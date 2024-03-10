@@ -1,6 +1,7 @@
 <script>
 	import Header from './Header.svelte';
 	import './styles.css';
+	import github from '$lib/images/github.svg';
 </script>
 
 <div class="app">
@@ -11,7 +12,10 @@
 	</main>
 
 	<footer>
-		<p>visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit</p>
+		Check out the GitHub repository!
+		<a href="https://github.com/phl28/stock-calculator">
+			<img src={github} alt="GitHub" />
+		</a>
 	</footer>
 </div>
 
@@ -20,6 +24,7 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
+		background-color: #121212;
 	}
 
 	main {
@@ -34,15 +39,17 @@
 	}
 
 	footer {
+		font-family: var(--font-family);
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		justify-content: center;
 		align-items: center;
-		padding: 12px;
+		padding: 2rem;
 	}
 
-	footer a {
-		font-weight: bold;
+	footer img {
+		height: 3rem;
+		width: 3rem;
 	}
 
 	@media (min-width: 480px) {
