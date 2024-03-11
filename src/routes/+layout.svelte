@@ -2,10 +2,13 @@
 	import Header from './Header.svelte';
 	import './styles.css';
 	import github from '$lib/images/github.svg';
+	
+	export let data;
+	$: loggedIn = data;
 </script>
 
 <div class="app">
-	<Header />
+	<Header {loggedIn}/>
 
 	<main>
 		<slot />

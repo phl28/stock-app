@@ -1,6 +1,8 @@
 <script>
 	import { page } from '$app/stores';
 	import logo from '$lib/images/logo-no-background.png';
+
+	export let loggedIn;
 </script>
 
 <header>
@@ -23,7 +25,11 @@
 		</ul>
 	</nav>
 
-	<a href="/login" class="login-link">Log in</a>
+	{#if loggedIn}
+   		<a href="/login" class="login-link">Log in</a>
+	{:else}
+		<a href="/logout" class="login-link">Log out</a>
+	{/if}
 </header>
 
 <style>
