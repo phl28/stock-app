@@ -17,7 +17,7 @@
 
 	<footer>
 		Check out the GitHub repository!
-		<a class="m-3" href="https://github.com/phl28/stock-calculator">
+		<a class="m-3" href="https://github.com/phl28/stock-app">
 			{#if $theme}
 				<img src={githubDark} alt="GitHub" />
 			{:else}
