@@ -1,4 +1,13 @@
-<h1>Log in</h1>
+<script>
+	import '@corbado/webcomponent';
+	import '@corbado/webcomponent/pkg/auth_cui.css';
+</script>
+
+<corbado-auth project-id="pro-5401653197206626566" conditional="yes">
+	<input name="username" id="corbado-username" required autocomplete="webauthn" />
+</corbado-auth>
+
+<!-- <h1>Log in</h1>
 
 <div class="login-form">
 	<form method="POST">
@@ -6,7 +15,7 @@
 		<input type="password" placeholder="Password" />
 		<button>Log in</button>
 	</form>
-</div>
+</div> -->
 
 <style>
 	.login-form {

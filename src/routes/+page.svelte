@@ -1,5 +1,4 @@
 <script>
-	import Counter from './Counter.svelte';
 </script>
 
 <svelte:head>
@@ -7,9 +6,7 @@
 	<meta name="description" content="Trade Your Equity Curve" />
 </svelte:head>
 
-<section>
-	<Counter />
-</section>
+<section></section>
 
 <style>
 	section {
