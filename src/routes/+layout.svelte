@@ -1,14 +1,15 @@
 <script>
-	import Header from './Header.svelte';
-	import './styles.css';
-	import github from '$lib/images/github.svg';
-	
-	export let data;
-	$: loggedIn = data;
+	import '../app.css';
+	import Header from '../lib/components/Header.svelte';
+	import githubLight from '$lib/images/github-mark.svg';
+	import githubDark from '$lib/images/github-mark-white.svg';
+	import { theme } from './stores.js';
+
+	let loggedIn = false;
 </script>
 
-<div class="app">
-	<Header {loggedIn}/>
+<div data-theme={$theme ? 'dark' : 'light'} class="app">
+	<Header data={loggedIn} />
 
 	<main>
 		<slot />
@@ -16,18 +17,22 @@
 
 	<footer>
 		Check out the GitHub repository!
-		<a href="https://github.com/phl28/stock-calculator">
-			<img src={github} alt="GitHub" />
+		<a class="m-3" href="https://github.com/phl28/stock-calculator">
+			{#if $theme}
+				<img src={githubDark} alt="GitHub" />
+			{:else}
+				<img src={githubLight} alt="GitHub" />
+			{/if}
 		</a>
 	</footer>
 </div>
 
-<style>
+<!-- style need to use lang="postcss" if using tailwind css in the style block-->
+<style lang="postcss">
 	.app {
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
-		background-color: #121212;
 	}
 
 	main {
@@ -42,7 +47,6 @@
 	}
 
 	footer {
-		font-family: var(--font-family);
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
