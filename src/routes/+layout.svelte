@@ -4,12 +4,10 @@
 	import githubLight from '$lib/images/github-mark.svg';
 	import githubDark from '$lib/images/github-mark-white.svg';
 	import { theme } from './stores.js';
-
-	let loggedIn = false;
 </script>
 
 <div data-theme={$theme ? 'dark' : 'light'} class="app">
-	<Header data={loggedIn} />
+	<Header />
 
 	<main>
 		<slot />

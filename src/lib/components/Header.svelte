@@ -3,13 +3,6 @@
 	import logo from '$lib/images/logo-no-background.png';
 	import { theme } from '../../routes/stores.js';
 
-	/**
-	 * loggedIn is a boolean that is true if the user is logged in
-	 * @type {boolean}
-	 */
-	export let data;
-	$: loggedIn = data;
-
 	const toggle = () => {
 		theme.toggle();
 		document.getElementById('toggle').classList.toggle('fa-moon');
@@ -37,21 +30,17 @@
 		</ul>
 	</nav>
 
-	<button on:click={toggle}>
+	<button on:click={toggle} class="mx-5">
 		<i class="fas fa-moon" id="toggle"></i>
 	</button>
-	{#if loggedIn}
-		<a href="/login" class="login-link">Log in</a>
-	{:else}
-		<a href="/logout" class="login-link">Log out</a>
-	{/if}
 </header>
 
 <style>
 	header {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
+		flex-direction: row;
+		justify-content: center;
 	}
 
 	.corner a {
@@ -68,17 +57,11 @@
 		object-fit: contain;
 	}
 
-	.login-link {
-		margin-right: 1rem; /* Add some spacing on the right */
-		padding: 0.5rem 1rem; /* Add some padding for button-like appearance */
-		border-radius: 0.25rem; /* Add some border radius for a rounded button */
-		text-decoration: none; /* Remove underline */
-		font-weight: 700; /* Make the text bold */
-	}
-
 	nav {
 		display: flex;
 		justify-content: center;
+		align-items: center;
+		flex-grow: 1;
 	}
 
 	ul {
