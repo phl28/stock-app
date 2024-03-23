@@ -5,8 +5,8 @@
 
 	const toggle = () => {
 		theme.toggle();
-		document.getElementById('toggle').classList.toggle('fa-moon');
-		document.getElementById('toggle').classList.toggle('fa-sun');
+		document.getElementById('toggle')?.classList.toggle('fa-moon');
+		document.getElementById('toggle')?.classList.toggle('fa-sun');
 	};
 </script>
 

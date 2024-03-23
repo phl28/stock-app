@@ -15,12 +15,17 @@
 			console.log(err);
 		}
 	};
-	const redirectToHome = () => {
+	const redirectToLogin = () => {
 		window.location.href = '/login';
 	};
+
 	onMount(() => {
 		session.refresh((u) => {
-			user = u;
+			if (u == null) {
+				redirectToLogin();
+			} else {
+				user = u;
+			}
 		});
 	});
 </script>
