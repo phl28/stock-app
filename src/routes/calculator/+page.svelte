@@ -3,7 +3,23 @@
 	import { ColorType, CrosshairMode } from 'lightweight-charts';
 	import { theme } from '../stores.js';
 	export let data;
-	let stockData = [{ time: '2021-05-01', open: 100, high: 120, low: 80, close: 110 }];
+	/**
+	 * @type {{ time: string; open: number; high: number; low: number; close: number; }[]}
+	 */
+	let stockData = [];
+	$: {
+		if (data) {
+			for (const item of Object.keys(data)) {
+				stockData.push({
+					time: item,
+					open: data[item]['1. open'],
+					high: data[item]['2. high'],
+					low: data[item]['3. low'],
+					close: data[item]['4. close']
+				});
+			}
+		}
+	}
 	let stockTickInput = 'AAPL';
 	let stockTick = 'AAPL';
 	const fetchTicker = () => {
@@ -22,9 +38,6 @@
 				},
 				watermark: {
 					color: 'rgba(0, 0, 0, 0)'
-				},
-				crosshair: {
-					color: '#758696'
 				},
 				grid: {
 					vertLines: {
@@ -82,6 +95,10 @@
 		},
 		timeScale: {
 			borderColor: 'rgba(197, 203, 206, 0.8)'
+		},
+		waterMark: {
+			visible: true,
+			text: `${stockTick} 1D`
 		}
 	};
 </script>

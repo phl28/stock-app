@@ -35,6 +35,10 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@corbado/webcomponent": "^1.0.104"
+		"@corbado/node-sdk": "^2.0.0",
+		"@corbado/web-js": "^1.1.16",
+		"@corbado/webcomponent": "^1.0.104",
+		"lightweight-charts": "^4.1.3",
+		"svelte-lightweight-charts": "^2.2.0"
 	}
 }
