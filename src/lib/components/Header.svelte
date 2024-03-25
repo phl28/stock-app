@@ -18,11 +18,8 @@
 	</div>
 	<nav>
 		<ul>
-			<li aria-current={$page.url.pathname === '/' ? 'page' : undefined}>
-				<a href="/">Home</a>
-			</li>
-			<li aria-current={$page.url.pathname.startsWith('/calculator') ? 'page' : undefined}>
-				<a href="/calculator">Stock calculator</a>
+			<li aria-current={$page.url.pathname.startsWith('/') ? 'page' : undefined}>
+				<a href="/">Stock calculator</a>
 			</li>
 			<li aria-current={$page.url.pathname.startsWith('/trade-history') ? 'page' : undefined}>
 				<a href="/trade-history">Trade history</a>
