@@ -3,6 +3,7 @@
 	import { ColorType, CrosshairMode, type ISeriesApi } from 'lightweight-charts';
 	import { theme } from './stores.js';
 	import type { HistogramSeriesProps } from 'svelte-lightweight-charts';
+	import { convertUnixTimestampToDate } from '$lib/helpers/DataHelpers.js';
 
 	export let data;
 	interface StockData {
@@ -15,18 +16,21 @@
 	let stockData: StockData[] = [];
 	let volume: ISeriesApi<'Histogram'> | null = null;
 	$: {
-		if (data) {
-			for (const item of Object.keys(data)) {
+		if (data.results) {
+			for (const item of data.results) {
+				const date = convertUnixTimestampToDate(item.t);
+				console.log(item.t);
+				console.log(date);
 				stockData.push({
-					time: item,
-					open: data[item]['1. open'],
-					high: data[item]['2. high'],
-					low: data[item]['3. low'],
-					close: data[item]['4. close']
+					time: date,
+					open: item.o,
+					high: item.h,
+					low: item.l,
+					close: item.c
 				});
 				volume?.update({
-					time: item,
-					value: data[item]['5. volume']
+					time: date,
+					value: item.v
 				});
 			}
 		}
@@ -44,11 +48,12 @@
 	function handleVolumeComponentReference(ref: ISeriesApi<'Histogram'> | null): void {
 		volume = ref;
 	}
-	let stockTickInput = 'AAPL';
-	let stockTick = 'AAPL';
+	let stockTickInput: string = 'AAPL';
+	let stockTick: string = 'AAPL';
 	const fetchTicker = () => {
 		stockTick = stockTickInput.toUpperCase();
 	};
+	let accSize: number;
 	const THEMES = {
 		Dark: {
 			chart: {
@@ -109,8 +114,8 @@
 	};
 
 	const chartOptions = {
-		width: 350,
-		height: 250,
+		width: 400,
+		height: 300,
 		crosshair: {
 			mode: CrosshairMode.Magnet
 		},
@@ -140,131 +145,7 @@
 		<h1 class="ms-2">{stockTick}</h1>
 	{/if}
 	<div class="flex flex-row items-center justify-between">
-		<div class="overflow-x-auto">
-			<table class="table">
-				<thead>
-					<tr>
-						<th>
-							<label>
-								<input type="checkbox" class="checkbox" />
-							</label>
-						</th>
-						<th>Name</th>
-						<th>Job</th>
-						<th>Favorite Color</th>
-						<th></th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<th>
-							<label>
-								<input type="checkbox" class="checkbox" />
-							</label>
-						</th>
-						<td>
-							<div class="flex items-center gap-3">
-								<div>
-									<div class="font-bold">Hart Hagerty</div>
-									<div class="text-sm opacity-50">United States</div>
-								</div>
-							</div>
-						</td>
-						<td>
-							Zemlak, Daniel and Leannon
-							<br />
-							<span class="badge badge-ghost badge-sm">Desktop Support Technician</span>
-						</td>
-						<td>Purple</td>
-						<th>
-							<button class="btn btn-ghost btn-xs">details</button>
-						</th>
-					</tr>
-					<tr>
-						<th>
-							<label>
-								<input type="checkbox" class="checkbox" />
-							</label>
-						</th>
-						<td>
-							<div class="flex items-center gap-3">
-								<div>
-									<div class="font-bold">Brice Swyre</div>
-									<div class="text-sm opacity-50">China</div>
-								</div>
-							</div>
-						</td>
-						<td>
-							Carroll Group
-							<br />
-							<span class="badge badge-ghost badge-sm">Tax Accountant</span>
-						</td>
-						<td>Red</td>
-						<th>
-							<button class="btn btn-ghost btn-xs">details</button>
-						</th>
-					</tr>
-					<tr>
-						<th>
-							<label>
-								<input type="checkbox" class="checkbox" />
-							</label>
-						</th>
-						<td>
-							<div class="flex items-center gap-3">
-								<div>
-									<div class="font-bold">Marjy Ferencz</div>
-									<div class="text-sm opacity-50">Russia</div>
-								</div>
-							</div>
-						</td>
-						<td>
-							Rowe-Schoen
-							<br />
-							<span class="badge badge-ghost badge-sm">Office Assistant I</span>
-						</td>
-						<td>Crimson</td>
-						<th>
-							<button class="btn btn-ghost btn-xs">details</button>
-						</th>
-					</tr>
-					<tr>
-						<th>
-							<label>
-								<input type="checkbox" class="checkbox" />
-							</label>
-						</th>
-						<td>
-							<div class="flex items-center gap-3">
-								<div>
-									<div class="font-bold">Yancy Tear</div>
-									<div class="text-sm opacity-50">Brazil</div>
-								</div>
-							</div>
-						</td>
-						<td>
-							Wyman-Ledner
-							<br />
-							<span class="badge badge-ghost badge-sm">Community Outreach Specialist</span>
-						</td>
-						<td>Indigo</td>
-						<th>
-							<button class="btn btn-ghost btn-xs">details</button>
-						</th>
-					</tr>
-				</tbody>
-				<!-- <tfoot>
-					<tr>
-						<th></th>
-						<th>Name</th>
-						<th>Job</th>
-						<th>Favorite Color</th>
-						<th></th>
-					</tr>
-				</tfoot> -->
-			</table>
-		</div>
-		<div>
+		<div class="flex flex-col overflow-x-auto">
 			<form method="GET" action="/">
 				<label class="form-control mb-5 w-full max-w-xs">
 					<div class="label">
@@ -281,7 +162,25 @@
 					</div>
 				</label>
 			</form>
-
+			<label class="input input-bordered flex items-center gap-2">
+				Account Size
+				<input type="number" class="grow" placeholder="1000000" bind:value={accSize} />
+			</label>
+			<label class="input input-bordered flex items-center gap-4">
+				Risk
+				<input type="text" class="grow" placeholder="0.03%" />
+			</label>
+			<label class="input input-bordered flex items-center gap-2">
+				<input type="text" class="grow" placeholder="Search" />
+				<kbd class="kbd kbd-sm">⌘</kbd>
+				<kbd class="kbd kbd-sm">K</kbd>
+			</label>
+			<label class="input input-bordered flex items-center gap-2">
+				<input type="text" class="grow" placeholder="Search" />
+				<span class="badge badge-info">Optional</span>
+			</label>
+		</div>
+		<div>
 			<Chart {...chartOptions} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
 				<CandlestickSeries
 					data={stockData}
