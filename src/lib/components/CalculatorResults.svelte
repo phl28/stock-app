@@ -43,7 +43,7 @@
 </script>
 
 <div class="overflow-x-auto">
-	<table class="table table-pin-rows table-pin-cols table-xs">
+	<table class="table table-pin-rows table-pin-cols table-sm">
 		<thead>
 			<tr>
 				<th>R / R</th>

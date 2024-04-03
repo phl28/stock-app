@@ -7,12 +7,15 @@
 	import type { StockData, VolumeData } from '$lib/types/chartTypes.js';
 	import CalculatorResults from '$lib/components/CalculatorResults.svelte';
 	import calculator from '$lib/calculator/calculator';
+	import { tick } from 'svelte';
 
 	export let form;
 	let stockData: StockData[];
 	let volumeData: VolumeData[];
 	let stockTickInput: string = 'AAPL';
 	let stockTick: string;
+	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
+	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
 
 	$: {
 		if (form) {
@@ -44,7 +47,21 @@
 			stockTick = form.ticker;
 			stockData = stock;
 			volumeData = volume;
+			tick().then(() => {
+				if (chartSeries) {
+					chartSeries.setData(stockData);
+				}
+				if (volumeSeries) {
+					volumeSeries.setData(volumeData);
+				}
+			});
 		}
+	}
+	function handleCandlestickSeriesReference(ref: ISeriesApi<'Candlestick'> | null) {
+		chartSeries = ref;
+	}
+	function handleVolumeSeriesReference(ref: ISeriesApi<'Histogram'> | null) {
+		volumeSeries = ref;
 	}
 
 	const THEMES = {
@@ -219,44 +236,46 @@
 					priceLineVisible={true}
 					upColor="rgb(11, 153, 129)"
 					downColor="rgb(209,57,70)"
+					ref={handleCandlestickSeriesReference}
 				/>
 				<HistogramSeries
 					bind:data={volumeData}
 					priceScaleId="volume"
 					color="#26a69a"
 					priceFormat={{ type: 'volume' }}
+					ref={handleVolumeSeriesReference}
 				/>
 				<PriceScale id="volume" scaleMargins={{ top: 0.8, bottom: 0 }} />
 			</Chart>
 		</div>
 	</div>
-	<div class="flex flex-row items-center">
+	<div class="flex flex-row items-center justify-between">
 		<div>
-			<label class="input input-sm flex items-center gap-4">
-				<strong>Stop Loss (%):</strong>
+			<label class="input input-sm flex items-center gap-2">
+				<strong>Stop Loss:</strong>
 				<input type="number" class="grow" value={stopLossAmt.toFixed(2)} disabled />
-				({(stopLossPerc * 100).toFixed(2)})
+				({(stopLossPerc * 100).toFixed(2)} %)
 			</label>
-			<label class="input input-sm flex items-center gap-4">
+			<label class="input input-sm flex items-center gap-2">
 				<strong>Position Amount:</strong>
 				<input type="text" value={positionAmt} class="grow" disabled />
 			</label>
-			<label class="input input-sm flex items-center gap-4">
+			<label class="input input-sm flex items-center gap-2">
 				<strong>Position Size:</strong>
 				<input type="text" value={(positionSize * 100).toFixed(2)} class="grow" disabled />
 				<span>%</span>
 			</label>
-			<label class="input input-sm flex items-center gap-4">
+			<label class="input input-sm flex items-center gap-2">
 				<strong>Profit:</strong>
 				<input type="text" value={(profit * 100).toFixed(2)} class="grow" disabled />
 				<span>%</span>
 			</label>
-			<label class="input input-sm flex items-center gap-4">
+			<label class="input input-sm flex items-center gap-2">
 				<strong>Account Growth:</strong>
 				<input type="text" value={(accGrowth * 100).toFixed(2)} class="grow" disabled />
 				<span>%</span>
 			</label>
-			<label class="input input-sm flex items-center gap-4">
+			<label class="input input-sm flex items-center gap-2">
 				<strong>Reward / Risk:</strong>
 				<input type="text" value={riskReward.toFixed(2)} class="grow" disabled />
 			</label>
