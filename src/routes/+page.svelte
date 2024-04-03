@@ -180,9 +180,7 @@
 </svelte:head>
 
 <section>
-	{#if stockTick}
-		<h1 class="ms-2">{stockTick}</h1>
-	{/if}
+	<h1 class="ms-2 {stockTick ? '' : 'hidden'}">{stockTick}</h1>
 	<div class="flex flex-row items-center justify-between">
 		<div class="flex flex-col">
 			<form method="POST" action="?/fetchStockData" use:enhance>
