@@ -1,59 +1,52 @@
 <script lang="ts">
-	import { Chart, CandlestickSeries, HistogramSeries } from 'svelte-lightweight-charts';
+	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
 	import { ColorType, CrosshairMode, type ISeriesApi } from 'lightweight-charts';
 	import { theme } from './stores.js';
-	import type { HistogramSeriesProps } from 'svelte-lightweight-charts';
 	import { convertUnixTimestampToDate } from '$lib/helpers/DataHelpers.js';
+	import { enhance } from '$app/forms';
+	import type { StockData, VolumeData } from '$lib/types/chartTypes.js';
+	import CalculatorResults from '$lib/components/CalculatorResults.svelte';
+	import calculator from '$lib/calculator/calculator';
 
-	export let data;
-	interface StockData {
-		time: string;
-		open: number;
-		high: number;
-		low: number;
-		close: number;
-	}
-	let stockData: StockData[] = [];
-	let volume: ISeriesApi<'Histogram'> | null = null;
+	export let form;
+	let stockData: StockData[];
+	let volumeData: VolumeData[];
+	let stockTickInput: string = 'AAPL';
+	let stockTick: string;
+
 	$: {
-		if (data.results) {
-			for (const item of data.results) {
+		if (form) {
+			let stock: StockData[] = [];
+			let volume: VolumeData[] = [];
+			let prevClose = 0;
+			for (const item of form.results) {
 				const date = convertUnixTimestampToDate(item.t);
-				console.log(item.t);
-				console.log(date);
-				stockData.push({
-					time: date,
-					open: item.o,
-					high: item.h,
-					low: item.l,
-					close: item.c
-				});
-				volume?.update({
-					time: date,
-					value: item.v
-				});
+				stock = [
+					...stock,
+					{
+						time: date,
+						open: item.o,
+						high: item.h,
+						low: item.l,
+						close: item.c
+					}
+				];
+				volume = [
+					...volume,
+					{
+						time: date,
+						value: item.v,
+						color: prevClose < item.c ? 'rgba(0, 150, 136, 0.8)' : 'rgba(255,82,82, 0.8)'
+					}
+				];
+				prevClose = item.c;
 			}
+			stockTick = form.ticker;
+			stockData = stock;
+			volumeData = volume;
 		}
 	}
 
-	let volumeProps: HistogramSeriesProps = {
-		color: '#26a69a',
-		priceFormat: {
-			type: 'volume'
-		},
-		priceScaleId: 'volume',
-		data: [...(volume ?? [])],
-		ref: (ref: ISeriesApi<'Histogram'> | null) => (volume = ref)
-	};
-	function handleVolumeComponentReference(ref: ISeriesApi<'Histogram'> | null): void {
-		volume = ref;
-	}
-	let stockTickInput: string = 'AAPL';
-	let stockTick: string = 'AAPL';
-	const fetchTicker = () => {
-		stockTick = stockTickInput.toUpperCase();
-	};
-	let accSize: number;
 	const THEMES = {
 		Dark: {
 			chart: {
@@ -64,9 +57,6 @@
 					},
 					lineColor: '#2B2B43',
 					textColor: '#D9D9D9'
-				},
-				watermark: {
-					color: 'rgba(0, 0, 0, 0)'
 				},
 				grid: {
 					vertLines: {
@@ -93,9 +83,6 @@
 					lineColor: '#2B2B43',
 					textColor: '#191919'
 				},
-				watermark: {
-					color: 'rgba(0, 0, 0, 0)'
-				},
 				grid: {
 					vertLines: {
 						visible: false
@@ -113,23 +100,58 @@
 		}
 	};
 
+	const watermark = {
+		visible: true,
+		text: `${stockTickInput.toUpperCase()} 1D`
+	};
+
 	const chartOptions = {
-		width: 400,
 		height: 300,
+		width: 600,
 		crosshair: {
 			mode: CrosshairMode.Magnet
 		},
 		rightPriceScale: {
-			borderColor: 'rgba(197, 203, 206, 0.8)'
+			borderColor: 'rgba(197, 203, 206, 0.8)',
+			scaleMargins: {
+				top: 0.3,
+				bottom: 0.25
+			}
 		},
 		timeScale: {
 			borderColor: 'rgba(197, 203, 206, 0.8)'
-		},
-		waterMark: {
-			visible: true,
-			text: `${stockTick} 1D`
 		}
 	};
+	const {
+		calcStopLossPerc,
+		calcStopLossAmt,
+		calcPositionSize,
+		calcPositionAmt,
+		calcProfitPerc,
+		calcRewardPerc,
+		calcRewardToRisk
+	} = calculator;
+	let accSize: number = 1000000;
+	let entry: number = 100;
+	let stop: number = 96;
+	let target: number = 120;
+	let risk: number = 0.3;
+	let stopLossAmt: number = 300;
+	let stopLossPerc: number = 0.004;
+	let positionAmt: number = 0;
+	let positionSize: number = 0;
+	let profit: number = 0;
+	let accGrowth: number = 0;
+	let riskReward: number = 0;
+	$: {
+		stopLossPerc = calcStopLossPerc(entry, stop);
+		positionSize = calcPositionSize(risk / 100, stopLossPerc);
+		positionAmt = calcPositionAmt(accSize, positionSize, entry);
+		stopLossAmt = calcStopLossAmt(entry, stop, positionAmt);
+		profit = calcProfitPerc(target, entry);
+		accGrowth = calcRewardPerc(profit, positionSize);
+		riskReward = calcRewardToRisk(risk / 100, accGrowth);
+	}
 </script>
 
 <svelte:head>
@@ -145,8 +167,8 @@
 		<h1 class="ms-2">{stockTick}</h1>
 	{/if}
 	<div class="flex flex-row items-center justify-between">
-		<div class="flex flex-col overflow-x-auto">
-			<form method="GET" action="/">
+		<div class="flex flex-col">
+			<form method="POST" action="?/fetchStockData" use:enhance>
 				<label class="form-control mb-5 w-full max-w-xs">
 					<div class="label">
 						<span class="label-text">Enter the stock ticker</span>
@@ -156,42 +178,91 @@
 							type="text"
 							name="ticker"
 							bind:value={stockTickInput}
-							class="input input-bordered me-2 w-full max-w-xs"
+							class="input input-sm input-bordered me-2 w-full max-w-xs"
 						/>
-						<button class="btn btn-primary" on:click={fetchTicker}>Submit</button>
+						<button class="btn btn-primary btn-sm" type="submit">Submit</button>
 					</div>
 				</label>
 			</form>
-			<label class="input input-bordered flex items-center gap-2">
-				Account Size
-				<input type="number" class="grow" placeholder="1000000" bind:value={accSize} />
-			</label>
-			<label class="input input-bordered flex items-center gap-4">
-				Risk
-				<input type="text" class="grow" placeholder="0.03%" />
-			</label>
-			<label class="input input-bordered flex items-center gap-2">
-				<input type="text" class="grow" placeholder="Search" />
-				<kbd class="kbd kbd-sm">⌘</kbd>
-				<kbd class="kbd kbd-sm">K</kbd>
-			</label>
-			<label class="input input-bordered flex items-center gap-2">
-				<input type="text" class="grow" placeholder="Search" />
-				<span class="badge badge-info">Optional</span>
-			</label>
+			<div class="mb-4 space-y-1">
+				<label class="input input-sm input-bordered flex items-center gap-4">
+					Account Size (USD)
+					<input type="number" class="grow" bind:value={accSize} />
+				</label>
+				<label class="input input-sm input-bordered flex items-center gap-4">
+					Risk
+					<input type="text" bind:value={risk} class="grow" />
+					<span>%</span>
+				</label>
+			</div>
+			<div class="space-y-1">
+				<label class="input input-sm input-bordered flex items-center gap-4">
+					Entry
+					<input type="number" bind:value={entry} class="grow" />
+				</label>
+				<label class="input input-sm input-bordered flex items-center gap-4">
+					Stop
+					<input type="number" bind:value={stop} class="grow" />
+				</label>
+				<label class="input input-sm input-bordered flex items-center gap-4">
+					Target
+					<input type="number" bind:value={target} class="grow" />
+				</label>
+			</div>
 		</div>
 		<div>
-			<Chart {...chartOptions} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
+			<Chart {...chartOptions} {watermark} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
 				<CandlestickSeries
-					data={stockData}
+					bind:data={stockData}
 					lastValueVisible={true}
 					title={stockTick}
 					priceLineVisible={true}
 					upColor="rgb(11, 153, 129)"
 					downColor="rgb(209,57,70)"
 				/>
-				<HistogramSeries {...volumeProps} ref={handleVolumeComponentReference} />
+				<HistogramSeries
+					bind:data={volumeData}
+					priceScaleId="volume"
+					color="#26a69a"
+					priceFormat={{ type: 'volume' }}
+				/>
+				<PriceScale id="volume" scaleMargins={{ top: 0.8, bottom: 0 }} />
 			</Chart>
 		</div>
+	</div>
+	<div class="flex flex-row items-center">
+		<div>
+			<label class="input input-sm flex items-center gap-4">
+				<strong>Stop Loss (%):</strong>
+				<input type="number" class="grow" value={stopLossAmt.toFixed(2)} disabled />
+				({(stopLossPerc * 100).toFixed(2)})
+			</label>
+			<label class="input input-sm flex items-center gap-4">
+				<strong>Position Amount:</strong>
+				<input type="text" value={positionAmt} class="grow" disabled />
+			</label>
+			<label class="input input-sm flex items-center gap-4">
+				<strong>Position Size:</strong>
+				<input type="text" value={(positionSize * 100).toFixed(2)} class="grow" disabled />
+				<span>%</span>
+			</label>
+			<label class="input input-sm flex items-center gap-4">
+				<strong>Profit:</strong>
+				<input type="text" value={(profit * 100).toFixed(2)} class="grow" disabled />
+				<span>%</span>
+			</label>
+			<label class="input input-sm flex items-center gap-4">
+				<strong>Account Growth:</strong>
+				<input type="text" value={(accGrowth * 100).toFixed(2)} class="grow" disabled />
+				<span>%</span>
+			</label>
+			<label class="input input-sm flex items-center gap-4">
+				<strong>Reward / Risk:</strong>
+				<input type="text" value={riskReward.toFixed(2)} class="grow" disabled />
+			</label>
+		</div>
+		<CalculatorResults
+			input={{ risk: risk, entry: entry, stop: stop, target: target, stopLossPerc: stopLossPerc }}
+		/>
 	</div>
 </section>
