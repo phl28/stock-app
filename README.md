@@ -3,6 +3,7 @@
 ## TODO
 - [x] Make it deploy (vercel)
 - [ ] Scaffold basic UI with mock data
+- [ ] Build Python backend for historic data fetching (from Futu and IBKR)
 - [ ] Actually set up the database
 - [ ] Attach datbase to the UI
 - [ ] Add authentication
@@ -21,4 +22,3 @@ npm run build
 
 You can preview the production build with `npm run preview`.
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
