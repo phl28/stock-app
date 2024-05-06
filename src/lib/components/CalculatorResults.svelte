@@ -8,29 +8,36 @@
 		stopLossPerc: 0.004
 	};
 
+	interface CalculatorInput {
+		risk: number;
+		entry: number;
+		stop: number;
+		target: number;
+		stopLossPerc: number;
+	}
+
 	interface TableData {
 		rr: number;
 		reward: number;
 		profit: number;
 		coverPrice: number;
 	}
-	let data: TableData[] = [];
+	$: data = calculateData(input);
 	const { calcProfitPerc, calcRewardPerc, calcCoverPrice } = calculator;
 	const riskReward = [2.0, 3.0, 4.0, 5.0];
-	riskReward.forEach((item) => {
-		const reward = calcRewardPerc(undefined, undefined, item, input.risk / 100);
-		const profit = calcProfitPerc(undefined, undefined, input.stopLossPerc, item);
-		const coverPrice = calcCoverPrice(input.entry, profit);
-		data = [
-			...data,
-			{
+	function calculateData(input: CalculatorInput): TableData[] {
+		return riskReward.map((item) => {
+			const reward = calcRewardPerc(undefined, undefined, item, input.risk / 100);
+			const profit = calcProfitPerc(undefined, undefined, input.stopLossPerc, item);
+			const coverPrice = calcCoverPrice(input.entry, profit);
+			return {
 				rr: item,
 				reward,
 				profit,
 				coverPrice
-			}
-		];
-	});
+			};
+		});
+	}
 	let customRR: number;
 	let customReward: number;
 	let customProfit: number;
