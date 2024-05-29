@@ -66,7 +66,13 @@
 		</label>
 		<SignedIn>
 			{#if $theme}
-				<UserButton appearance={{ baseTheme: dark }} afterSignOutUrl="/" />
+				<UserButton
+					appearance={{
+						baseTheme: dark,
+						userProfile: { baseTheme: dark }
+					}}
+					afterSignOutUrl="/"
+				/>
 			{:else}
 				<UserButton afterSignOutUrl="/" />
 			{/if}
