@@ -40,7 +40,9 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@clerk/themes": "^2.1.8",
 		"@vercel/postgres": "^0.8.0",
+		"clerk-sveltekit": "^0.4.2",
 		"drizzle-orm": "^0.30.8",
 		"futu-api": "^8.1.4108",
 		"lightweight-charts": "^4.1.3",
