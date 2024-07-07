@@ -34,7 +34,7 @@
 			</li>
 		</ul>
 	</nav>
-	<div class="flex items-center justify-end">
+	<div class="flex items-center justify-end pe-3">
 		<label class="mx-2 flex cursor-pointer gap-2">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
