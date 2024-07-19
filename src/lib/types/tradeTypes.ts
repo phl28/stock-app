@@ -1,21 +1,21 @@
-enum TradeSide {
+export enum TradeSide {
     BUY = "BUY",
     SELL = "SELL",
     BUY_BACK = "BUY_BACK"
 }
 
-enum Platform {
+export enum Platform {
     FUTU = "FUTU",
     IBKR = "IBKR"
 }
 
-enum Region {
+export enum Region {
     US = "US",
     HK = "HK",
     UK = "UK"
 }
 
-enum Currency {
+export enum Currency {
     USD = "USD",
     HKD = "HKD",
     EUR = "EUR",

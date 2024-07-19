@@ -1,6 +1,5 @@
 <script>
 	import HistoryNavBar from '$lib/components/HistoryNavBar.svelte';
-	import { platform } from '../../server/db/schema';
 
 	export let data;
 </script>
