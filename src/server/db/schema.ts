@@ -72,5 +72,7 @@ export const tradeHistory = pgTable(
   (trade) => ({
     tickerIndex: index("trade_ticker_idx").on(trade.ticker),
     positionIndex: index("position_id_idx").on(trade.positionId),
+    platformIndex: index("platform_idx").on(trade.platform),
+    sideIndex: index("side_idx").on(trade.side),
   }),
 );

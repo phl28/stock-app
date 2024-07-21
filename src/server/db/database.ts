@@ -1,30 +1,28 @@
 import { drizzle } from 'drizzle-orm/vercel-postgres';
 import { sql } from "@vercel/postgres";
-import type { Trade } from "../../lib/types/tradeTypes";
 
 import * as schema from './schema';
+import { eq, inArray } from 'drizzle-orm';
 
 // Use this object to send drizzle queries to your DB
 export const db = drizzle(sql, {schema});
+
+type Trade = typeof schema.tradeHistory.$inferInsert
+type Position = typeof schema.positions.$inferInsert
 
 export const getAllTradeHistory = async () => {
     return await db.query.tradeHistory.findMany();
   };
 
-// export const insertTradeHistory = async (trade: Trade) => {
-//     trade.ticker = trade.ticker.toUpperCase();
-//     return db.insert(schema.tradeHistory).values({
-//         ticker: trade.ticker,
-//         region: trade.region,
-//         currency: trade.currency,
-//         price: trade.price,
-//         fees: trade.fees,
-//         totalValue: trade.totalValue,
-//         volume: trade.volume,
-//         platform: trade.platform,
-//         side: trade.side,
-//         executedAt: trade.executedAt,
-//         profitLoss: trade.profitLoss,
-//         notes: trade.notes
-//     });
-// }
+export const insertTradeHistory = async (trade: Trade) => {
+    trade.ticker = trade.ticker.toUpperCase();
+    return await db.insert(schema.tradeHistory).values(trade);
+}
+
+export const deleteTradeHistory = async (id: number) => {
+    return await db.delete(schema.tradeHistory).where(eq(schema.tradeHistory.id, id));
+}
+
+export const deleteTradeHistoryBatch = async (ids: number[]) => {
+    return await db.delete(schema.tradeHistory).where(inArray(schema.tradeHistory.id, ids));
+}

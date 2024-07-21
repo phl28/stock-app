@@ -1,7 +1,13 @@
-<script>
+<script lang="ts">
 	import HistoryNavBar from '$lib/components/HistoryNavBar.svelte';
 
 	export let data;
+
+	let selectedTrades: Set<number> = new Set();
+	function toggleSelection(id: number) {
+		selectedTrades.has(id) ? selectedTrades.delete(id) : selectedTrades.add(id);
+		selectedTrades = selectedTrades;
+	}
 </script>
 
 <svelte:head>
@@ -13,7 +19,7 @@
 </svelte:head>
 
 <div class="w-full">
-	<HistoryNavBar />
+	<HistoryNavBar {selectedTrades} />
 </div>
 <div class="overflow-x-auto">
 	<table class="table table-pin-rows table-pin-cols table-xs">
@@ -35,7 +41,7 @@
 				<tr>
 					<td>
 						<label>
-							<input type="checkbox" class="checkbox" />
+							<input type="checkbox" class="checkbox" on:change={() => toggleSelection(trade.id)} />
 						</label>
 					</td>
 					<td>{trade.ticker}</td>
