@@ -23,25 +23,28 @@
 		const modal = document.getElementById('add-trade-modal') as HTMLDialogElement;
 		modal.close();
 	}
-
-	async function deleteSelectedTrades() {
-		const formData = new FormData();
-		selectedTrades.forEach((id) => {
-			formData.append('id', id.toString());
-		});
-		const response = await fetch('/trade-history?/deleteTradesBatch', {
-			method: 'POST',
-			body: formData
-		});
-		if (response.ok) {
-			selectedTrades = new Set();
-		}
-	}
 </script>
 
 <div class="m-4 flex justify-end">
 	{#if selectedTrades.size > 0}
-		<button class="btn btn-neutral" on:click={deleteSelectedTrades}>Delete</button>
+		<form
+			action="?/deleteTradesBatch"
+			method="POST"
+			use:enhance={({ formElement, formData, action, cancel }) => {
+				return async ({ result, update }) => {
+					if (result.type === 'success') {
+						selectedTrades.clear();
+						selectedTrades = selectedTrades;
+						await update();
+					}
+				};
+			}}
+		>
+			{#each Array.from(selectedTrades) as id}
+				<input type="hidden" name="id" value={id} />
+			{/each}
+			<button class="btn btn-neutral" type="submit">Delete</button>
+		</form>
 	{/if}
 	<button class="btn btn-neutral" on:click={openModal}>Add new trade</button>
 	<dialog id="add-trade-modal" class="modal">

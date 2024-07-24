@@ -55,6 +55,7 @@
 						<textarea
 							placeholder="Notes"
 							class="textarea textarea-bordered textarea-xs w-full max-w-xs"
+							bind:value={trade.notes}
 						></textarea>
 					</td>
 				</tr>
