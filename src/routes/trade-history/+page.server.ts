@@ -1,5 +1,5 @@
 import type { Currency, Platform, Region, Trade, TradeSide } from '$lib/types/tradeTypes';
-import { deleteTradeHistory, deleteTradeHistoryBatch, getAllTradeHistory, insertTradeHistory } from '../../server/db/database';
+import { deleteTradeHistory, deleteTradeHistoryBatch, getAllTradeHistory, insertTradeHistory, updateTradeHistoryBatch } from '../../server/db/database';
 
 export async function load() {
     const trades = await getAllTradeHistory()
@@ -28,6 +28,12 @@ export const actions = {
         };
         newTrade.totalValue = (parseFloat(newTrade.price) * newTrade.volume + parseFloat(newTrade.fees)).toString(); 
         await insertTradeHistory(newTrade);
+    },
+    updateTradeBatch: async ({ request }) => {
+        const formData = await request.formData();
+        const trades = formData.get('trades') as string;
+        const updatedTrades = JSON.parse(trades);
+        await updateTradeHistoryBatch(updatedTrades);
     },
     deleteTrade: async ({ request }) => {
         const formData = await request.formData();

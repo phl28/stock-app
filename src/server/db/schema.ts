@@ -24,7 +24,7 @@ export const pgTable = pgTableCreator((name) => `tradeup_${name}`);
 
 export const region = pgEnum('region', ['US', 'HK', 'UK']);
 export const platform = pgEnum('platform', ['FUTU', 'IBKR']);
-export const tradeSide = pgEnum('tradeSide', ['BUY', 'SELL', 'BUY_BACK']);
+export const tradeSide = pgEnum('tradeside', ['BUY', 'SELL', 'BUY_BACK']);
 export const currency = pgEnum('currency', ['USD', 'HKD', 'EUR', 'GBP', 'CNY']);
 
 export const positions = pgTable(
@@ -59,7 +59,7 @@ export const tradeHistory = pgTable(
     totalValue: decimal('totalValue', { precision: 10, scale: 2 }).notNull(),
     volume: integer('volume').notNull(),
     platform: platform('platform').notNull().default('FUTU'),
-    side: tradeSide('tradeSide').notNull().default('BUY'),
+    tradeSide: tradeSide('tradeside').notNull().default('BUY'),
     executedAt: timestamp('executedAt').notNull(),
     profitLoss: decimal('profitLoss', { precision: 10, scale: 2 }),
     notes: text('notes'),
@@ -73,6 +73,6 @@ export const tradeHistory = pgTable(
     tickerIndex: index("trade_ticker_idx").on(trade.ticker),
     positionIndex: index("position_id_idx").on(trade.positionId),
     platformIndex: index("platform_idx").on(trade.platform),
-    sideIndex: index("side_idx").on(trade.side),
+    sideIndex: index("side_idx").on(trade.tradeSide),
   }),
 );

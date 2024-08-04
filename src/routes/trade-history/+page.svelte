@@ -1,13 +1,34 @@
 <script lang="ts">
 	import HistoryNavBar from '$lib/components/HistoryNavBar.svelte';
+	import type { Trade } from '$lib/types/tradeTypes.js';
 
 	export let data;
 
-	let selectedTrades: Set<number> = new Set();
-	function toggleSelection(id: number) {
-		selectedTrades.has(id) ? selectedTrades.delete(id) : selectedTrades.add(id);
+	let selectedTrades: Set<Trade> = new Set();
+	function toggleSelection(trade: Trade) {
+		selectedTrades.has(trade) ? selectedTrades.delete(trade) : selectedTrades.add(trade);
 		selectedTrades = selectedTrades;
 	}
+
+	let editedNotes: { [key: number]: string } = {};
+	function handleNoteChange(trade: Trade, newNote: string) {
+		if (newNote !== data.trades.find((t) => t.id === trade.id)?.notes) {
+			editedNotes[trade.id] = newNote;
+			if (!selectedTrades.has(trade)) {
+				selectedTrades.add(trade);
+				selectedTrades = selectedTrades;
+			}
+		} else {
+			delete editedNotes[trade.id];
+			if (selectedTrades.has(trade)) {
+				selectedTrades.delete(trade);
+				selectedTrades = selectedTrades;
+			}
+		}
+		editedNotes = editedNotes;
+	}
+
+	$: hasEditedNotes = Object.keys(editedNotes).length > 0;
 </script>
 
 <svelte:head>
@@ -19,7 +40,7 @@
 </svelte:head>
 
 <div class="w-full">
-	<HistoryNavBar {selectedTrades} />
+	<HistoryNavBar {selectedTrades} {hasEditedNotes} />
 </div>
 <div class="overflow-x-auto">
 	<table class="table table-pin-rows table-pin-cols table-xs">
@@ -41,7 +62,12 @@
 				<tr>
 					<td>
 						<label>
-							<input type="checkbox" class="checkbox" on:change={() => toggleSelection(trade.id)} />
+							<input
+								type="checkbox"
+								class="checkbox"
+								on:change={() => toggleSelection(trade)}
+								checked={selectedTrades.has(trade)}
+							/>
 						</label>
 					</td>
 					<td>{trade.ticker}</td>
@@ -49,13 +75,14 @@
 					<td>{trade.volume}</td>
 					<td>$ {trade.price}</td>
 					<td>{trade.platform}</td>
-					<td>{trade.side}</td>
+					<td>{trade.tradeSide}</td>
 					<td>{new Date(trade.executedAt).toLocaleDateString()}</td>
 					<td>
 						<textarea
 							placeholder="Notes"
 							class="textarea textarea-bordered textarea-xs w-full max-w-xs"
-							bind:value={trade.notes}
+							value={editedNotes[trade.id] !== undefined ? editedNotes[trade.id] : trade.notes}
+							on:input={(e) => handleNoteChange(trade, e.currentTarget.value)}
 						></textarea>
 					</td>
 				</tr>

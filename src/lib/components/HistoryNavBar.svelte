@@ -1,16 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { TradeSide, Platform, Region, Currency } from '$lib/types/tradeTypes';
+	import { TradeSide, Platform, Region, Currency, type Trade } from '$lib/types/tradeTypes';
 
-	export let selectedTrades: Set<number> = new Set();
+	export let selectedTrades: Set<Trade> = new Set();
+	export let hasEditedNotes: boolean;
+
 	let ticker: string = 'AAPL';
-	let region: Region = Region.US;
-	let currency: Currency = Currency.USD;
+	let region: string = 'US';
+	let currency: string = 'USD';
 	let price: number = 100;
 	let fees: number = 1;
 	let volume: number = 1000;
-	let platform: Platform = Platform.FUTU;
-	let side: TradeSide = TradeSide.BUY;
+	let platform: string = 'FUTU';
+	let side: string = 'BUY';
 	let executedAt: string = '2023-10-01';
 	let notes: string = '';
 
@@ -25,12 +27,12 @@
 	}
 </script>
 
-<div class="m-4 flex justify-end">
+<div class="m-4 flex justify-end space-x-2">
 	{#if selectedTrades.size > 0}
 		<form
 			action="?/deleteTradesBatch"
 			method="POST"
-			use:enhance={({ formElement, formData, action, cancel }) => {
+			use:enhance={() => {
 				return async ({ result, update }) => {
 					if (result.type === 'success') {
 						selectedTrades.clear();
@@ -40,11 +42,29 @@
 				};
 			}}
 		>
-			{#each Array.from(selectedTrades) as id}
-				<input type="hidden" name="id" value={id} />
+			{#each Array.from(selectedTrades) as trade}
+				<input type="hidden" name="id" value={trade.id} />
 			{/each}
 			<button class="btn btn-neutral" type="submit">Delete</button>
 		</form>
+		{#if hasEditedNotes}
+			<form
+				action="?/updateTradeBatch"
+				method="POST"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success') {
+							selectedTrades.clear();
+							selectedTrades = selectedTrades;
+							await update();
+						}
+					};
+				}}
+			>
+				<input type="hidden" name="trades" value={JSON.stringify(Array.from(selectedTrades))} />
+				<button class="btn btn-primary" type="submit">Save</button>
+			</form>
+		{/if}
 	{/if}
 	<button class="btn btn-neutral" on:click={openModal}>Add new trade</button>
 	<dialog id="add-trade-modal" class="modal">
