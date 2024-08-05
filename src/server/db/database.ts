@@ -24,8 +24,6 @@ export const updateTradeHistoryBatch = async (trades: Trade[]) => {
     `(${trade.id}, '${trade.ticker}', '${trade.region}', '${trade.currency}', ${trade.price}, ${trade.fees}, ${trade.volume}, '${trade.platform}', '${trade.tradeSide}', '${trade.executedAt}', ${trade.profitLoss || 'NULL'}, '${trade.notes}')`
   ).join(', ');
 
-  console.log(values);
-
   const query = dsql`
     WITH updates(id, ticker, region, currency, price, fees, volume, platform, tradeside, executedAt, profitLoss, notes) AS (
       VALUES ${dsql.raw(values)}

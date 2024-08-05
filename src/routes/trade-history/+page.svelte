@@ -4,9 +4,11 @@
 
 	export let data;
 
-	let selectedTrades: Set<Trade> = new Set();
+	let selectedTrades: Map<number, Trade> = new Map();
 	function toggleSelection(trade: Trade) {
-		selectedTrades.has(trade) ? selectedTrades.delete(trade) : selectedTrades.add(trade);
+		selectedTrades.has(trade.id)
+			? selectedTrades.delete(trade.id)
+			: selectedTrades.set(trade.id, trade);
 		selectedTrades = selectedTrades;
 	}
 
@@ -14,14 +16,12 @@
 	function handleNoteChange(trade: Trade, newNote: string) {
 		if (newNote !== data.trades.find((t) => t.id === trade.id)?.notes) {
 			editedNotes[trade.id] = newNote;
-			if (!selectedTrades.has(trade)) {
-				selectedTrades.add(trade);
-				selectedTrades = selectedTrades;
-			}
+			selectedTrades.set(trade.id, { ...trade, notes: newNote });
+			selectedTrades = selectedTrades;
 		} else {
 			delete editedNotes[trade.id];
-			if (selectedTrades.has(trade)) {
-				selectedTrades.delete(trade);
+			if (selectedTrades.has(trade.id)) {
+				selectedTrades.delete(trade.id);
 				selectedTrades = selectedTrades;
 			}
 		}
@@ -66,7 +66,7 @@
 								type="checkbox"
 								class="checkbox"
 								on:change={() => toggleSelection(trade)}
-								checked={selectedTrades.has(trade)}
+								checked={selectedTrades.has(trade.id)}
 							/>
 						</label>
 					</td>

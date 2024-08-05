@@ -1,5 +1,6 @@
 import type { Currency, Platform, Region, Trade, TradeSide } from '$lib/types/tradeTypes';
 import { deleteTradeHistory, deleteTradeHistoryBatch, getAllTradeHistory, insertTradeHistory, updateTradeHistoryBatch } from '../../server/db/database';
+import { reviver } from '$lib/helpers/JsonHelpers';
 
 export async function load() {
     const trades = await getAllTradeHistory()
@@ -32,8 +33,12 @@ export const actions = {
     updateTradeBatch: async ({ request }) => {
         const formData = await request.formData();
         const trades = formData.get('trades') as string;
-        const updatedTrades = JSON.parse(trades);
-        await updateTradeHistoryBatch(updatedTrades);
+        const updatedTrades = JSON.parse(trades, reviver) as Map<number, Trade>;
+        const tradeList: Trade[] =[]
+        for (let trade of updatedTrades.values()) {
+            tradeList.push(trade)
+        }
+        await updateTradeHistoryBatch(tradeList);
     },
     deleteTrade: async ({ request }) => {
         const formData = await request.formData();

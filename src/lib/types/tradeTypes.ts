@@ -36,11 +36,11 @@ export type Trade = {
     currency: Currency;
     price: string;
     fees: string | null;
-    totalValue?: string;
+    totalValue: string;
     volume: number;
     platform: Platform;
     tradeSide: TradeSide;
-    executedAt?: Date;
+    executedAt: Date;
     profitLoss: string | null;
     notes: string | null;
 }

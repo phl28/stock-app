@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { TradeSide, Platform, Region, Currency, type Trade } from '$lib/types/tradeTypes';
+	import { replacer } from '$lib/helpers/JsonHelpers';
 
-	export let selectedTrades: Set<Trade> = new Set();
+	export let selectedTrades: Map<number, Trade> = new Map();
 	export let hasEditedNotes: boolean;
 
 	let ticker: string = 'AAPL';
@@ -42,8 +43,8 @@
 				};
 			}}
 		>
-			{#each Array.from(selectedTrades) as trade}
-				<input type="hidden" name="id" value={trade.id} />
+			{#each selectedTrades.entries() as [id, _]}
+				<input type="hidden" name="id" value={id} />
 			{/each}
 			<button class="btn btn-neutral" type="submit">Delete</button>
 		</form>
@@ -61,7 +62,7 @@
 					};
 				}}
 			>
-				<input type="hidden" name="trades" value={JSON.stringify(Array.from(selectedTrades))} />
+				<input type="hidden" name="trades" value={JSON.stringify(selectedTrades, replacer)} />
 				<button class="btn btn-primary" type="submit">Save</button>
 			</form>
 		{/if}
