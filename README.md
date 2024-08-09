@@ -2,11 +2,14 @@
 
 ## TODO
 - [x] Make it deploy (vercel)
-- [ ] Scaffold basic UI with mock data
+- [x] Scaffold basic UI with mock data
 - [ ] Build Python backend for historic data fetching (from Futu and IBKR)
-- [ ] Actually set up the database
-- [ ] Attach datbase to the UI
-- [ ] Add authentication
+- [x] Actually set up the database
+- [x] Attach datbase to the UI
+- [x] Add authentication
+- [ ] Improve UX
+- [ ] Make Position Calculations
+- [ ] Dashboard for analytics
 
 ## Developing
 
