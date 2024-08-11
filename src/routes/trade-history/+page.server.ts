@@ -21,13 +21,13 @@ export const actions = {
             fees: formData.get('fees') as string,
             volume: parseFloat(formData.get('volume') as string),
             platform: formData.get('platform') as Platform,
-            side: formData.get('side') as TradeSide,
+            tradeSide: formData.get('side') as TradeSide,
             executedAt: new Date(formData.get('executedAt') as string),
             notes: formData.get('notes') as string,
             profitLoss: formData.get('profitLoss') as string,
-            totalValue: ""
+            totalCost: ""
         };
-        newTrade.totalValue = (parseFloat(newTrade.price) * newTrade.volume + parseFloat(newTrade.fees)).toString(); 
+        newTrade.totalCost = (parseFloat(newTrade.price) * newTrade.volume + parseFloat(newTrade.fees)).toString(); 
         await insertTradeHistory(newTrade);
     },
     updateTradeBatch: async ({ request }) => {

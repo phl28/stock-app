@@ -12,7 +12,6 @@ export const Platform = {
 export const TradeSide = {
     BUY: "BUY",
     SELL: "SELL",
-    BUY_BACK: "BUY_BACK"
 } as const;
 
 export const Currency = {
@@ -36,11 +35,24 @@ export type Trade = {
     currency: Currency;
     price: string;
     fees: string | null;
-    totalValue: string;
+    totalCost: string;
     volume: number;
     platform: Platform;
     tradeSide: TradeSide;
     executedAt: Date;
     profitLoss: string | null;
+    notes: string | null;
+}
+
+export type Position = {
+    id: number;
+    ticker: string;
+    region: Region;
+    volume: number;
+    averagePrice: string;
+    totalCost: string;
+    openedAt: Date;
+    lastUpdatedAt: Date;
+    platform: Platform;
     notes: string | null;
 }
