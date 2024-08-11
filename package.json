@@ -4,7 +4,7 @@
 	"scripts": {
 		"start": "npm run dev -- --open",
 		"dev": "vite dev",
-		"db:push": "drizzle-kit push:pg",
+		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
 		"build": "vite build",
 		"preview": "vite preview",
