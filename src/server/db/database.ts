@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/vercel-postgres';
 import { sql } from "@vercel/postgres";
 
 import * as schema from './schema';
-import { eq, inArray, sql as dsql, and } from 'drizzle-orm';
+import { eq, inArray, sql as dsql, and, gte, lte } from 'drizzle-orm';
 
 export const db = drizzle(sql, {schema});
 
@@ -46,15 +46,29 @@ export const insertTradeHistory = async (trade: Trade) => {
         updatedAveragePrice = updatedVolume > 0 ? updatedTotalCost / updatedVolume : 0;
       }
 
-      await tx.update(schema.positions)
-        .set({
-          volume: updatedVolume,
-          totalCost: String(updatedTotalCost),
-          averagePrice: String(updatedAveragePrice),
-          lastUpdatedAt: new Date(),
-          realizedProfitLoss: String(realizedProfitLoss),
-        })
-        .where(eq(schema.positions.id, existingPosition.id));
+      if (updatedVolume === 0) {
+        await tx.update(schema.positions)
+          .set({
+            volume: updatedVolume,
+            totalCost: String(updatedTotalCost),
+            averagePrice: String(updatedAveragePrice),
+            lastUpdatedAt: new Date(),
+            realizedProfitLoss: String(realizedProfitLoss),
+            closed: true,
+            closedAt: new Date(),
+          })
+          .where(eq(schema.positions.id, existingPosition.id));
+      } else {
+        await tx.update(schema.positions)
+          .set({
+            volume: updatedVolume,
+            totalCost: String(updatedTotalCost),
+            averagePrice: String(updatedAveragePrice),
+            lastUpdatedAt: new Date(),
+            realizedProfitLoss: String(realizedProfitLoss),
+          })
+          .where(eq(schema.positions.id, existingPosition.id));
+        }
     } else {
       const newPosition: Position = {
         ticker: trade.ticker,
@@ -134,18 +148,30 @@ export const deleteTradeHistory = async (id: number) => {
 
       const updatedAveragePrice = updatedVolume > 0 ? updatedTotalCost / updatedVolume : 0;
 
-      await tx.update(schema.positions)
-        .set({
-            volume: updatedVolume,
-            totalCost: String(updatedTotalCost),
-            averagePrice: String(updatedAveragePrice),
-            lastUpdatedAt: new Date(),
-            realizedProfitLoss: String(updatedRealizedProfitLoss),
-        })
-        .where(eq(schema.positions.id, existingPosition.id));
-
-      if (updatedVolume === 0) {
+      if (updatedVolume !== 0 && existingPosition.closed) {
+        await tx.update(schema.positions)
+          .set({
+              volume: updatedVolume,
+              totalCost: String(updatedTotalCost),
+              averagePrice: String(updatedAveragePrice),
+              lastUpdatedAt: new Date(),
+              realizedProfitLoss: String(updatedRealizedProfitLoss),
+              closed: false,
+              closedAt: null,
+          })
+          .where(eq(schema.positions.id, existingPosition.id));
+      } else if (updatedVolume === 0) {
         await tx.delete(schema.positions)
+          .where(eq(schema.positions.id, existingPosition.id));
+      } else {
+        await tx.update(schema.positions)
+          .set({
+              volume: updatedVolume,
+              totalCost: String(updatedTotalCost),
+              averagePrice: String(updatedAveragePrice),
+              lastUpdatedAt: new Date(),
+              realizedProfitLoss: String(updatedRealizedProfitLoss),
+          })
           .where(eq(schema.positions.id, existingPosition.id));
       }
     }
@@ -194,24 +220,67 @@ export const deleteTradeHistoryBatch = async (ids: number[]) => {
         }
 
         const updatedAveragePrice = updatedVolume > 0 ? updatedTotalCost / updatedVolume : 0;
-
-        await tx.update(schema.positions)
-          .set({
-            volume: updatedVolume,
-            totalCost: String(updatedTotalCost),
-            averagePrice: String(updatedAveragePrice),
-            lastUpdatedAt: new Date(),
-            realizedProfitLoss: String(updatedRealizedProfitLoss),
-          })
-          .where(eq(schema.positions.id, existingPosition.id));
-
-        if (updatedVolume === 0) {
+        
+        if (updatedVolume !== 0 && existingPosition.closed) {
+          await tx.update(schema.positions)
+            .set({
+              volume: updatedVolume,
+              totalCost: String(updatedTotalCost),
+              averagePrice: String(updatedAveragePrice),
+              lastUpdatedAt: new Date(),
+              realizedProfitLoss: String(updatedRealizedProfitLoss),
+              closed: false,
+              closedAt: null,
+            })
+            .where(eq(schema.positions.id, existingPosition.id));
+        } else if (updatedVolume === 0) {
           await tx.delete(schema.positions)
             .where(eq(schema.positions.id, existingPosition.id));
+        } else {
+          await tx.update(schema.positions)
+            .set({
+              volume: updatedVolume,
+              totalCost: String(updatedTotalCost),
+              averagePrice: String(updatedAveragePrice),
+              lastUpdatedAt: new Date(),
+              realizedProfitLoss: String(updatedRealizedProfitLoss),
+            })
+            .where(eq(schema.positions.id, existingPosition.id)); 
         }
       }
     }
 
     return deletedTrades;
   });
+};
+
+export const getClosedPositions = async (startDate: Date, endDate: Date) => {
+  return await db.query.positions.findMany({
+    where: and(
+      eq(schema.positions.closed, true),
+      gte(schema.positions.closedAt, startDate),
+      lte(schema.positions.closedAt, endDate)
+    )
+  });
+};
+
+export const getPositionPerformance = async (positionId: number) => {
+  const position = await db.query.positions.findFirst({
+    where: eq(schema.positions.id, positionId)
+  });
+
+  if (position && position.closed && position.closedAt) {
+    const duration = position.closedAt.getTime() - position.openedAt.getTime();
+    const durationDays = duration / (1000 * 60 * 60 * 24);
+    const profitLoss = Number(position.realizedProfitLoss);
+    const roi = (profitLoss / Number(position.totalCost)) * 100;
+
+    return {
+      duration: durationDays,
+      profitLoss,
+      roi
+    };
+  }
+
+  return null;
 };

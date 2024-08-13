@@ -11,7 +11,8 @@ import {
   pgEnum,
   text,
   integer,
-  decimal
+  decimal,
+  boolean
 } from "drizzle-orm/pg-core";
 
 /**
@@ -41,6 +42,8 @@ export const positions = pgTable(
     lastUpdatedAt: timestamp('lastUpdatedAt').notNull(),
     platform: platform('platform').notNull().default('FUTU'),
     notes: text('notes'),
+    closed: boolean('closed').notNull().default(false),
+    closedAt: timestamp('closedAt'),
   },
   (position) => ({
     tickerIndex: index("position_ticker_idx").on(position.ticker),
