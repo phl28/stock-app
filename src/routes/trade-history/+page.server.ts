@@ -1,12 +1,14 @@
 import type { Currency, Platform, Region, Trade, TradeSide } from '$lib/types/tradeTypes';
-import { deleteTradeHistory, deleteTradeHistoryBatch, getAllTradeHistory, insertTradeHistory, updateTradeHistoryBatch } from '../../server/db/database';
+import { deleteTradeHistory, deleteTradeHistoryBatch, getAllTradeHistory, getPositions, insertTradeHistory, updateTradeHistoryBatch } from '../../server/db/database';
 import { reviver } from '$lib/helpers/JsonHelpers';
 
 export async function load() {
     const trades = await getAllTradeHistory()
+    const positions = await getPositions();
 
     return {
-        trades
+        trades,
+        positions
     }
 }
 

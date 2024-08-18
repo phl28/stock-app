@@ -13,6 +13,10 @@ export const getAllTradeHistory = async () => {
     return await db.query.tradeHistory.findMany();
 };
 
+export const getPositions = async () => {
+  return await db.query.positions.findMany();
+}
+
 export const insertTradeHistory = async (trade: Trade) => {
   trade.ticker = trade.ticker.toUpperCase();
 
