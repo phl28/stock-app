@@ -29,7 +29,6 @@ export type Currency = typeof Currency[keyof typeof Currency];
 
 export type Trade = {
     id: number;
-    positionId: number | null;
     ticker: string;
     region: Region;
     currency: Currency;
@@ -42,6 +41,8 @@ export type Trade = {
     executedAt: Date;
     profitLoss: string | null;
     notes: string | null;
+    createdAt: Date;
+    updatedAt: Date | null;
 }
 
 export type Position = {
@@ -51,8 +52,11 @@ export type Position = {
     volume: number;
     averagePrice: string;
     totalCost: string;
+    realizedProfitLoss: string;
     openedAt: Date;
     lastUpdatedAt: Date;
     platform: Platform;
     notes: string | null;
+    closed: boolean;
+    closedAt: Date | null;
 }
