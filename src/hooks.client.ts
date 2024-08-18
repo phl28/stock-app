@@ -3,7 +3,7 @@ import { initializeClerkClient } from 'clerk-sveltekit/client'
 import { PUBLIC_CLERK_PUBLISHABLE_KEY } from '$env/static/public'
 
 initializeClerkClient(PUBLIC_CLERK_PUBLISHABLE_KEY, {
-	afterSignInUrl: '/trade-history/',
+	afterSignInUrl: '/trade/',
 	signInUrl: '/sign-in',
 })
 
