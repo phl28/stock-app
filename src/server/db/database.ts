@@ -6,8 +6,8 @@ import { eq, inArray, sql as dsql, and, gte, lte } from 'drizzle-orm';
 
 export const db = drizzle(sql, {schema});
 
-type Trade = typeof schema.tradeHistory.$inferInsert
-type Position = typeof schema.positions.$inferInsert
+export type Trade = typeof schema.tradeHistory.$inferInsert
+export type Position = typeof schema.positions.$inferInsert
 
 export const getAllTradeHistory = async () => {
     return await db.query.tradeHistory.findMany();
@@ -211,14 +211,20 @@ export const deleteTradeHistoryBatch = async (ids: number[]) => {
         let updatedVolume = existingPosition.volume;
         let updatedTotalCost = Number(existingPosition.totalCost);
         let updatedRealizedProfitLoss = Number(existingPosition.realizedProfitLoss);
+        console.log("originalVolume", existingPosition.volume);
+        console.log("originalTotalCost", existingPosition.totalCost);
 
         for (const trade of trades) {
           if (trade.tradeSide === 'BUY') {
             updatedVolume -= trade.volume;
             updatedTotalCost -= Number(trade.totalCost);
+            console.log("updatedVolume", updatedVolume);
+            console.log("updatedTotalCost", updatedTotalCost);
           } else {
             updatedVolume += trade.volume;
             updatedTotalCost += Number(trade.totalCost);
+            console.log("updatedVolume", updatedVolume);
+            console.log("updatedTotalCost", updatedTotalCost);
           }
           updatedRealizedProfitLoss -= (Number(trade.price) - Number(existingPosition.averagePrice)) * trade.volume - Number(trade.fees);
         }

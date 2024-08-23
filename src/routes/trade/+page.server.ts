@@ -20,7 +20,7 @@ export const actions = {
             region: formData.get('region') as Region,
             currency: formData.get('currency') as Currency,
             price: formData.get('price') as string,
-            fees: formData.get('fees') as string,
+            fees: formData.get('fees') as string === "" ? "0" : formData.get('fees') as string,
             volume: parseFloat(formData.get('volume') as string),
             platform: formData.get('platform') as Platform,
             tradeSide: formData.get('side') as TradeSide,
@@ -29,6 +29,9 @@ export const actions = {
             profitLoss: formData.get('profitLoss') as string,
             totalCost: ""
         };
+        if (newTrade.price === "" ) {
+            return new Error("Price cannot be empty");
+        }
         newTrade.totalCost = (parseFloat(newTrade.price) * newTrade.volume + parseFloat(newTrade.fees)).toString(); 
         await insertTradeHistory(newTrade);
     },

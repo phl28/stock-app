@@ -6,16 +6,16 @@
 	export let selectedTrades: Map<number, Trade> = new Map();
 	export let hasEditedNotes: boolean;
 
-	let ticker: string = 'AAPL';
-	let region: string = 'US';
-	let currency: string = 'USD';
-	let price: number = 100;
-	let fees: number = 1;
-	let volume: number = 1000;
-	let platform: string = 'FUTU';
-	let side: string = 'BUY';
-	let executedAt: string = '2023-10-01';
-	let notes: string = '';
+	let ticker: string;
+	let region: string;
+	let currency: string;
+	let price: number;
+	let fees: number;
+	let volume: number;
+	let platform: string;
+	let side: string;
+	let executedAt: string;
+	let notes: string;
 
 	function openModal() {
 		const modal = document.getElementById('add-trade-modal') as HTMLDialogElement;
