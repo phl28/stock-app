@@ -15,10 +15,11 @@ export async function load() {
     const res = await fetch(`${PUBLIC_POLYGON_IO_URL}/v2/aggs/ticker/AAPL/range/1/day/${formattedSixMonthsAgo}/${formattedToday}?adjusted=true&sort=asc&apiKey=${API_KEY}`);
     if (res.ok) {
       const data = await res.json();
+      console.log('data', data);
       return data;
     }
     else {
-        return json(res);
+      throw new Error('Error fetching stock data');
     }
   } catch (err) {
     console.error('Error fetching stock data', err);
@@ -44,11 +45,19 @@ export const actions = {
           return data;
         }
         else {
-            return json(res);
+            return {
+              results: [],
+              ticker: ticker,
+              error: 'Error fetching stock data'
+            }
         }
       } catch (err) {
         console.error('Error fetching stock data', err);
-        return json({ error: 'Error fetching stock data' }, { status: 500 });
+          return {
+            results: [],
+            ticker: ticker,
+            error: 'Error fetching stock data'
+          }
       }
     }
   };
