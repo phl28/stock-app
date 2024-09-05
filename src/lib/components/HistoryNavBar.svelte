@@ -6,6 +6,8 @@
 	export let selectedTrades: Map<number, Trade> = new Map();
 	export let hasEditedNotes: boolean;
 
+	$: isFormValid = ticker && region && currency && price && volume && platform && side;
+
 	let ticker: string;
 	let region: string;
 	let currency: string;
@@ -85,11 +87,17 @@
 							class="input input-bordered w-full"
 							bind:value={ticker}
 							name="ticker"
+							required
 						/>
 						<div class="label">
 							<span class="label-text">Region</span>
 						</div>
-						<select class="select select-bordered w-full" bind:value={region} name="region">
+						<select
+							class="select select-bordered w-full"
+							bind:value={region}
+							name="region"
+							required
+						>
 							{#each Object.values(Region) as region}
 								<option value={region}>{region}</option>
 							{/each}
@@ -97,7 +105,12 @@
 						<div class="label">
 							<span class="label-text">Currency</span>
 						</div>
-						<select class="select select-bordered w-full" bind:value={currency} name="currency">
+						<select
+							class="select select-bordered w-full"
+							bind:value={currency}
+							name="currency"
+							required
+						>
 							{#each Object.values(Currency) as currency}
 								<option value={currency}>{currency}</option>
 							{/each}
@@ -111,6 +124,7 @@
 							class="input input-bordered w-full"
 							bind:value={price}
 							name="price"
+							required
 						/>
 						<div class="label">
 							<span class="label-text">Fees</span>
@@ -131,11 +145,17 @@
 							class="input input-bordered w-full"
 							bind:value={volume}
 							name="volume"
+							required
 						/>
 						<div class="label">
 							<span class="label-text">Platform</span>
 						</div>
-						<select class="select select-bordered w-full" bind:value={platform} name="platform">
+						<select
+							class="select select-bordered w-full"
+							bind:value={platform}
+							name="platform"
+							required
+						>
 							{#each Object.values(Platform) as platform}
 								<option value={platform}>{platform}</option>
 							{/each}
@@ -143,7 +163,7 @@
 						<div class="label">
 							<span class="label-text">Side</span>
 						</div>
-						<select class="select select-bordered w-full" bind:value={side} name="side">
+						<select class="select select-bordered w-full" bind:value={side} name="side" required>
 							{#each Object.values(TradeSide) as side}
 								<option value={side}>{side}</option>
 							{/each}
@@ -171,7 +191,12 @@
 						<form method="dialog">
 							<button class="btn">Close</button>
 						</form>
-						<button class="btn btn-primary" type="submit" on:click={closeModal}>Add</button>
+						<button
+							class="btn btn-primary"
+							type="submit"
+							on:click={closeModal}
+							disabled={!isFormValid}>Add</button
+						>
 					</div>
 				</form>
 			</div>
