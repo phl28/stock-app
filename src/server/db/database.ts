@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/vercel-postgres';
 import { sql } from "@vercel/postgres";
 
 import * as schema from './schema';
-import { eq, inArray, sql as dsql, and, gte, lte } from 'drizzle-orm';
+import { eq, inArray, sql as dsql, and, gte, lte, desc } from 'drizzle-orm';
 
 export const db = drizzle(sql, {schema});
 
@@ -10,11 +10,15 @@ export type Trade = typeof schema.tradeHistory.$inferInsert
 export type Position = typeof schema.positions.$inferInsert
 
 export const getAllTradeHistory = async () => {
-    return await db.query.tradeHistory.findMany();
+    return await db.query.tradeHistory.findMany({
+      orderBy: [desc(schema.tradeHistory.executedAt)]
+    });
 };
 
 export const getPositions = async () => {
-  return await db.query.positions.findMany();
+  return await db.query.positions.findMany({
+    orderBy: [desc(schema.positions.lastUpdatedAt)]
+  });
 }
 
 export const insertTradeHistory = async (trade: Trade) => {
