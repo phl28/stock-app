@@ -9,7 +9,7 @@
 - [x] Add authentication
 - [ ] Allow mass importing trades from csv
 - [ ] Improve UX
-- [ ] Make Position Calculations
+- [x] Make Position Calculations
 - [ ] Dashboard for analytics
 
 ## Developing
