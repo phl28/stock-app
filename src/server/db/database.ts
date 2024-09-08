@@ -36,18 +36,41 @@ export const insertTradeHistory = async (trade: Trade) => {
 
     if (existingPosition) {
       let updatedVolume, updatedTotalCost, updatedAveragePrice, realizedProfitLoss;
+      const isClosingTrade = (existingPosition.isShort && trade.tradeSide === 'BUY') || 
+        (!existingPosition.isShort && trade.tradeSide === 'SELL');
 
-      if (trade.tradeSide === 'BUY') {
-        updatedVolume = existingPosition.volume + trade.volume;
-        updatedTotalCost = Number(existingPosition.totalCost) + Number(trade.totalCost);
-        updatedAveragePrice = updatedTotalCost / updatedVolume;
-        realizedProfitLoss = Number(existingPosition.realizedProfitLoss);
+      if (isClosingTrade) {
+        const closingVolume = Math.min(Math.abs(existingPosition.volume), trade.volume);
+        const remainingVolume = Math.abs(existingPosition.volume) - closingVolume;
+        
+        if (existingPosition.isShort) {
+          realizedProfitLoss = Number(existingPosition.realizedProfitLoss) + 
+            (Number(existingPosition.averagePrice) - Number(trade.price)) * closingVolume - Number(trade.fees);
+        } else {
+          realizedProfitLoss = Number(existingPosition.realizedProfitLoss) + 
+            (Number(trade.price) - Number(existingPosition.averagePrice)) * closingVolume - Number(trade.fees);
+        }
+
+        updatedVolume = remainingVolume * (existingPosition.isShort ? -1 : 1);
+        updatedTotalCost = Number(existingPosition.totalCost) - Number(trade.totalCost);
+        updatedAveragePrice = remainingVolume > 0 ? updatedTotalCost / remainingVolume : 0;
+
+
+        if (trade.volume > Math.abs(existingPosition.volume)) {
+          const flippedVolume = trade.volume - Math.abs(existingPosition.volume);
+          updatedVolume = flippedVolume * (existingPosition.isShort ? 1 : -1);
+          updatedTotalCost = Number(trade.price) * flippedVolume;
+          updatedAveragePrice = Number(trade.price);
+        }
       } else {
-        updatedVolume = existingPosition.volume - trade.volume;
-        updatedTotalCost = Number(existingPosition.totalCost) - (Number(existingPosition.averagePrice) * trade.volume);
-        realizedProfitLoss = Number(existingPosition.realizedProfitLoss) + 
-          (Number(trade.price) - Number(existingPosition.averagePrice)) * trade.volume - Number(trade.fees);
-        updatedAveragePrice = updatedVolume > 0 ? updatedTotalCost / updatedVolume : 0;
+        if (existingPosition.isShort) {
+          updatedVolume = existingPosition.volume - trade.volume;
+        } else {
+          updatedVolume = existingPosition.volume + trade.volume;
+        }
+        updatedTotalCost = Number(existingPosition.totalCost) + Number(trade.totalCost);
+        updatedAveragePrice = Math.abs(updatedTotalCost / updatedVolume);
+        realizedProfitLoss = Number(existingPosition.realizedProfitLoss);
       }
 
       if (updatedVolume === 0) {
@@ -60,6 +83,7 @@ export const insertTradeHistory = async (trade: Trade) => {
             realizedProfitLoss: String(realizedProfitLoss),
             closed: true,
             closedAt: new Date(),
+            isShort: false,
           })
           .where(eq(schema.positions.id, existingPosition.id));
       } else {
@@ -70,6 +94,7 @@ export const insertTradeHistory = async (trade: Trade) => {
             averagePrice: String(updatedAveragePrice),
             lastUpdatedAt: new Date(),
             realizedProfitLoss: String(realizedProfitLoss),
+            isShort: updatedVolume < 0,
           })
           .where(eq(schema.positions.id, existingPosition.id));
         }
@@ -77,7 +102,7 @@ export const insertTradeHistory = async (trade: Trade) => {
       const newPosition: Position = {
         ticker: trade.ticker,
         region: trade.region,
-        volume: trade.volume,
+        volume: trade.tradeSide === 'SELL' ? -trade.volume : trade.volume,
         averagePrice: trade.price,
         totalCost: trade.totalCost,
         openedAt: trade.executedAt,
@@ -85,6 +110,7 @@ export const insertTradeHistory = async (trade: Trade) => {
         platform: trade.platform,
         notes: '',
         realizedProfitLoss: '0',
+        isShort: trade.tradeSide === 'SELL',
       };
 
       await tx.insert(schema.positions).values(newPosition);
@@ -96,25 +122,15 @@ export const insertTradeHistory = async (trade: Trade) => {
 
 export const updateTradeHistoryBatch = async (trades: Trade[]) => {
   const values = trades.map(trade => 
-    `(${trade.id}, '${trade.ticker}', '${trade.region}', '${trade.currency}', ${trade.price}, ${trade.fees}, ${trade.volume}, '${trade.platform}', '${trade.tradeSide}', '${trade.executedAt}', ${trade.profitLoss || 'NULL'}, '${trade.notes}, '${new Date().toISOString()}')') ` 
+    `(${trade.id}, '${trade.notes}, '${new Date().toISOString()}')') ` 
   ).join(', ');
 
   const query = dsql`
-    WITH updates(id, ticker, region, currency, price, fees, volume, platform, tradeside, executedAt, profitLoss, notes, updatedAt) AS (
+    WITH updates(id, notes, updatedAt) AS (
       VALUES ${dsql.raw(values)}
     )
     UPDATE ${schema.tradeHistory} AS th
     SET
-      ticker = u.ticker,
-      region = u.region::region,
-      currency = u.currency::currency,
-      price = u.price,
-      fees = u.fees,
-      volume = u.volume,
-      platform = u.platform::platform,
-      tradeside = u.tradeSide::"tradeSide",
-      "executedAt" = u.executedAt::TIMESTAMP,
-      "profitLoss" = u.profitLoss::numeric,
       notes = u.notes
       "updatedAt = u.updatedAt::TIMESTAMP
     FROM updates AS u
@@ -140,41 +156,50 @@ export const deleteTradeHistory = async (id: number) => {
       let updatedVolume = existingPosition.volume;
       let updatedTotalCost = Number(existingPosition.totalCost);
       let updatedRealizedProfitLoss = Number(existingPosition.realizedProfitLoss);
+      let updatedIsShort = existingPosition.isShort;
 
-      if (deletedTrade.tradeSide === 'BUY') {
-        updatedVolume -= deletedTrade.volume;
-        updatedTotalCost -= Number(deletedTrade.totalCost);
+      const isClosingTrade = (existingPosition.isShort && deletedTrade.tradeSide === 'BUY') || 
+       (!existingPosition.isShort && deletedTrade.tradeSide === 'SELL');
+
+      if (isClosingTrade) {
+        updatedTotalCost += Number(deletedTrade.price) * deletedTrade.volume;
+        let averagePrice: number; 
+        if (existingPosition.isShort) {
+          updatedVolume -= deletedTrade.volume;
+          averagePrice = Math.abs(updatedTotalCost / updatedVolume);
+          updatedRealizedProfitLoss -= (Number(averagePrice) - Number(deletedTrade.price)) * deletedTrade.volume;
+        } else {
+          updatedVolume += deletedTrade.volume;
+          averagePrice = Math.abs(updatedTotalCost / updatedVolume);
+          updatedRealizedProfitLoss -= (Number(deletedTrade.price) - Number(averagePrice)) * deletedTrade.volume;
+        }
+        updatedRealizedProfitLoss += Number(deletedTrade.fees);
       } else {
-        updatedVolume += deletedTrade.volume;
-        updatedTotalCost += Number(deletedTrade.totalCost);
+        if (existingPosition.isShort) {
+          updatedVolume += deletedTrade.volume;
+        } else {
+          updatedVolume -= deletedTrade.volume;
+        }
+        updatedTotalCost -= Number(deletedTrade.totalCost);
       }
-      updatedRealizedProfitLoss -= (Number(deletedTrade.price) - Number(existingPosition.averagePrice)) * deletedTrade.volume - Number(deletedTrade.fees);
 
-      const updatedAveragePrice = updatedVolume > 0 ? updatedTotalCost / updatedVolume : 0;
+      const updatedAveragePrice = updatedVolume !== 0 ? Math.abs(updatedTotalCost / updatedVolume) : 0;
+      updatedIsShort = updatedVolume < 0;
 
-      if (updatedVolume !== 0 && existingPosition.closed) {
-        await tx.update(schema.positions)
-          .set({
-              volume: updatedVolume,
-              totalCost: String(updatedTotalCost),
-              averagePrice: String(updatedAveragePrice),
-              lastUpdatedAt: new Date(),
-              realizedProfitLoss: String(updatedRealizedProfitLoss),
-              closed: false,
-              closedAt: null,
-          })
-          .where(eq(schema.positions.id, existingPosition.id));
-      } else if (updatedVolume === 0) {
+      if (updatedVolume === 0) {
         await tx.delete(schema.positions)
           .where(eq(schema.positions.id, existingPosition.id));
       } else {
         await tx.update(schema.positions)
           .set({
-              volume: updatedVolume,
-              totalCost: String(updatedTotalCost),
-              averagePrice: String(updatedAveragePrice),
-              lastUpdatedAt: new Date(),
-              realizedProfitLoss: String(updatedRealizedProfitLoss),
+            volume: updatedVolume,
+            totalCost: String(updatedTotalCost),
+            averagePrice: String(updatedAveragePrice),
+            lastUpdatedAt: new Date(),
+            realizedProfitLoss: String(updatedRealizedProfitLoss),
+            isShort: updatedIsShort,
+            closed: false,
+            closedAt: null,
           })
           .where(eq(schema.positions.id, existingPosition.id));
       }
@@ -211,39 +236,39 @@ export const deleteTradeHistoryBatch = async (ids: number[]) => {
         let updatedVolume = existingPosition.volume;
         let updatedTotalCost = Number(existingPosition.totalCost);
         let updatedRealizedProfitLoss = Number(existingPosition.realizedProfitLoss);
-        console.log("originalVolume", existingPosition.volume);
-        console.log("originalTotalCost", existingPosition.totalCost);
+        let updatedIsShort = existingPosition.isShort;
 
         for (const trade of trades) {
-          if (trade.tradeSide === 'BUY') {
-            updatedVolume -= trade.volume;
-            updatedTotalCost -= Number(trade.totalCost);
-            console.log("updatedVolume", updatedVolume);
-            console.log("updatedTotalCost", updatedTotalCost);
+          const isClosingTrade = (existingPosition.isShort && trade.tradeSide === 'BUY') || 
+            (!existingPosition.isShort && trade.tradeSide === 'SELL');
+
+          if (isClosingTrade) {
+            updatedTotalCost += Number(trade.price) * trade.volume;
+            let averagePrice: number; 
+            if (existingPosition.isShort) {
+              updatedVolume -= trade.volume;
+              averagePrice = Math.abs(updatedTotalCost / updatedVolume);
+              updatedRealizedProfitLoss -= (Number(averagePrice) - Number(trade.price)) * trade.volume;
+            } else {
+              updatedVolume += trade.volume;
+              averagePrice = Math.abs(updatedTotalCost / updatedVolume);
+              updatedRealizedProfitLoss -= (Number(trade.price) - Number(averagePrice)) * trade.volume;
+            }
+            updatedRealizedProfitLoss += Number(trade.fees);
           } else {
-            updatedVolume += trade.volume;
-            updatedTotalCost += Number(trade.totalCost);
-            console.log("updatedVolume", updatedVolume);
-            console.log("updatedTotalCost", updatedTotalCost);
+            if (existingPosition.isShort) {
+              updatedVolume += trade.volume;
+            } else {
+              updatedVolume -= trade.volume;
+            }
+            updatedTotalCost -= Number(trade.totalCost);
           }
-          updatedRealizedProfitLoss -= (Number(trade.price) - Number(existingPosition.averagePrice)) * trade.volume - Number(trade.fees);
         }
 
-        const updatedAveragePrice = updatedVolume > 0 ? updatedTotalCost / updatedVolume : 0;
-        
-        if (updatedVolume !== 0 && existingPosition.closed) {
-          await tx.update(schema.positions)
-            .set({
-              volume: updatedVolume,
-              totalCost: String(updatedTotalCost),
-              averagePrice: String(updatedAveragePrice),
-              lastUpdatedAt: new Date(),
-              realizedProfitLoss: String(updatedRealizedProfitLoss),
-              closed: false,
-              closedAt: null,
-            })
-            .where(eq(schema.positions.id, existingPosition.id));
-        } else if (updatedVolume === 0) {
+        const updatedAveragePrice = updatedVolume !== 0 ? Math.abs(updatedTotalCost / updatedVolume) : 0;
+        updatedIsShort = updatedVolume < 0;
+
+        if (updatedVolume === 0) {
           await tx.delete(schema.positions)
             .where(eq(schema.positions.id, existingPosition.id));
         } else {
@@ -254,8 +279,11 @@ export const deleteTradeHistoryBatch = async (ids: number[]) => {
               averagePrice: String(updatedAveragePrice),
               lastUpdatedAt: new Date(),
               realizedProfitLoss: String(updatedRealizedProfitLoss),
+              isShort: updatedIsShort,
+              closed: false,
+              closedAt: null,
             })
-            .where(eq(schema.positions.id, existingPosition.id)); 
+            .where(eq(schema.positions.id, existingPosition.id));
         }
       }
     }

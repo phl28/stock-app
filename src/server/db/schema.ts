@@ -38,6 +38,7 @@ export const positions = pgTable(
     averagePrice: decimal('averagePrice', { precision: 10, scale: 2 }).notNull(),
     totalCost: decimal('totalCost', { precision: 10, scale: 2 }).notNull(),
     realizedProfitLoss: decimal('realizedProfitLoss', { precision: 10, scale: 2 }).notNull().default('0'),
+    isShort: boolean('isShort').notNull().default(false),
     openedAt: timestamp('openedAt').notNull(),
     lastUpdatedAt: timestamp('lastUpdatedAt').notNull(),
     platform: platform('platform').notNull().default('FUTU'),

@@ -124,6 +124,7 @@
 							class="input input-bordered w-full"
 							bind:value={price}
 							name="price"
+							step="0.01"
 							required
 						/>
 						<div class="label">
@@ -134,6 +135,7 @@
 							placeholder="1"
 							class="input input-bordered w-full"
 							bind:value={fees}
+							step="0.01"
 							name="fees"
 						/>
 						<div class="label">
