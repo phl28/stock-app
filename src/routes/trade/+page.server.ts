@@ -25,7 +25,6 @@ export const actions = {
             platform: formData.get('platform') as Platform,
             tradeSide: formData.get('side') as TradeSide,
             executedAt: new Date(formData.get('executedAt') as string),
-            notes: formData.get('notes') as string,
             profitLoss: formData.get('profitLoss') as string,
             totalCost: ""
         };

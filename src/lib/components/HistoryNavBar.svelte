@@ -179,15 +179,6 @@
 							bind:value={executedAt}
 							name="executedAt"
 						/>
-						<div class="label">
-							<span class="label-text">Notes</span>
-						</div>
-						<textarea
-							class="textarea textarea-bordered"
-							placeholder="Notes"
-							bind:value={notes}
-							name="notes"
-						></textarea>
 					</div>
 					<div class="modal-action">
 						<form method="dialog">

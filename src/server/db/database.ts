@@ -122,19 +122,19 @@ export const insertTradeHistory = async (trade: Trade) => {
 
 export const updateTradeHistoryBatch = async (trades: Trade[]) => {
   const values = trades.map(trade => 
-    `(${trade.id}, '${trade.notes}, '${new Date().toISOString()}')') ` 
-  ).join(', ');
+    dsql`(${trade.id}, ${trade.notes}, ${new Date().toISOString()}::TIMESTAMP)`
+  );
 
   const query = dsql`
     WITH updates(id, notes, updatedAt) AS (
-      VALUES ${dsql.raw(values)}
+      VALUES ${dsql.join(values, ',')}
     )
     UPDATE ${schema.tradeHistory} AS th
     SET
-      notes = u.notes
-      "updatedAt = u.updatedAt::TIMESTAMP
+      notes = u.notes,
+      "updatedAt" = u.updatedAt
     FROM updates AS u
-    WHERE th.id = u.id;
+    WHERE th.id = u.id::INTEGER
   `;
 
   return await db.execute(query);
