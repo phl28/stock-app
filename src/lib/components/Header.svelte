@@ -29,8 +29,8 @@
 			<li aria-current={$page.url.pathname.startsWith('/') ? 'page' : undefined}>
 				<a href="/">Stock calculator</a>
 			</li>
-			<li aria-current={$page.url.pathname.startsWith('/trade-history') ? 'page' : undefined}>
-				<a href="/trade-history">Trade history</a>
+			<li aria-current={$page.url.pathname.startsWith('/trade') ? 'page' : undefined}>
+				<a href="/trade">Trade</a>
 			</li>
 		</ul>
 	</nav>

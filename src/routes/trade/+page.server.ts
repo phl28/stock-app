@@ -1,12 +1,14 @@
 import type { Currency, Platform, Region, Trade, TradeSide } from '$lib/types/tradeTypes';
-import { deleteTradeHistory, deleteTradeHistoryBatch, getAllTradeHistory, insertTradeHistory, updateTradeHistoryBatch } from '../../server/db/database';
+import { deleteTradeHistory, deleteTradeHistoryBatch, getAllTradeHistory, getPositions, insertTradeHistory, updateTradeHistoryBatch } from '../../server/db/database';
 import { reviver } from '$lib/helpers/JsonHelpers';
 
 export async function load() {
     const trades = await getAllTradeHistory()
+    const positions = await getPositions();
 
     return {
-        trades
+        trades,
+        positions
     }
 }
 
@@ -18,16 +20,19 @@ export const actions = {
             region: formData.get('region') as Region,
             currency: formData.get('currency') as Currency,
             price: formData.get('price') as string,
-            fees: formData.get('fees') as string,
+            fees: formData.get('fees') as string === "" ? "0" : formData.get('fees') as string,
             volume: parseFloat(formData.get('volume') as string),
             platform: formData.get('platform') as Platform,
-            side: formData.get('side') as TradeSide,
+            tradeSide: formData.get('side') as TradeSide,
             executedAt: new Date(formData.get('executedAt') as string),
             notes: formData.get('notes') as string,
             profitLoss: formData.get('profitLoss') as string,
-            totalValue: ""
+            totalCost: ""
         };
-        newTrade.totalValue = (parseFloat(newTrade.price) * newTrade.volume + parseFloat(newTrade.fees)).toString(); 
+        if (newTrade.price === "" ) {
+            return new Error("Price cannot be empty");
+        }
+        newTrade.totalCost = (parseFloat(newTrade.price) * newTrade.volume + parseFloat(newTrade.fees)).toString(); 
         await insertTradeHistory(newTrade);
     },
     updateTradeBatch: async ({ request }) => {

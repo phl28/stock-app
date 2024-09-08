@@ -11,7 +11,8 @@ import {
   pgEnum,
   text,
   integer,
-  decimal
+  decimal,
+  boolean
 } from "drizzle-orm/pg-core";
 
 /**
@@ -24,7 +25,7 @@ export const pgTable = pgTableCreator((name) => `tradeup_${name}`);
 
 export const region = pgEnum('region', ['US', 'HK', 'UK']);
 export const platform = pgEnum('platform', ['FUTU', 'IBKR']);
-export const tradeSide = pgEnum('tradeside', ['BUY', 'SELL', 'BUY_BACK']);
+export const tradeSide = pgEnum('tradeSide', ['BUY', 'SELL']);
 export const currency = pgEnum('currency', ['USD', 'HKD', 'EUR', 'GBP', 'CNY']);
 
 export const positions = pgTable(
@@ -32,14 +33,18 @@ export const positions = pgTable(
   {
     id: serial("id").primaryKey(),
     ticker: varchar('ticker', { length: 15 }).notNull(),
-    region: region('region').notNull(),
-    openVolume: integer('openVolume').notNull(),
-    averageOpenPrice: decimal('averageOpenPrice', { precision: 10, scale: 2 }).notNull(),
-    totalCost: decimal('totalCost', { precision: 10, scale: 2 }).notNull(),
+    region: region('region').notNull().default('US'),
+    volume: integer('volume').notNull(),
+    averagePrice: decimal('averagePrice', { precision: 20, scale: 8 }).notNull(),
+    totalCost: decimal('totalCost',  { precision: 20, scale: 8 }).notNull(),
+    realizedProfitLoss: decimal('realizedProfitLoss',  { precision: 20, scale: 8 }).notNull().default('0'),
+    isShort: boolean('isShort').notNull().default(false),
     openedAt: timestamp('openedAt').notNull(),
     lastUpdatedAt: timestamp('lastUpdatedAt').notNull(),
-    platform: platform('platform').notNull(),
+    platform: platform('platform').notNull().default('FUTU'),
     notes: text('notes'),
+    closed: boolean('closed').notNull().default(false),
+    closedAt: timestamp('closedAt'),
   },
   (position) => ({
     tickerIndex: index("position_ticker_idx").on(position.ticker),
@@ -50,18 +55,17 @@ export const tradeHistory = pgTable(
   "tradeHistory",
   {
     id: serial("id").primaryKey(),
-    positionId: integer('positionId').references(() => positions.id),
     ticker: varchar('ticker', { length: 15 }).notNull(),
     region: region('region').notNull().default('US'),
     currency: currency('currency').notNull().default('USD'),
-    price: decimal('price', { precision: 10, scale: 2 }).notNull(),
-    fees: decimal('fees', { precision: 10, scale: 2 }).default('0'),
-    totalValue: decimal('totalValue', { precision: 10, scale: 2 }).notNull(),
+    price: decimal('price',  { precision: 20, scale: 8 }).notNull(),
+    fees: decimal('fees',  { precision: 20, scale: 8 }).default('0'),
+    totalCost: decimal('totalCost',  { precision: 20, scale: 8 }).notNull(),
     volume: integer('volume').notNull(),
     platform: platform('platform').notNull().default('FUTU'),
-    tradeSide: tradeSide('tradeside').notNull().default('BUY'),
+    tradeSide: tradeSide('tradeSide').notNull().default('BUY'),
     executedAt: timestamp('executedAt').notNull(),
-    profitLoss: decimal('profitLoss', { precision: 10, scale: 2 }),
+    profitLoss: decimal('profitLoss',  { precision: 20, scale: 8 }),
     notes: text('notes'),
 
     createdAt: timestamp('created_at')
@@ -71,7 +75,6 @@ export const tradeHistory = pgTable(
   },
   (trade) => ({
     tickerIndex: index("trade_ticker_idx").on(trade.ticker),
-    positionIndex: index("position_id_idx").on(trade.positionId),
     platformIndex: index("platform_idx").on(trade.platform),
     sideIndex: index("side_idx").on(trade.tradeSide),
   }),

@@ -1,8 +1,8 @@
 import { writable } from 'svelte/store';
 
 function toggleDarkTheme() {
-    // by default dark theme is on
-	const { subscribe, update } = writable(true);
+    // by default dark theme is off	
+	const { subscribe, update } = writable(false);
 
 	return {
 		subscribe,

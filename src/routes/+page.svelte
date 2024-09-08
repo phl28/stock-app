@@ -10,6 +10,8 @@
 	import { tick } from 'svelte';
 
 	export let form;
+	export let data;
+
 	let stockData: StockData[];
 	let volumeData: VolumeData[];
 	let stockTickInput: string = 'AAPL';
@@ -17,49 +19,56 @@
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
 
+	const fillChartData = (data: any) => {
+		let stock: StockData[] = [];
+		let volume: VolumeData[] = [];
+		let prevClose = 0;
+		for (const item of data.results) {
+			const date = convertUnixTimestampToDate(item.t);
+			stock = [
+				...stock,
+				{
+					time: date,
+					open: item.o,
+					high: item.h,
+					low: item.l,
+					close: item.c
+				}
+			];
+			volume = [
+				...volume,
+				{
+					time: date,
+					value: item.v,
+					color: prevClose < item.c ? 'rgba(0, 150, 136, 0.8)' : 'rgba(255,82,82, 0.8)'
+				}
+			];
+			prevClose = item.c;
+		}
+		stockTick = data.ticker;
+		stockData = stock;
+		volumeData = volume;
+		tick().then(() => {
+			if (chartSeries) {
+				chartSeries.setData(stockData);
+			}
+			if (volumeSeries) {
+				volumeSeries.setData(volumeData);
+			}
+		});
+	};
 	$: {
 		if (form) {
-			let stock: StockData[] = [];
-			let volume: VolumeData[] = [];
-			let prevClose = 0;
-			for (const item of form.results) {
-				const date = convertUnixTimestampToDate(item.t);
-				stock = [
-					...stock,
-					{
-						time: date,
-						open: item.o,
-						high: item.h,
-						low: item.l,
-						close: item.c
-					}
-				];
-				volume = [
-					...volume,
-					{
-						time: date,
-						value: item.v,
-						color: prevClose < item.c ? 'rgba(0, 150, 136, 0.8)' : 'rgba(255,82,82, 0.8)'
-					}
-				];
-				prevClose = item.c;
-			}
-			stockTick = form.ticker;
-			stockData = stock;
-			volumeData = volume;
-			tick().then(() => {
-				if (chartSeries) {
-					chartSeries.setData(stockData);
-				}
-				if (volumeSeries) {
-					volumeSeries.setData(volumeData);
-				}
-			});
+			fillChartData(form);
+		} else if (data) {
+			fillChartData(data);
 		}
 	}
+
 	function handleCandlestickSeriesReference(ref: ISeriesApi<'Candlestick'> | null) {
 		chartSeries = ref;
 	}
+
 	function handleVolumeSeriesReference(ref: ISeriesApi<'Histogram'> | null) {
 		volumeSeries = ref;
 	}
@@ -139,6 +148,7 @@
 			borderColor: 'rgba(197, 203, 206, 0.8)'
 		}
 	};
+
 	const {
 		calcStopLossPerc,
 		calcStopLossAmt,
@@ -148,6 +158,7 @@
 		calcRewardPerc,
 		calcRewardToRisk
 	} = calculator;
+
 	let accSize: number = 1000000;
 	let entry: number = 100;
 	let stop: number = 96;
@@ -160,6 +171,7 @@
 	let profit: number = 0;
 	let accGrowth: number = 0;
 	let riskReward: number = 0;
+
 	$: {
 		stopLossPerc = calcStopLossPerc(entry, stop);
 		positionSize = calcPositionSize(risk / 100, stopLossPerc);
@@ -179,107 +191,109 @@
 	/>
 </svelte:head>
 
-<section>
-	<h1 class="ms-2 {stockTick ? '' : 'hidden'}">{stockTick}</h1>
-	<div class="flex flex-row items-center justify-between">
+<div class="w-3/4">
+	<div class="flex flex-row items-center justify-center gap-10">
 		<div class="flex flex-col">
-			<form method="POST" action="?/fetchStockData" use:enhance>
-				<label class="form-control mb-5 w-full max-w-xs">
-					<div class="label">
-						<span class="label-text">Enter the stock ticker</span>
-					</div>
-					<div class="flex">
-						<input
-							type="text"
-							name="ticker"
-							bind:value={stockTickInput}
-							class="input input-sm input-bordered me-2 w-full max-w-xs"
-						/>
-						<button class="btn btn-primary btn-sm" type="submit">Submit</button>
-					</div>
+			<h1 class="ms-1 {stockTick ? '' : 'hidden'}">{stockTick}</h1>
+			<div>
+				<form method="POST" action="?/fetchStockData" use:enhance>
+					<label class="form-control mb-5 w-full max-w-xs">
+						<div class="label">
+							<span class="label-text">Enter the stock ticker</span>
+						</div>
+						<div class="flex">
+							<input
+								type="text"
+								name="ticker"
+								bind:value={stockTickInput}
+								class="input input-sm input-bordered me-2 w-full max-w-xs"
+							/>
+							<button class="btn btn-primary btn-sm" type="submit">Submit</button>
+						</div>
+					</label>
+				</form>
+				<div class="mb-4 space-y-1">
+					<label class="input input-sm input-bordered flex items-center gap-4">
+						Account Size (USD)
+						<input type="number" class="grow" bind:value={accSize} />
+					</label>
+					<label class="input input-sm input-bordered flex items-center gap-4">
+						Risk
+						<input type="text" bind:value={risk} class="grow" />
+						<span>%</span>
+					</label>
+				</div>
+				<div class="space-y-1">
+					<label class="input input-sm input-bordered flex items-center gap-4">
+						Entry
+						<input type="number" bind:value={entry} class="grow" />
+					</label>
+					<label class="input input-sm input-bordered flex items-center gap-4">
+						Stop
+						<input type="number" bind:value={stop} class="grow" />
+					</label>
+					<label class="input input-sm input-bordered flex items-center gap-4">
+						Target
+						<input type="number" bind:value={target} class="grow" />
+					</label>
+				</div>
+			</div>
+			<div>
+				<label class="input input-sm flex items-center gap-2">
+					<strong>Stop Loss:</strong>
+					<input type="number" class="grow" value={stopLossAmt.toFixed(2)} disabled />
+					({(stopLossPerc * 100).toFixed(2)} %)
 				</label>
-			</form>
-			<div class="mb-4 space-y-1">
-				<label class="input input-sm input-bordered flex items-center gap-4">
-					Account Size (USD)
-					<input type="number" class="grow" bind:value={accSize} />
+				<label class="input input-sm flex items-center gap-2">
+					<strong>Position Amount:</strong>
+					<input type="text" value={positionAmt} class="grow" disabled />
 				</label>
-				<label class="input input-sm input-bordered flex items-center gap-4">
-					Risk
-					<input type="text" bind:value={risk} class="grow" />
+				<label class="input input-sm flex items-center gap-2">
+					<strong>Position Size:</strong>
+					<input type="text" value={(positionSize * 100).toFixed(2)} class="grow" disabled />
 					<span>%</span>
 				</label>
-			</div>
-			<div class="space-y-1">
-				<label class="input input-sm input-bordered flex items-center gap-4">
-					Entry
-					<input type="number" bind:value={entry} class="grow" />
+				<label class="input input-sm flex items-center gap-2">
+					<strong>Profit:</strong>
+					<input type="text" value={(profit * 100).toFixed(2)} class="grow" disabled />
+					<span>%</span>
 				</label>
-				<label class="input input-sm input-bordered flex items-center gap-4">
-					Stop
-					<input type="number" bind:value={stop} class="grow" />
+				<label class="input input-sm flex items-center gap-2">
+					<strong>Account Growth:</strong>
+					<input type="text" value={(accGrowth * 100).toFixed(2)} class="grow" disabled />
+					<span>%</span>
 				</label>
-				<label class="input input-sm input-bordered flex items-center gap-4">
-					Target
-					<input type="number" bind:value={target} class="grow" />
+				<label class="input input-sm flex items-center gap-2">
+					<strong>Reward / Risk:</strong>
+					<input type="text" value={riskReward.toFixed(2)} class="grow" disabled />
 				</label>
 			</div>
 		</div>
-		<div>
-			<Chart {...chartOptions} {watermark} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
-				<CandlestickSeries
-					bind:data={stockData}
-					lastValueVisible={true}
-					title={stockTick}
-					priceLineVisible={true}
-					upColor="rgb(11, 153, 129)"
-					downColor="rgb(209,57,70)"
-					ref={handleCandlestickSeriesReference}
-				/>
-				<HistogramSeries
-					bind:data={volumeData}
-					priceScaleId="volume"
-					color="#26a69a"
-					priceFormat={{ type: 'volume' }}
-					ref={handleVolumeSeriesReference}
-				/>
-				<PriceScale id="volume" scaleMargins={{ top: 0.8, bottom: 0 }} />
-			</Chart>
+		<div class="flex flex-col">
+			<div>
+				<Chart {...chartOptions} {watermark} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
+					<CandlestickSeries
+						bind:data={stockData}
+						lastValueVisible={true}
+						title={stockTick}
+						priceLineVisible={true}
+						upColor="rgb(11, 153, 129)"
+						downColor="rgb(209,57,70)"
+						ref={handleCandlestickSeriesReference}
+					/>
+					<HistogramSeries
+						bind:data={volumeData}
+						priceScaleId="volume"
+						color="#26a69a"
+						priceFormat={{ type: 'volume' }}
+						ref={handleVolumeSeriesReference}
+					/>
+					<PriceScale id="volume" scaleMargins={{ top: 0.8, bottom: 0 }} />
+				</Chart>
+			</div>
+			<CalculatorResults
+				input={{ risk: risk, entry: entry, stop: stop, target: target, stopLossPerc: stopLossPerc }}
+			/>
 		</div>
 	</div>
-	<div class="flex flex-row items-center justify-between">
-		<div>
-			<label class="input input-sm flex items-center gap-2">
-				<strong>Stop Loss:</strong>
-				<input type="number" class="grow" value={stopLossAmt.toFixed(2)} disabled />
-				({(stopLossPerc * 100).toFixed(2)} %)
-			</label>
-			<label class="input input-sm flex items-center gap-2">
-				<strong>Position Amount:</strong>
-				<input type="text" value={positionAmt} class="grow" disabled />
-			</label>
-			<label class="input input-sm flex items-center gap-2">
-				<strong>Position Size:</strong>
-				<input type="text" value={(positionSize * 100).toFixed(2)} class="grow" disabled />
-				<span>%</span>
-			</label>
-			<label class="input input-sm flex items-center gap-2">
-				<strong>Profit:</strong>
-				<input type="text" value={(profit * 100).toFixed(2)} class="grow" disabled />
-				<span>%</span>
-			</label>
-			<label class="input input-sm flex items-center gap-2">
-				<strong>Account Growth:</strong>
-				<input type="text" value={(accGrowth * 100).toFixed(2)} class="grow" disabled />
-				<span>%</span>
-			</label>
-			<label class="input input-sm flex items-center gap-2">
-				<strong>Reward / Risk:</strong>
-				<input type="text" value={riskReward.toFixed(2)} class="grow" disabled />
-			</label>
-		</div>
-		<CalculatorResults
-			input={{ risk: risk, entry: entry, stop: stop, target: target, stopLossPerc: stopLossPerc }}
-		/>
-	</div>
-</section>
+</div>
