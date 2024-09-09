@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { TradeSide, Platform, Region, Currency, type Trade } from '$lib/types/tradeTypes';
 	import { replacer } from '$lib/helpers/JsonHelpers';
+	import { dispatchToast } from '../../routes/stores';
 
 	export let selectedTrades: Map<number, Trade> = new Map();
 	export let hasEditedNotes: boolean;
@@ -16,7 +17,7 @@
 	let volume: number;
 	let platform: string;
 	let side: string;
-	let executedAt: string;
+	let executedAt: string = new Date().toISOString().split('T')[0];
 	let notes: string;
 
 	function openModal() {
@@ -42,7 +43,10 @@
 						if (result.type === 'success') {
 							selectedTrades.clear();
 							selectedTrades = selectedTrades;
+							dispatchToast({ type: 'success', message: 'Trades deleted successfully!' });
 							await update();
+						} else if (result.type === 'error') {
+							dispatchToast({ type: 'error', message: result.error });
 						}
 					};
 				}}
@@ -61,7 +65,10 @@
 							if (result.type === 'success') {
 								selectedTrades.clear();
 								selectedTrades = selectedTrades;
+								dispatchToast({ type: 'success', message: 'Trade updated successfully!' });
 								await update();
+							} else if (result.type === 'error') {
+								dispatchToast({ type: 'error', message: result.error });
 							}
 						};
 					}}
@@ -71,12 +78,25 @@
 				</form>
 			{/if}
 		{/if}
-		<button class="btn btn-neutral" on:click={openModal}>Add new trade</button>
+		<button class="btn btn-neutral" on:click={openModal}>Add Trade</button>
 		<dialog id="add-trade-modal" class="modal">
 			<div class="modal-box">
 				<h3 class="text-lg font-bold">Add new trade</h3>
 				<p class="py-4">Enter the details of the new trade:</p>
-				<form method="POST" action="?/addTrade" use:enhance>
+				<form
+					method="POST"
+					action="?/addTrade"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							if (result.type === 'success') {
+								dispatchToast({ type: 'success', message: 'Trade added successfully!' });
+								await update();
+							} else if (result.type === 'error') {
+								dispatchToast({ type: 'error', message: result.error });
+							}
+						};
+					}}
+				>
 					<div class="form-control w-full">
 						<div class="label">
 							<span class="label-text">Ticker</span>
