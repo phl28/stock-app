@@ -4,6 +4,7 @@
 	import type { Trade } from '$lib/types/tradeTypes.js';
 
 	export let trades: Trade[];
+	// export let allTickers: string[];
 
 	let selectedTrades: Map<number, Trade> = new Map();
 	function toggleSelection(trade: Trade) {

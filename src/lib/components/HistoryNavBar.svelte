@@ -46,7 +46,7 @@
 							dispatchToast({ type: 'success', message: 'Trades deleted successfully!' });
 							await update();
 						} else if (result.type === 'error') {
-							dispatchToast({ type: 'error', message: result.error });
+							dispatchToast({ type: 'error', message: result.error.message });
 						}
 					};
 				}}
@@ -68,7 +68,7 @@
 								dispatchToast({ type: 'success', message: 'Trade updated successfully!' });
 								await update();
 							} else if (result.type === 'error') {
-								dispatchToast({ type: 'error', message: result.error });
+								dispatchToast({ type: 'error', message: result.error.message });
 							}
 						};
 					}}
@@ -92,7 +92,7 @@
 								dispatchToast({ type: 'success', message: 'Trade added successfully!' });
 								await update();
 							} else if (result.type === 'error') {
-								dispatchToast({ type: 'error', message: result.error });
+								dispatchToast({ type: 'error', message: result.error.message });
 							}
 						};
 					}}
