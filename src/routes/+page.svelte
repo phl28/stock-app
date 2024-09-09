@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
 	import { ColorType, CrosshairMode, type ISeriesApi } from 'lightweight-charts';
-	import { theme } from './stores.ts';
+	import { dispatchToast, theme } from './stores.ts';
 	import { convertUnixTimestampToDate } from '$lib/helpers/DataHelpers.js';
 	import { enhance } from '$app/forms';
 	import type { StockData, VolumeData } from '$lib/types/chartTypes.js';
@@ -196,7 +196,17 @@
 		<div class="flex flex-col">
 			<h1 class="ms-1 {stockTick ? '' : 'hidden'}">{stockTick}</h1>
 			<div>
-				<form method="POST" action="?/fetchStockData" use:enhance>
+				<form
+					method="POST"
+					action="?/fetchStockData"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							if (result.type === 'error') {
+								dispatchToast({ type: 'error', message: result.error });
+							}
+						};
+					}}
+				>
 					<label class="form-control mb-5 w-full max-w-xs">
 						<div class="label">
 							<span class="label-text">Enter the stock ticker</span>

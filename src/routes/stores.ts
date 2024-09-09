@@ -15,7 +15,7 @@ export const theme = toggleDarkTheme();
 
 export const toasts = writable<Toast[]>([]);
 
-export const addToast = (toast: Toast) => {
+export const dispatchToast = (toast: Omit<Toast, 'id'>) => {
   const id = Math.floor(Math.random() * 10000);
 
   const defaults = {

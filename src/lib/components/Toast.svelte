@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { CircleCheck, Info, OctagonX, TriangleAlert } from 'lucide-svelte';
 	import { createEventDispatcher } from 'svelte';
 	import { fade } from 'svelte/transition';
 
@@ -17,6 +18,14 @@
 		class:alert-error={type === 'error'}
 		class:alert-warning={type === 'warning'}
 	>
-		<slot />
+		{#if type === 'success'}
+			<CircleCheck />
+		{:else if type === 'error'}
+			<OctagonX />
+		{:else if type === 'warning'}
+			<TriangleAlert />
+		{:else}
+			<Info />
+		{/if}<slot />
 	</div>
 </div>
