@@ -1,4 +1,4 @@
-import { json } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL } from '$env/static/public';
 
@@ -22,7 +22,7 @@ export async function load() {
     }
   } catch (err) {
     console.error('Error fetching stock data', err);
-    return json({ error: 'Error fetching stock data' }, { status: 500 });
+    return error(500, { message: 'Error fetching stock data' });
   }
 }
 
@@ -44,19 +44,12 @@ export const actions = {
           return data;
         }
         else {
-            return {
-              results: [],
-              ticker: ticker,
-              error: 'Error fetching stock data'
-            }
+          console.error('Error fetching stock data', res.status);
+          return error(500, { message: 'Error fetching stock data' });
         }
       } catch (err) {
         console.error('Error fetching stock data', err);
-          return {
-            results: [],
-            ticker: ticker,
-            error: 'Error fetching stock data'
-          }
+        return error(500, { message: 'Error fetching stock data' });
       }
     }
   };

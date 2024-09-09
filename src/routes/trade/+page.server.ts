@@ -1,14 +1,33 @@
 import type { Currency, Platform, Region, Trade, TradeSide } from '$lib/types/tradeTypes';
 import { deleteTradeHistory, deleteTradeHistoryBatch, getAllTradeHistory, getPositions, insertTradeHistory, updateTradeHistoryBatch } from '../../server/db/database';
 import { reviver } from '$lib/helpers/JsonHelpers';
+import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
+import { PUBLIC_POLYGON_IO_URL } from '$env/static/public';
+import { error, fail, isHttpError } from '@sveltejs/kit';
+
+const checkTickerValid = async (ticker: string) => {
+    const res = await fetch(`${PUBLIC_POLYGON_IO_URL}/v3/reference/tickers?ticker=${ticker}&apiKey=${PRIVATE_POLYGON_IO_API_KEY}`);
+    if (res.ok) {
+        const data = await res.json();
+        return data.results.length > 0;
+    }
+    return false;
+}
 
 export async function load() {
+    try {
     const trades = await getAllTradeHistory()
     const positions = await getPositions();
-
-    return {
-        trades,
-        positions
+        return {
+            trades,
+            positions
+        }
+    }
+    catch (err) {
+        if (isHttpError(err)) {
+            return error(err.status, { message: err.body.message });
+        }
+        return fail(500); 
     }
 }
 
@@ -28,8 +47,12 @@ export const actions = {
             profitLoss: formData.get('profitLoss') as string,
             totalCost: ""
         };
+        const isTickerValid = await checkTickerValid(newTrade.ticker);
+        if (!isTickerValid) {
+            return error(400, {message: "Ticker is not valid"});
+        }
         if (newTrade.price === "" ) {
-            return new Error("Price cannot be empty");
+            return error(400, { message: "Price cannot be empty" });
         }
         newTrade.totalCost = (parseFloat(newTrade.price) * newTrade.volume + parseFloat(newTrade.fees)).toString(); 
         await insertTradeHistory(newTrade);

@@ -202,7 +202,7 @@
 					use:enhance={() => {
 						return async ({ result, update }) => {
 							if (result.type === 'error') {
-								dispatchToast({ type: 'error', message: result.error });
+								dispatchToast({ type: 'error', message: result.error.message });
 							}
 						};
 					}}
