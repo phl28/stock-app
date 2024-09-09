@@ -2,6 +2,9 @@
 	import { enhance } from '$app/forms';
 	import { TradeSide, Platform, Region, Currency, type Trade } from '$lib/types/tradeTypes';
 	import { replacer } from '$lib/helpers/JsonHelpers';
+	import { createEventDispatcher } from 'svelte';
+
+	const dispatch = createEventDispatcher();
 
 	export let selectedTrades: Map<number, Trade> = new Map();
 	export let hasEditedNotes: boolean;
@@ -42,7 +45,10 @@
 						if (result.type === 'success') {
 							selectedTrades.clear();
 							selectedTrades = selectedTrades;
+							dispatch('notify', { type: 'success', message: 'Trade added successfully!' });
 							await update();
+						} else if (result.type === 'error') {
+							dispatch('notify', { type: 'error', message: result.error });
 						}
 					};
 				}}

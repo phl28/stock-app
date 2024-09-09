@@ -1,12 +1,14 @@
-<script>
+<script lang="ts">
 	import '../app.css';
 	import Header from '../lib/components/Header.svelte';
 	import githubLight from '$lib/images/github-mark.svg';
 	import githubDark from '$lib/images/github-mark-white.svg';
-	import { theme } from './stores.js';
+	import { theme } from './stores.ts';
+	import Toasts from '$lib/components/Toasts.svelte';
 </script>
 
 <div data-theme={$theme ? 'dark' : 'light'} class="app">
+	<Toasts />
 	<Header />
 
 	<main>
