@@ -79,6 +79,10 @@
 			{/if}
 		{/if}
 		<button class="btn btn-neutral" on:click={openModal}>Add Trade</button>
+		<form method="POST" action="?/syncTrades">
+			<button class="btn btn-neutral" type="submit">Sync Trades</button>
+		</form>
+
 		<dialog id="add-trade-modal" class="modal">
 			<div class="modal-box">
 				<h3 class="text-lg font-bold">Add new trade</h3>
