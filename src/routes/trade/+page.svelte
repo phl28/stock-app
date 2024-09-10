@@ -2,6 +2,7 @@
 	import TradeHistoryTable from '$lib/components/TradeHistoryTable.svelte';
 	import PositionsTable from '$lib/components/PositionTable.svelte';
 	export let data;
+	$: ({ positions = [], trades = [] } = data);
 </script>
 
 <svelte:head>
@@ -13,6 +14,6 @@
 </svelte:head>
 
 <div class="flex w-10/12 flex-row gap-8">
-	<PositionsTable positions={data.positions} />
-	<TradeHistoryTable trades={data.trades} />
+	<PositionsTable {positions} />
+	<TradeHistoryTable {trades} />
 </div>

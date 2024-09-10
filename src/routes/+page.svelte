@@ -1,29 +1,51 @@
 <script lang="ts">
-	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
-	import { ColorType, CrosshairMode, type ISeriesApi } from 'lightweight-charts';
+	import {
+		Chart,
+		CandlestickSeries,
+		HistogramSeries,
+		PriceScale,
+		LineSeries
+	} from 'svelte-lightweight-charts';
+	import {
+		ColorType,
+		CrosshairMode,
+		type ISeriesApi,
+		type SeriesDataItemTypeMap
+	} from 'lightweight-charts';
 	import { dispatchToast, theme } from './stores.ts';
 	import { convertUnixTimestampToDate } from '$lib/helpers/DataHelpers.js';
 	import { enhance } from '$app/forms';
 	import type { StockData, VolumeData } from '$lib/types/chartTypes.js';
 	import CalculatorResults from '$lib/components/CalculatorResults.svelte';
 	import calculator from '$lib/calculator/calculator';
-	import { tick } from 'svelte';
+	import { onMount, tick } from 'svelte';
+	import type { HttpError } from '@sveltejs/kit';
 
 	export let form;
 	export let data;
 
+	onMount(() => {
+		if (data.error) {
+			console.log('data.error', data.error);
+			dispatchToast({ type: 'error', message: data.error });
+		}
+	});
+
 	let stockData: StockData[];
 	let volumeData: VolumeData[];
+	let smaData: SeriesDataItemTypeMap['Line'][];
 	let stockTickInput: string = 'AAPL';
 	let stockTick: string;
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
+	let lineSeries: ISeriesApi<'Line'> | null = null;
 
 	const fillChartData = (data: any) => {
 		let stock: StockData[] = [];
 		let volume: VolumeData[] = [];
+		let sma: SeriesDataItemTypeMap['Line'][] = [];
 		let prevClose = 0;
-		for (const item of data.results) {
+		for (const item of data.stockData.results) {
 			const date = convertUnixTimestampToDate(item.t);
 			stock = [
 				...stock,
@@ -45,9 +67,20 @@
 			];
 			prevClose = item.c;
 		}
-		stockTick = data.ticker;
+		for (const item of data.smaData.results.values) {
+			const date = convertUnixTimestampToDate(item.timestamp);
+			sma = [
+				{
+					time: date,
+					value: item.value
+				},
+				...sma
+			];
+		}
+		stockTick = data.stockData.ticker;
 		stockData = stock;
 		volumeData = volume;
+		smaData = sma;
 		tick().then(() => {
 			if (chartSeries) {
 				chartSeries.setData(stockData);
@@ -55,12 +88,15 @@
 			if (volumeSeries) {
 				volumeSeries.setData(volumeData);
 			}
+			if (lineSeries) {
+				lineSeries.setData(smaData);
+			}
 		});
 	};
 	$: {
-		if (form) {
+		if (form && form.stockData && form.smaData) {
 			fillChartData(form);
-		} else if (data) {
+		} else if (data && data.stockData && data.smaData) {
 			fillChartData(data);
 		}
 	}
@@ -71,6 +107,10 @@
 
 	function handleVolumeSeriesReference(ref: ISeriesApi<'Histogram'> | null) {
 		volumeSeries = ref;
+	}
+
+	function handleLineSeriesReference(ref: ISeriesApi<'Line'> | null) {
+		lineSeries = ref;
 	}
 
 	const THEMES = {
@@ -298,6 +338,7 @@
 						priceFormat={{ type: 'volume' }}
 						ref={handleVolumeSeriesReference}
 					/>
+					<LineSeries bind:data={smaData} ref={handleLineSeriesReference} />
 					<PriceScale id="volume" scaleMargins={{ top: 0.8, bottom: 0 }} />
 				</Chart>
 			</div>
