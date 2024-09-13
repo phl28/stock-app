@@ -19,14 +19,12 @@
 	import CalculatorResults from '$lib/components/CalculatorResults.svelte';
 	import calculator from '$lib/calculator/calculator';
 	import { onMount, tick } from 'svelte';
-	import type { HttpError } from '@sveltejs/kit';
 
 	export let form;
 	export let data;
 
 	onMount(() => {
 		if (data.error) {
-			console.log('data.error', data.error);
 			dispatchToast({ type: 'error', message: data.error });
 		}
 	});
@@ -289,34 +287,31 @@
 				</div>
 			</div>
 			<div>
-				<label class="input input-sm flex items-center gap-2">
+				<div class="input input-sm flex items-center gap-2">
 					<strong>Stop Loss:</strong>
-					<input type="number" class="grow" value={stopLossAmt.toFixed(2)} disabled />
+					{stopLossAmt.toFixed(2)}
 					({(stopLossPerc * 100).toFixed(2)} %)
-				</label>
-				<label class="input input-sm flex items-center gap-2">
+				</div>
+				<div class="input input-sm flex items-center gap-2">
 					<strong>Position Amount:</strong>
-					<input type="text" value={positionAmt} class="grow" disabled />
-				</label>
-				<label class="input input-sm flex items-center gap-2">
+					{positionAmt}
+				</div>
+				<div class="input input-sm flex items-center gap-2">
 					<strong>Position Size:</strong>
-					<input type="text" value={(positionSize * 100).toFixed(2)} class="grow" disabled />
-					<span>%</span>
-				</label>
-				<label class="input input-sm flex items-center gap-2">
+					{(positionSize * 100).toFixed(2)} %
+				</div>
+				<div class="input input-sm flex items-center gap-2">
 					<strong>Profit:</strong>
-					<input type="text" value={(profit * 100).toFixed(2)} class="grow" disabled />
-					<span>%</span>
-				</label>
-				<label class="input input-sm flex items-center gap-2">
+					{(profit * 100).toFixed(2)} %
+				</div>
+				<div class="input input-sm flex items-center gap-2">
 					<strong>Account Growth:</strong>
-					<input type="text" value={(accGrowth * 100).toFixed(2)} class="grow" disabled />
-					<span>%</span>
-				</label>
-				<label class="input input-sm flex items-center gap-2">
+					{(accGrowth * 100).toFixed(2)} %
+				</div>
+				<div class="input input-sm flex items-center gap-2">
 					<strong>Reward / Risk:</strong>
-					<input type="text" value={riskReward.toFixed(2)} class="grow" disabled />
-				</label>
+					{riskReward.toFixed(2)}
+				</div>
 			</div>
 		</div>
 		<div class="flex flex-col">
