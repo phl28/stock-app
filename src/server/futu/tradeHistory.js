@@ -1,13 +1,8 @@
-import { getFtWebsocket, getCommon, getTrd_Common } from "./futuApiWrapper";
 import { PRIVATE_FUTU_WEBSOCKET_AUTH_KEY } from "$env/static/private";
 
-export async function TrdGetHistoryOrderList(){
-    const ftWebsocket = await getFtWebsocket();
-    const Common = await getCommon();
-    const Trd_Common = await getTrd_Common();
-
-    const { RetType } = Common
-    const { TrdEnv, TrdMarket } = Trd_Common
+// this does not work, cant seem to import from futu-api/proto.js
+export async function TrdGetHistoryOrderList() {
+    const ftWebsocket = await import("futu-api");
     let [addr, port, enable_ssl, key] = ["0.0.0.0", 11111, false, PRIVATE_FUTU_WEBSOCKET_AUTH_KEY];
     let websocket = new ftWebsocket();
 
@@ -19,17 +14,20 @@ export async function TrdGetHistoryOrderList(){
                 },
             }).then((res) => {
                 let { retType,s2c: { accList } } = res
-                if(retType == RetType.RetType_Succeed){
+                if(retType == 0){
                     let acc = accList.filter((item)=>{ 
-                        return item.trdEnv == TrdEnv.TrdEnv_Simulate && item.trdMarketAuthList.some((auth)=>{ return auth == TrdMarket.TrdMarket_HK})
-                    })[0]; // The sample takes the first HK paper trading environment account
+                        return item.trdEnv ==   {
+                            value: 1, //Trd_Common.TrdEnv_Real
+                            label: "真实环境",
+                          } && item.trdMarketAuthList.some((auth)=>{ return auth == {value: 1, label: "US"} })
+                    })[0]; // The sample takes the first US real trading environment account
 
                     const req = {
                         c2s: {
                             header: {
                                 trdEnv: acc.trdEnv,
                                 accID: acc.accID,
-                                trdMarket: TrdMarket.TrdMarket_HK,
+                                trdMarket: {value: 1, label: "US"}
                             },
                             filterConditions:{
                                 beginTime:"2021-09-01 00:00:00",
@@ -42,7 +40,7 @@ export async function TrdGetHistoryOrderList(){
                     .then((res) => {
                         let { errCode, retMsg, retType,s2c } = res
                         console.log("GetHistoryOrderList: errCode %d, retMsg %s, retType %d", errCode, retMsg, retType); 
-                        if(retType == RetType.RetType_Succeed){
+                        if(retType == 0){
                             let data = JSON.stringify(s2c);
                             console.log(data);
                         }

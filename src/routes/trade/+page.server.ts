@@ -34,8 +34,9 @@ export async function load() {
 
 export const actions = {
     syncTrades: async () => {
-        const result = TrdGetHistoryOrderList();
-        console.log("result", result);
+        // @FIXME: This does not work somehow and the documentatino is not clear.
+        // const result = await TrdGetHistoryOrderList();
+        console.log("Do nothing at the moment");
       },
     addTrade: async ({ request}) => {
         const formData = await request.formData();
