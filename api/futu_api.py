@@ -1,8 +1,7 @@
 from decimal import Decimal
 from enum import Enum
 from pydantic import BaseModel
-from futu import OpenSecTradeContext, TrdMarket, SecurityFirm, RET_OK, OrderStatus, TrdEnv, SysConfig
-import pandas as pd
+from futu import OpenSecTradeContext, TrdMarket, SecurityFirm, RET_OK, TrdEnv, SysConfig, OrderStatus
 from datetime import datetime
 from typing import List, Optional
 
@@ -68,7 +67,7 @@ class FUTU(BaseModel):
             )
     
             ret, data = trd_ctx.history_order_list_query(
-                # status_filter_list=[OrderStatus.FILLED_ALL],
+                status_filter_list=[OrderStatus.FILLED_ALL],
                 start=start_date.strftime("%Y-%m-%d 00:00:00") if start_date else None,
                 end=None,
                 trd_env=TrdEnv.REAL
