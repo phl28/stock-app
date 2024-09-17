@@ -60,7 +60,7 @@ class FUTU(BaseModel):
             SysConfig.set_init_rsa_file("/Users/adrian/Downloads/Futu_OpenD_7.4.3608_Mac/Futu_OpenD_7.4.3608_Mac/rsaKey.txt")
             trd_ctx = OpenSecTradeContext(
             filter_trdmarket=TrdMarket.US,
-            host="127.0.0.1",
+            host="0.0.0.0",
             port=11111,
             is_encrypt=True,
             security_firm=SecurityFirm.FUTUSECURITIES,
@@ -72,35 +72,33 @@ class FUTU(BaseModel):
                 end=None,
                 trd_env=TrdEnv.REAL
             )
-            print("data", data)
+
             if ret == RET_OK:
                 trades = []
-                # for _, row in data.iterrows():
-                #     price = Decimal(str(row['dealt_avg_price'])) if row['dealt_avg_price'] else Decimal(str(row['price']))
-                #     volume = int(row['dealt_qty']) if row['dealt_qty'] else Decimal(str(row['qty']))
-                #     total_cost = price * volume
-                #     code = row['code']
-                #     currency = row['currency']
+                for _, row in data.iterrows():
+                    price = Decimal(str(row['dealt_avg_price'])) if row['dealt_avg_price'] else Decimal(str(row['price']))
+                    volume = int(row['dealt_qty']) if row['dealt_qty'] else Decimal(str(row['qty']))
+                    total_cost = price * volume
+                    code = row['code']
+                    currency = row['currency']
                     
-                #     trade = TradeData(
-                #         region=Region.US if market == TrdMarket.US else Region.HK if market == TrdMarket.HK else Region.UK,
-                #         currency=Currency.USD if currency == 'USD' else Currency.HKD if currency == 'HKD' else Currency.EUR if currency == 'EUR' else Currency.GBP if currency == 'GBP' else Currency.CNY,
-                #         ticker=code.replace("US.", ""),
-                #         price=price,
-                #         totalCost=total_cost,
-                #         volume=volume,
-                #         tradeSide=TradeSide.BUY if row['trd_side'] == 'BUY' or row['trd_side'] == 'BUY_BACK' else TradeSide.SELL,
-                #         executedAt=datetime.datetime.strptime(row['updated_time'], "%Y-%m-%d %H:%M:%S"),
-                #     )
-                #     trades.append(trade)
-
-                print("trades", trades)
+                    trade = TradeData(
+                        region=Region.US if market == TrdMarket.US else Region.HK if market == TrdMarket.HK else Region.UK,
+                        currency=Currency.USD if currency == 'USD' else Currency.HKD if currency == 'HKD' else Currency.EUR if currency == 'EUR' else Currency.GBP if currency == 'GBP' else Currency.CNY,
+                        ticker=code.replace("US.", ""),
+                        price=price,
+                        totalCost=total_cost,
+                        volume=volume,
+                        tradeSide=TradeSide.BUY if row['trd_side'] == 'BUY' or row['trd_side'] == 'BUY_BACK' else TradeSide.SELL,
+                        executedAt=datetime.datetime.strptime(row['updated_time'], "%Y-%m-%d %H:%M:%S"),
+                    )
+                    trades.append(trade)
                 
-        #         return FUTUResponse(trades=trades)
-        #     else:
-        #         return FUTUResponse(trades=[], error=f"history_order_list_query error: {data}")
-        # except Exception as e:
-        #     return FUTUResponse(trades=[], error=str(e))
+                return FUTUResponse(trades=trades)
+            else:
+                return FUTUResponse(trades=[], error=f"history_order_list_query error: {data}")
+        except Exception as e:
+            return FUTUResponse(trades=[], error=str(e))
         finally:
             trd_ctx.close()
 
