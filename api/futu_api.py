@@ -1,7 +1,10 @@
+import base64
 from decimal import Decimal
 from enum import Enum
+import os
+import tempfile
 from pydantic import BaseModel
-from futu import OpenSecTradeContext, TrdMarket, SecurityFirm, RET_OK, TrdEnv, SysConfig, OrderStatus
+from futu import OpenSecTradeContext, TrdMarket, SecurityFirm, RET_OK, TrdEnv, SysConfig
 from datetime import datetime
 from typing import List, Optional
 
@@ -53,23 +56,53 @@ class FUTUConfig(BaseModel):
 
 class FUTU(BaseModel):
     config: FUTUConfig = FUTUConfig()
+    
+    def _setup_rsa_key(self):
+        rsa_key = os.environ.get('FUTU_RSA_KEY')
+        try:
+            decoded_key = base64.b64decode(rsa_key).decode('utf-8')
+        except Exception:
+            decoded_key = rsa_key
+
+        if not decoded_key.startswith('-----BEGIN RSA PRIVATE KEY-----'):
+            decoded_key = '-----BEGIN RSA PRIVATE KEY-----\n' + decoded_key
+        if not decoded_key.endswith('-----END RSA PRIVATE KEY-----'):
+            decoded_key = decoded_key + '\n-----END RSA PRIVATE KEY-----'
+
+        lines = decoded_key.split('\n')
+        formatted_lines = [lines[0]]  
+        for line in lines[1:-1]: 
+            formatted_lines.extend([line[i:i+64] for i in range(0, len(line), 64)])
+        formatted_lines.append(lines[-1])  
+        formatted_key = '\n'.join(formatted_lines)
+
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+            temp_file.write(formatted_key)
+            temp_file_path = temp_file.name
+        
+        return temp_file_path
 
     def get_futu_data(self, start_date: Optional[datetime.date] = None, end_date: Optional[datetime.date] = None, market: Optional[TrdMarket] = TrdMarket.US) -> FUTUResponse:
         try:
+            temp_file_path = self._setup_rsa_key()
+
             SysConfig.enable_proto_encrypt(is_encrypt = True)
-            SysConfig.set_init_rsa_file("/Users/adrian/Downloads/Futu_OpenD_7.4.3608_Mac/Futu_OpenD_7.4.3608_Mac/rsaKey.txt")
+            SysConfig.set_init_rsa_file(temp_file_path)
             trd_ctx = OpenSecTradeContext(
-            filter_trdmarket=TrdMarket.US,
+            filter_trdmarket=market,
             host="0.0.0.0",
             port=11111,
             is_encrypt=True,
             security_firm=SecurityFirm.FUTUSECURITIES,
             )
-    
+
+            start_str = start_date.strftime("%Y-%m-%d %H:%M:%S") if start_date else "2000-06-17 21:15:59"
+            end_str = end_date.strftime("%Y-%m-%d %H:%M:%S") if end_date else datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
             ret, data = trd_ctx.history_order_list_query(
-                status_filter_list=[OrderStatus.FILLED_ALL],
-                start=start_date.strftime("%Y-%m-%d 00:00:00") if start_date else None,
-                end=None,
+                start=start_str,
+                end=end_str,
+                acc_index=0,
                 trd_env=TrdEnv.REAL
             )
 
