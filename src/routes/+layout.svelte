@@ -5,6 +5,12 @@
 	import githubDark from '$lib/images/github-mark-white.svg';
 	import { theme } from './stores.ts';
 	import Toasts from '$lib/components/Toasts.svelte';
+	import { dev } from '$app/environment';
+	import { inject } from '@vercel/analytics';
+	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
+
+	injectSpeedInsights();
+	inject({ mode: dev ? 'development' : 'production' });
 </script>
 
 <div data-theme={$theme ? 'dark' : 'light'} class="app">
