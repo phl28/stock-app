@@ -3,7 +3,8 @@
 ## TODO
 - [x] Make it deploy (vercel)
 - [x] Scaffold basic UI with mock data
-- [ ] Build Python backend for historic data fetching (from Futu and IBKR)
+- [x] Build Python backend for historic data fetching from Futu
+- [ ] Build Python backend for historic data fetching from IBKR
 - [x] Actually set up the database
 - [x] Attach datbase to the UI
 - [x] Add authentication
