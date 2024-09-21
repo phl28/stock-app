@@ -1,29 +1,49 @@
 <script lang="ts">
-	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
-	import { ColorType, CrosshairMode, type ISeriesApi } from 'lightweight-charts';
+	import {
+		Chart,
+		CandlestickSeries,
+		HistogramSeries,
+		PriceScale,
+		LineSeries
+	} from 'svelte-lightweight-charts';
+	import {
+		ColorType,
+		CrosshairMode,
+		type ISeriesApi,
+		type SeriesDataItemTypeMap
+	} from 'lightweight-charts';
 	import { dispatchToast, theme } from './stores.ts';
 	import { convertUnixTimestampToDate } from '$lib/helpers/DataHelpers.js';
 	import { enhance } from '$app/forms';
 	import type { StockData, VolumeData } from '$lib/types/chartTypes.js';
 	import CalculatorResults from '$lib/components/CalculatorResults.svelte';
 	import calculator from '$lib/calculator/calculator';
-	import { tick } from 'svelte';
+	import { onMount, tick } from 'svelte';
 
 	export let form;
 	export let data;
 
+	onMount(() => {
+		if (data.error) {
+			dispatchToast({ type: 'error', message: data.error });
+		}
+	});
+
 	let stockData: StockData[];
 	let volumeData: VolumeData[];
+	let smaData: SeriesDataItemTypeMap['Line'][];
 	let stockTickInput: string = 'AAPL';
 	let stockTick: string;
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
+	let lineSeries: ISeriesApi<'Line'> | null = null;
 
 	const fillChartData = (data: any) => {
 		let stock: StockData[] = [];
 		let volume: VolumeData[] = [];
+		let sma: SeriesDataItemTypeMap['Line'][] = [];
 		let prevClose = 0;
-		for (const item of data.results) {
+		for (const item of data.stockData.results) {
 			const date = convertUnixTimestampToDate(item.t);
 			stock = [
 				...stock,
@@ -45,9 +65,20 @@
 			];
 			prevClose = item.c;
 		}
-		stockTick = data.ticker;
+		for (const item of data.smaData.results.values) {
+			const date = convertUnixTimestampToDate(item.timestamp);
+			sma = [
+				{
+					time: date,
+					value: item.value
+				},
+				...sma
+			];
+		}
+		stockTick = data.stockData.ticker;
 		stockData = stock;
 		volumeData = volume;
+		smaData = sma;
 		tick().then(() => {
 			if (chartSeries) {
 				chartSeries.setData(stockData);
@@ -55,12 +86,15 @@
 			if (volumeSeries) {
 				volumeSeries.setData(volumeData);
 			}
+			if (lineSeries) {
+				lineSeries.setData(smaData);
+			}
 		});
 	};
 	$: {
-		if (form) {
+		if (form && form.stockData && form.smaData) {
 			fillChartData(form);
-		} else if (data) {
+		} else if (data && data.stockData && data.smaData) {
 			fillChartData(data);
 		}
 	}
@@ -71,6 +105,10 @@
 
 	function handleVolumeSeriesReference(ref: ISeriesApi<'Histogram'> | null) {
 		volumeSeries = ref;
+	}
+
+	function handleLineSeriesReference(ref: ISeriesApi<'Line'> | null) {
+		lineSeries = ref;
 	}
 
 	const THEMES = {
@@ -249,34 +287,31 @@
 				</div>
 			</div>
 			<div>
-				<label class="input input-sm flex items-center gap-2">
+				<div class="input input-sm flex items-center gap-2">
 					<strong>Stop Loss:</strong>
-					<input type="number" class="grow" value={stopLossAmt.toFixed(2)} disabled />
+					{stopLossAmt.toFixed(2)}
 					({(stopLossPerc * 100).toFixed(2)} %)
-				</label>
-				<label class="input input-sm flex items-center gap-2">
+				</div>
+				<div class="input input-sm flex items-center gap-2">
 					<strong>Position Amount:</strong>
-					<input type="text" value={positionAmt} class="grow" disabled />
-				</label>
-				<label class="input input-sm flex items-center gap-2">
+					{positionAmt}
+				</div>
+				<div class="input input-sm flex items-center gap-2">
 					<strong>Position Size:</strong>
-					<input type="text" value={(positionSize * 100).toFixed(2)} class="grow" disabled />
-					<span>%</span>
-				</label>
-				<label class="input input-sm flex items-center gap-2">
+					{(positionSize * 100).toFixed(2)} %
+				</div>
+				<div class="input input-sm flex items-center gap-2">
 					<strong>Profit:</strong>
-					<input type="text" value={(profit * 100).toFixed(2)} class="grow" disabled />
-					<span>%</span>
-				</label>
-				<label class="input input-sm flex items-center gap-2">
+					{(profit * 100).toFixed(2)} %
+				</div>
+				<div class="input input-sm flex items-center gap-2">
 					<strong>Account Growth:</strong>
-					<input type="text" value={(accGrowth * 100).toFixed(2)} class="grow" disabled />
-					<span>%</span>
-				</label>
-				<label class="input input-sm flex items-center gap-2">
+					{(accGrowth * 100).toFixed(2)} %
+				</div>
+				<div class="input input-sm flex items-center gap-2">
 					<strong>Reward / Risk:</strong>
-					<input type="text" value={riskReward.toFixed(2)} class="grow" disabled />
-				</label>
+					{riskReward.toFixed(2)}
+				</div>
 			</div>
 		</div>
 		<div class="flex flex-col">
@@ -298,6 +333,7 @@
 						priceFormat={{ type: 'volume' }}
 						ref={handleVolumeSeriesReference}
 					/>
+					<LineSeries bind:data={smaData} ref={handleLineSeriesReference} />
 					<PriceScale id="volume" scaleMargins={{ top: 0.8, bottom: 0 }} />
 				</Chart>
 			</div>

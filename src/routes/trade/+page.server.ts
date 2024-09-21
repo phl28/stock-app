@@ -4,6 +4,7 @@ import { reviver } from '$lib/helpers/JsonHelpers';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL } from '$env/static/public';
 import { error, fail, isHttpError } from '@sveltejs/kit';
+import { TrdGetHistoryOrderList } from '../../server/futu/tradeHistory';
 
 const checkTickerValid = async (ticker: string) => {
     const res = await fetch(`${PUBLIC_POLYGON_IO_URL}/v3/reference/tickers?ticker=${ticker}&apiKey=${PRIVATE_POLYGON_IO_API_KEY}`);
@@ -32,6 +33,11 @@ export async function load() {
 }
 
 export const actions = {
+    syncTrades: async () => {
+        // @FIXME: This does not work somehow and the documentatino is not clear.
+        // const result = await TrdGetHistoryOrderList();
+        console.log("Do nothing at the moment");
+      },
     addTrade: async ({ request}) => {
         const formData = await request.formData();
         const newTrade = {

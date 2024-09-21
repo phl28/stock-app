@@ -1,0 +1,6 @@
+fastapi[standard]
+futu-api==8.5.4508
+pydantic
+requests==2.32.3
+ruff==0.6.5
+uvicorn==0.30.6
