@@ -46,7 +46,6 @@
 		"@vercel/speed-insights": "^1.0.12",
 		"clerk-sveltekit": "^0.4.2",
 		"drizzle-orm": "^0.30.8",
-		"futu-api": "^8.5.4508",
 		"lightweight-charts": "^4.1.3",
 		"lucide-svelte": "^0.439.0",
 		"svelte-lightweight-charts": "^2.2.0"
