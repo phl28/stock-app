@@ -11,3 +11,8 @@ export interface VolumeData {
     value: number;
     color: string;
 }
+
+export interface ChartResponse {
+    stockData: any;
+    error: any;
+}

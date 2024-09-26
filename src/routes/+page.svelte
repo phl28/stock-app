@@ -15,12 +15,12 @@
 	import { dispatchToast, theme } from './stores.ts';
 	import { convertUnixTimestampToDate } from '$lib/helpers/DataHelpers.js';
 	import { enhance } from '$app/forms';
-	import type { StockData, VolumeData } from '$lib/types/chartTypes.js';
+	import type { StockData, VolumeData, ChartResponse } from '$lib/types/chartTypes.js';
 	import CalculatorResults from '$lib/components/CalculatorResults.svelte';
 	import calculator from '$lib/calculator/calculator';
 	import { onMount, tick } from 'svelte';
 
-	export let form;
+	export let form: ChartResponse | undefined;
 	export let data;
 
 	onMount(() => {
@@ -31,7 +31,7 @@
 
 	let stockData: StockData[];
 	let volumeData: VolumeData[];
-	let smaData: SeriesDataItemTypeMap['Line'][];
+
 	let stockTickInput: string = 'AAPL';
 	let stockTick: string;
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
@@ -41,7 +41,6 @@
 	const fillChartData = (data: any) => {
 		let stock: StockData[] = [];
 		let volume: VolumeData[] = [];
-		let sma: SeriesDataItemTypeMap['Line'][] = [];
 		let prevClose = 0;
 		for (const item of data.stockData.results) {
 			const date = convertUnixTimestampToDate(item.t);
@@ -65,20 +64,9 @@
 			];
 			prevClose = item.c;
 		}
-		for (const item of data.smaData.results.values) {
-			const date = convertUnixTimestampToDate(item.timestamp);
-			sma = [
-				{
-					time: date,
-					value: item.value
-				},
-				...sma
-			];
-		}
 		stockTick = data.stockData.ticker;
 		stockData = stock;
 		volumeData = volume;
-		smaData = sma;
 		tick().then(() => {
 			if (chartSeries) {
 				chartSeries.setData(stockData);
@@ -86,15 +74,12 @@
 			if (volumeSeries) {
 				volumeSeries.setData(volumeData);
 			}
-			if (lineSeries) {
-				lineSeries.setData(smaData);
-			}
 		});
 	};
 	$: {
-		if (form && form.stockData && form.smaData) {
+		if (form && form.stockData) {
 			fillChartData(form);
-		} else if (data && data.stockData && data.smaData) {
+		} else if (data && data.stockData) {
 			fillChartData(data);
 		}
 	}
@@ -241,6 +226,8 @@
 						return async ({ result, update }) => {
 							if (result.type === 'error') {
 								dispatchToast({ type: 'error', message: result.error.message });
+							} else if (result.type === 'success') {
+								update();
 							}
 						};
 					}}
@@ -333,7 +320,6 @@
 						priceFormat={{ type: 'volume' }}
 						ref={handleVolumeSeriesReference}
 					/>
-					<LineSeries bind:data={smaData} ref={handleLineSeriesReference} />
 					<PriceScale id="volume" scaleMargins={{ top: 0.8, bottom: 0 }} />
 				</Chart>
 			</div>

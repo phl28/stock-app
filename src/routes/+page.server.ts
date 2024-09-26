@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL } from '$env/static/public';
+import type { ChartResponse } from '$lib/types/chartTypes.js';
 
 const API_KEY = PRIVATE_POLYGON_IO_API_KEY
 
@@ -13,11 +14,9 @@ export async function load() {
 
   try {
     const res = await fetch(`${PUBLIC_POLYGON_IO_URL}/v2/aggs/ticker/AAPL/range/1/day/${formattedTwoYearsAgo}/${formattedToday}?adjusted=true&sort=asc&apiKey=${API_KEY}`);
-    const res2 = await fetch(`${PUBLIC_POLYGON_IO_URL}/v1/indicators/sma/AAPL?timespan=day&adjusted=true&window=50&series_type=close&expand_underlying=true&order=desc&limit=5000&apiKey=${API_KEY}`);
-    if (res.ok && res2.ok) {
+    if (res.ok) {
       const stockData = await res.json();
-      const smaData = await res2.json();
-      return { stockData, smaData, error: null };
+      return { stockData, smaData: [], error: null } as ChartResponse;
     }
     else {
       throw new Error('Error fetching stock data');
@@ -45,11 +44,9 @@ export const actions = {
   
       try {
         const res = await fetch(`${PUBLIC_POLYGON_IO_URL}/v2/aggs/ticker/${ticker}/range/1/day/${formattedTwoYearsAgo}/${formattedToday}?adjusted=true&sort=asc&apiKey=${API_KEY}`);
-        const res2 = await fetch(`${PUBLIC_POLYGON_IO_URL}/v1/indicators/sma/AAPL?timespan=day&adjusted=true&window=50&series_type=close&expand_underlying=true&order=desc&limit=5000&apiKey=${API_KEY}`);
-        if (res.ok && res2.ok) {
+        if (res.ok) {
           const stockData = await res.json();
-          const smaData = await res2.json();
-          return { stockData, smaData, error: null };
+          return { stockData, smaData: [], error: null } as ChartResponse;;
         }
         else {
           console.error('Error fetching stock data', res.status);
