@@ -12,7 +12,8 @@ import {
   text,
   integer,
   decimal,
-  boolean
+  boolean,
+  jsonb
 } from "drizzle-orm/pg-core";
 
 /**
@@ -79,3 +80,21 @@ export const tradeHistory = pgTable(
     sideIndex: index("side_idx").on(trade.tradeSide),
   }),
 );
+
+export const articles = pgTable(
+  "articles",
+  {
+    articleId: serial("article_id").primaryKey(),
+    title: varchar('title', { length: 64 }).notNull(),
+    content: jsonb('content').notNull(),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp('updatedAt'),
+  },
+  (article) => ({
+      titleSearchIndex: index('title_search_index')
+      .using('gin', sql`to_tsvector('english', ${article.title})`),
+    }),
+
+)

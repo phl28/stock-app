@@ -3,16 +3,23 @@ import { sql } from "@vercel/postgres";
 
 import * as schema from './schema';
 import { eq, inArray, sql as dsql, and, gte, lte, desc } from 'drizzle-orm';
+import { CatIcon } from 'lucide-svelte';
 
 export const db = drizzle(sql, {schema});
 
-export type Trade = typeof schema.tradeHistory.$inferInsert
-export type Position = typeof schema.positions.$inferInsert
+export type InsertTrade = typeof schema.tradeHistory.$inferInsert;
+export type SelectTrade = typeof schema.tradeHistory.$inferSelect;
+export type InsertPosition = typeof schema.positions.$inferInsert;
+export type SelectPosition = typeof schema.positions.$inferSelect;
+export type InsertArticle = typeof schema.articles.$inferInsert;
+export type SelectArticle = typeof schema.articles.$inferSelect;
+
 
 export const getAllTradeHistory = async () => {
-    return await db.query.tradeHistory.findMany({
-      orderBy: [desc(schema.tradeHistory.executedAt)]
-    });
+  const tradeHistory = await db.query.tradeHistory.findMany({
+    orderBy: [desc(schema.tradeHistory.executedAt)]
+  });
+  return tradeHistory;
 };
 
 export const getPositions = async () => {
@@ -21,7 +28,7 @@ export const getPositions = async () => {
   });
 }
 
-export const insertTradeHistory = async (trade: Trade) => {
+export const insertTradeHistory = async (trade: InsertTrade) => {
   trade.ticker = trade.ticker.toUpperCase();
 
   return await db.transaction(async (tx) => {
@@ -103,7 +110,7 @@ export const insertTradeHistory = async (trade: Trade) => {
           .where(eq(schema.positions.id, existingPosition.id));
         }
     } else {
-      const newPosition: Position = {
+      const newPosition: InsertPosition = {
         ticker: trade.ticker,
         region: trade.region,
         volume: trade.tradeSide === 'SELL' ? -trade.volume : trade.volume,
@@ -124,7 +131,7 @@ export const insertTradeHistory = async (trade: Trade) => {
   });
 };
 
-export const updateTradeHistoryBatch = async (trades: Trade[]) => {
+export const updateTradeHistoryBatch = async (trades: InsertTrade[]) => {
   const values = trades.map(trade => 
     dsql`(${trade.id}, ${trade.notes}, ${new Date().toISOString()}::TIMESTAMP)`
   );
@@ -223,7 +230,7 @@ export const deleteTradeHistoryBatch = async (ids: number[]) => {
       if (!acc[key]) acc[key] = [];
       acc[key].push(trade);
       return acc;
-    }, {} as Record<string, Trade[]>);
+    }, {} as Record<string, InsertTrade[]>);
 
     for (const [key, trades] of Object.entries(tradeGroups)) {
       const [ticker, platform, region] = key.split('-');
@@ -325,4 +332,25 @@ export const getPositionPerformance = async (positionId: number) => {
   }
 
   return null;
+};
+
+export const getArticles = async (pageNumber: number, pageSize: number = 1) => {
+  const articles = await db.select().from(schema.articles).orderBy(desc(schema.articles.articleId)).limit(pageSize).offset((pageSize - 1) * pageNumber); 
+  const counts = db
+    .select({ count: dsql<number>`count(*)`.mapWith(Number) })
+    .from(schema.articles);
+  return {
+    articles,
+    currentPage: pageNumber,
+    totalPages: Math.ceil(Number(counts) / pageSize),
+    totalArticles: Number(counts)
+  }
+};
+
+export const getArticle = async (articleId: number) => {
+  return await db.select().from(schema.articles).where(eq(schema.articles.articleId, articleId));
+};
+
+export const addArticle = async (article: InsertArticle) => {
+  return await db.insert(schema.articles).values(article);
 };
