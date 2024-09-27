@@ -1,17 +1,6 @@
 <script lang="ts">
-	import {
-		Chart,
-		CandlestickSeries,
-		HistogramSeries,
-		PriceScale,
-		LineSeries
-	} from 'svelte-lightweight-charts';
-	import {
-		ColorType,
-		CrosshairMode,
-		type ISeriesApi,
-		type SeriesDataItemTypeMap
-	} from 'lightweight-charts';
+	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
+	import { ColorType, CrosshairMode, type ISeriesApi } from 'lightweight-charts';
 	import { dispatchToast, theme } from './stores.ts';
 	import { convertUnixTimestampToDate } from '$lib/helpers/DataHelpers.js';
 	import { enhance } from '$app/forms';
