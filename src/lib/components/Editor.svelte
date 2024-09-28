@@ -6,6 +6,7 @@
 	export let readOnly = false;
 	export let placeholder = 'What are your thoughts for this week?';
 	export let autofocus = true;
+	export let onSave = (outputData) => {};
 
 	let editor;
 
@@ -95,10 +96,10 @@
 		editor
 			.save()
 			.then((outputData) => {
-				console.log('Saving succeeded: ', outputData);
+				onSave(outputData);
 			})
 			.catch((error) => {
-				console.log('Saving failed: ', error);
+				console.error('Saving failed: ', error);
 			});
 		// return editor.save();
 	};
@@ -106,7 +107,7 @@
 
 <div
 	id="article-editor"
-	class={`article-editor w-full flex-grow ${!readOnly ? 'border-spacing-5 rounded-md border-2' : ''} `}
+	class={`article-editor w-full flex-grow p-4 ${!readOnly ? 'border-spacing-5 rounded-md border-2' : ''} `}
 ></div>
 {#if !readOnly}
 	<div class="flex justify-end">

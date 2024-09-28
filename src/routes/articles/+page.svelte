@@ -66,7 +66,7 @@
 
 <section class="container mx-auto flex flex-grow flex-col">
 	<div class="flex justify-end">
-		<form method="POST" action="articles/new" on:submit|preventDefault>
+		<form method="POST" action="?/createArticle">
 			<button type="submit" class="btn btn-circle">+</button>
 		</form>
 	</div>

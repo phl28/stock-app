@@ -6,5 +6,7 @@
 </script>
 
 {#if data.article}
-	<Editor readOnly={false} data={data.article} />
+	<section class="container flex flex-grow flex-col gap-4">
+		<Editor readOnly={true} data={data.article.content ?? {}} />
+	</section>
 {/if}
