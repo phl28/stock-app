@@ -14,7 +14,6 @@
 			const EditorJS = (await import('@editorjs/editorjs')).default;
 			const Header = (await import('@editorjs/header')).default;
 			const List = (await import('@editorjs/list')).default;
-			const Paragraph = (await import('@editorjs/paragraph')).default;
 			const Quote = (await import('@editorjs/quote')).default;
 			const Image = (await import('@editorjs/image')).default;
 			const CheckList = (await import('@editorjs/checklist')).default;
@@ -33,12 +32,19 @@
 				 * implements BlockToolConstructable or InlineToolConstructable.
 				 */
 				tools: {
-					header: Header,
+					header: {
+						class: Header,
+						config: {
+							placeholder: 'Enter a header',
+							levels: [1, 2, 3, 4],
+							defaultLevel: 2
+						},
+						inlineToolbar: true
+					},
 					list: {
 						class: List,
 						inlineToolbar: true
 					},
-					paragraph: Paragraph,
 					quote: Quote,
 					embed: Embed,
 					image: {
@@ -85,20 +91,25 @@
 		}
 	});
 
-	export function save() {
+	export const save = () => {
 		editor
 			.save()
 			.then((outputData) => {
-				console.log('Article data: ', outputData);
+				console.log('Saving succeeded: ', outputData);
 			})
 			.catch((error) => {
 				console.log('Saving failed: ', error);
 			});
 		// return editor.save();
-	}
+	};
 </script>
 
-<section>
-	<div id="article-editor" class="article-editor"></div>
-	<button class="btn btn-primary" on:click={save}>Save</button>
-</section>
+<div
+	id="article-editor"
+	class={`article-editor w-full flex-grow ${!readOnly ? 'border-spacing-5 rounded-md border-2' : ''} `}
+></div>
+{#if !readOnly}
+	<div class="flex justify-end">
+		<button class="btn btn-neutral" on:click={save}>Save</button>
+	</div>
+{/if}
