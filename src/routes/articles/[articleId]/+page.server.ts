@@ -1,3 +1,4 @@
+import { error } from "@sveltejs/kit";
 import { getArticle } from "../../../server/db/database.js";
 import type { PageServerLoad } from "./$types.js";
 
@@ -8,8 +9,6 @@ export const load: PageServerLoad = async ({ params }) => {
             article
         }
     } catch (err) {
-        return {
-            article: null
-        }
+        throw error(404, "Article not found");
     }
 }

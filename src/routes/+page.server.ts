@@ -23,12 +23,7 @@ export const load: PageServerLoad = async() => {
       throw new Error('Error fetching stock data');
     }
   } catch (err) {
-    console.error('Error fetching stock data', err);
-    return {
-      stockData: null,
-      smaData: null,
-      error: "Error fetching stock data"
-    }
+    throw error(500, 'An unexpected error occurred');
   }
 }
 

@@ -6,5 +6,5 @@
 </script>
 
 {#if data.article}
-	<Editor readOnly={true} data={data.article} />
+	<Editor readOnly={false} data={data.article} />
 {/if}

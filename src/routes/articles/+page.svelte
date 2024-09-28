@@ -65,6 +65,11 @@
 </script>
 
 <section class="container mx-auto flex flex-grow flex-col">
+	<div class="flex justify-end">
+		<form method="POST" action="articles/new" on:submit|preventDefault>
+			<button type="submit" class="btn btn-circle">+</button>
+		</form>
+	</div>
 	<div class="flex-grow">
 		{#if data.articles}
 			<div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
