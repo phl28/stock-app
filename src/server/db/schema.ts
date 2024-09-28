@@ -86,7 +86,7 @@ export const articles = pgTable(
   {
     articleId: serial("article_id").primaryKey(),
     title: varchar('title', { length: 64 }).notNull(),
-    content: jsonb('content').notNull(),
+    content: jsonb('content'),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),

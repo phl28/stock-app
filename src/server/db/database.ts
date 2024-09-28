@@ -3,7 +3,6 @@ import { sql } from "@vercel/postgres";
 
 import * as schema from './schema';
 import { eq, inArray, sql as dsql, and, gte, lte, desc } from 'drizzle-orm';
-import { CatIcon } from 'lucide-svelte';
 
 export const db = drizzle(sql, {schema});
 
@@ -352,5 +351,11 @@ export const getArticle = async (articleId: number) => {
 };
 
 export const addArticle = async (article: InsertArticle) => {
-  return await db.insert(schema.articles).values(article);
+  const [articleId] =  await db.insert(schema.articles).values(article).returning({articleId: schema.articles.articleId});
+  return articleId;
+};
+
+export const updateArticle = async (article: InsertArticle) => {
+  if (!article.articleId) throw new Error('Article ID is required');
+  return await db.update(schema.articles).set(article).where(eq(schema.articles.articleId, article.articleId));
 };
