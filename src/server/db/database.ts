@@ -333,8 +333,8 @@ export const getPositionPerformance = async (positionId: number) => {
   return null;
 };
 
-export const getArticles = async (pageNumber: number, pageSize: number = 1) => {
-  const articles = await db.select().from(schema.articles).orderBy(desc(schema.articles.articleId)).limit(pageSize).offset((pageSize - 1) * pageNumber); 
+export const getArticles = async (pageSize: number, pageNumber: number = 1) => {
+  const articles = await db.select().from(schema.articles).orderBy(desc(schema.articles.articleId)).limit(pageSize).offset((pageNumber - 1) * pageSize); 
   const counts = db
     .select({ count: dsql<number>`count(*)`.mapWith(Number) })
     .from(schema.articles);

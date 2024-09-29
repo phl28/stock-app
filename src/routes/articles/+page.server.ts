@@ -17,7 +17,7 @@ type ArticlesResponse = {
 
 export const load: PageServerLoad = async() => {
     try {
-        const result = await getArticles(9);
+        const result = await getArticles(9, 1);
         return result satisfies ArticlesResponse;
     } catch (err) {
         error(404, "Articles not found");

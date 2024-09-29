@@ -1,55 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types.js';
 
-	let data: PageData = {
-		articles: [
-			{
-				articleId: 1,
-				title: 'Article 1',
-				content: 'testing',
-				createdAt: new Date(),
-				updatedAt: new Date()
-			},
-			{
-				articleId: 2,
-				title: 'Article 2',
-				content: 'testing',
-				createdAt: new Date(),
-				updatedAt: new Date()
-			},
-			{
-				articleId: 3,
-				title: 'Article 3',
-				content: 'testing',
-				createdAt: new Date(),
-				updatedAt: new Date()
-			},
-			{
-				articleId: 4,
-				title: 'Article 4',
-				content: 'testing',
-				createdAt: new Date(),
-				updatedAt: new Date()
-			},
-			{
-				articleId: 5,
-				title: 'Article 5',
-				content: 'testing',
-				createdAt: new Date(),
-				updatedAt: new Date()
-			},
-			{
-				articleId: 6,
-				title: 'Article 6',
-				content: 'testing',
-				createdAt: new Date(),
-				updatedAt: new Date()
-			}
-		],
-		currentPage: 1,
-		totalPages: 4,
-		totalArticles: 6
-	};
+	export let data: PageData;
 
 	const handlePageIncrement = () => {
 		if (data.currentPage < data.totalPages) {
