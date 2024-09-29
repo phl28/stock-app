@@ -22,7 +22,7 @@
 
 {#if data}
 	<section class="container flex flex-grow flex-col gap-4">
-		<label class="input input-bordered flex items-center gap-2">
+		<label class="input input-bordered flex items-center justify-center gap-2">
 			Title
 			<input type="text" class="grow" placeholder="Title here" bind:value={title} />
 		</label>

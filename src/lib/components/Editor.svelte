@@ -65,18 +65,6 @@
 				 */
 				data: data,
 				/**
-				 * onReady callback
-				 */
-				onReady: () => {
-					console.log('Editor.js is ready to work!');
-				},
-				/**
-				 * onChange callback
-				 */
-				onChange: (api, event) => {
-					console.log("Now I know that Editor's content changed!", event);
-				},
-				/**
 				 * Enable autofocus
 				 */
 				autofocus: autofocus,
@@ -101,7 +89,6 @@
 			.catch((error) => {
 				console.error('Saving failed: ', error);
 			});
-		// return editor.save();
 	};
 </script>
 
