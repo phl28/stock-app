@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
 	import type { PageData } from './$types.js';
 
 	export let data: PageData;
@@ -17,11 +18,13 @@
 </script>
 
 <section class="container mx-auto flex flex-grow flex-col">
-	<div class="flex justify-end">
-		<form method="POST" action="?/createArticle">
-			<button type="submit" class="btn btn-circle">+</button>
-		</form>
-	</div>
+	<SignedIn>
+		<div class="flex justify-end">
+			<form method="POST" action="?/createArticle">
+				<button type="submit" class="btn btn-circle">+</button>
+			</form>
+		</div>
+	</SignedIn>
 	<div class="flex-grow">
 		{#if data.articles}
 			<div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -31,7 +34,7 @@
 							<h2 class="card-title">
 								{article.title}
 							</h2>
-							<span class="text-xs">Uploaded At: {article.createdAt.toLocaleDateString()}</span>
+							<span class="text-xs">Uploaded on: {article.createdAt.toLocaleDateString()}</span>
 
 							<div class="card-actions">
 								<a
