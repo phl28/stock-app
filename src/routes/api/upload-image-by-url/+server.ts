@@ -1,6 +1,5 @@
-import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { put } from "@vercel/blob";
+import { put, BlobAccessError } from "@vercel/blob";
 
 export const POST: RequestHandler = async ({ request }) => {
     try {
@@ -22,6 +21,14 @@ export const POST: RequestHandler = async ({ request }) => {
           }
         ));
     } catch (error) {
+        if (error instanceof BlobAccessError) {
+            return new Response(JSON.stringify(
+              {
+                success: 0,
+                error: "You don't have access to the blob"
+              }
+            ));
+        }
         console.error(error);
         return new Response(JSON.stringify(
           {
