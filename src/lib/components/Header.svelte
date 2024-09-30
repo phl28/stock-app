@@ -32,6 +32,9 @@
 			<li aria-current={$page.url.pathname.startsWith('/trade') ? 'page' : undefined}>
 				<a href="/trade">Trade</a>
 			</li>
+			<li aria-current={$page.url.pathname.startsWith('/articles') ? 'page' : undefined}>
+				<a href="/articles">Articles</a>
+			</li>
 		</ul>
 	</nav>
 	<div class="flex items-center justify-end pe-3">

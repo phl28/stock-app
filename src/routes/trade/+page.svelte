@@ -1,7 +1,9 @@
 <script lang="ts">
 	import TradeHistoryTable from '$lib/components/TradeHistoryTable.svelte';
 	import PositionsTable from '$lib/components/PositionTable.svelte';
-	export let data;
+	import type { PageData } from './$types';
+
+	export let data: PageData;
 	$: ({ positions = [], trades = [] } = data);
 </script>
 

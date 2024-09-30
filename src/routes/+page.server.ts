@@ -2,10 +2,11 @@ import { error } from '@sveltejs/kit';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL } from '$env/static/public';
 import type { ChartResponse } from '$lib/types/chartTypes.js';
+import type { PageServerLoad } from './$types';
 
 const API_KEY = PRIVATE_POLYGON_IO_API_KEY
 
-export async function load() {
+export const load: PageServerLoad = async() => {
   const today = new Date();
   let twoYearsAgo = new Date(today.getFullYear() - 2, today.getMonth(), today.getDate());
 
@@ -22,12 +23,7 @@ export async function load() {
       throw new Error('Error fetching stock data');
     }
   } catch (err) {
-    console.error('Error fetching stock data', err);
-    return {
-      stockData: null,
-      smaData: null,
-      error: "Error fetching stock data"
-    }
+    throw error(500, 'An unexpected error occurred');
   }
 }
 

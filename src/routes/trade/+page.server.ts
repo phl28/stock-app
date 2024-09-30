@@ -3,8 +3,8 @@ import { deleteTradeHistory, deleteTradeHistoryBatch, getAllTradeHistory, getPos
 import { reviver } from '$lib/helpers/JsonHelpers';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL } from '$env/static/public';
-import { error, fail, isHttpError } from '@sveltejs/kit';
-import { TrdGetHistoryOrderList } from '../../server/futu/tradeHistory';
+import { error, isHttpError } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types.js';
 
 const checkTickerValid = async (ticker: string) => {
     const res = await fetch(`${PUBLIC_POLYGON_IO_URL}/v3/reference/tickers?ticker=${ticker}&apiKey=${PRIVATE_POLYGON_IO_API_KEY}`);
@@ -15,20 +15,20 @@ const checkTickerValid = async (ticker: string) => {
     return false;
 }
 
-export async function load() {
+export const load: PageServerLoad = async() => {
     try {
-    const trades = await getAllTradeHistory()
-    const positions = await getPositions();
+        const trades = await getAllTradeHistory();
+        const positions = await getPositions();
         return {
             trades,
             positions
         }
     }
-    catch (err) {
+    catch (err) { 
         if (isHttpError(err)) {
-            return error(err.status, { message: err.body.message });
+            throw error(err.status, err.body.message);
         }
-        return fail(500); 
+        throw error(500, 'An unexpected error occurred');
     }
 }
 
