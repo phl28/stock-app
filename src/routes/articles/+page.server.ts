@@ -27,7 +27,7 @@ export const load: PageServerLoad = async() => {
 export const actions = {
     createArticle: async () => {
         const article = {
-            title: ""
+            title: new Date().toLocaleDateString()
         };
         let articleId: number;
         try {

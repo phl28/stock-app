@@ -7,6 +7,7 @@
 
 {#if data.article}
 	<section class="container flex flex-grow flex-col gap-4">
-		<Editor readOnly={true} data={data.article.content ?? {}} />
+		<span class="flex justify-center text-3xl font-bold">{data.article.title}</span>
+		<Editor readOnly={true} data={data.article.content ?? {}} autofocus={false} />
 	</section>
 {/if}
