@@ -359,3 +359,7 @@ export const updateArticle = async (article: InsertArticle) => {
   if (!article.articleId) throw new Error('Article ID is required');
   return await db.update(schema.articles).set(article).where(eq(schema.articles.articleId, article.articleId));
 };
+
+export const deleteArticle = async (articleId: number) => {
+  return await db.delete(schema.articles).where(eq(schema.articles.articleId, articleId));
+}

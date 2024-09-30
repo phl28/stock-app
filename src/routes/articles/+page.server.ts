@@ -37,6 +37,6 @@ export const actions = {
         catch(err) {
             throw error(400, "Article could not be created");
         };
-        throw redirect(303, `/articles/new/${articleId}`);
+        throw redirect(303, `/articles/edit/${articleId}`);
     },
 }
