@@ -16,7 +16,7 @@
 			const Header = (await import('@editorjs/header')).default;
 			const List = (await import('@editorjs/list')).default;
 			const Quote = (await import('@editorjs/quote')).default;
-			const Image = (await import('@editorjs/image')).default;
+			const ImageTool = (await import('@editorjs/image')).default;
 			const CheckList = (await import('@editorjs/checklist')).default;
 			const Table = (await import('@editorjs/table')).default;
 			const Embed = (await import('@editorjs/embed')).default;
@@ -49,12 +49,14 @@
 					quote: Quote,
 					embed: Embed,
 					image: {
-						class: Image,
+						class: ImageTool,
 						config: {
 							endpoints: {
-								byFile: '',
-								byUrl: ''
-							}
+								byFile: '/api/upload-image',
+								byUrl: '/api/upload-image-by-url'
+							},
+							field: 'image',
+							captionPlaceholder: 'Image caption'
 						}
 					},
 					checklist: CheckList,
