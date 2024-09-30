@@ -16,7 +16,7 @@
 </script>
 
 <div class="mt-6 w-full">
-	<h1 class="m-2">Positions</h1>
+	<h5 class="m-2">Positions</h5>
 	<div class="overflow-x-auto">
 		<table class="table table-pin-rows table-pin-cols table-xs">
 			<thead>
