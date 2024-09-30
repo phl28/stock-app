@@ -28,11 +28,10 @@
 				{#each data.articles as article (article.articleId)}
 					<div class="card card-normal bg-base-100 shadow-xl">
 						<div class="card-body">
-							<h2 class="card-title justify-start">
-								{article.title}<span class="text-xs"
-									>Last Updated: {article.createdAt.toLocaleDateString()}</span
-								>
+							<h2 class="card-title">
+								{article.title}
 							</h2>
+							<span class="text-xs">Uploaded At: {article.createdAt.toLocaleDateString()}</span>
 
 							<div class="card-actions">
 								<a
