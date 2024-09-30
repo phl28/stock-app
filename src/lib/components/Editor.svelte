@@ -35,12 +35,8 @@
 				tools: {
 					header: {
 						class: Header,
-						config: {
-							placeholder: 'Enter a header',
-							levels: [1, 2, 3, 4],
-							defaultLevel: 2
-						},
-						inlineToolbar: true
+						levels: [1, 2, 3, 4, 5, 6],
+						defaultLevel: 2
 					},
 					list: {
 						class: List,
