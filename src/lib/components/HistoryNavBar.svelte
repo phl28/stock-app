@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { TradeSide, Platform, Region, Currency, type Trade } from '$lib/types/tradeTypes';
+	import { TradeSide, Platform, Region, Currency } from '$lib/types/tradeTypes';
+	import type { Trade } from '$lib/types/tradeTypes';
 	import { replacer } from '$lib/helpers/JsonHelpers';
 	import { dispatchToast } from '../../routes/stores';
 

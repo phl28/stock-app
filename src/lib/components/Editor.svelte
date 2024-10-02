@@ -6,7 +6,7 @@
 	export let readOnly = false;
 	export let placeholder = 'What are your thoughts for this week?';
 	export let autofocus = true;
-	export let onSave = (outputData) => {};
+	export let onSave;
 
 	let editor;
 

@@ -1,34 +1,34 @@
-import { deleteArticle } from "../../../../server/db/database";
-import type { RequestHandler } from "./$types";
-import { del } from "@vercel/blob";
-import { goto } from "$app/navigation";
-import type {OutputData} from "@editorjs/editorjs";
+import { deleteArticle } from '../../../../server/db/database';
+import type { RequestHandler } from './$types';
+import { del } from '@vercel/blob';
+import { goto } from '$app/navigation';
+import type { OutputData } from '@editorjs/editorjs';
 
 export const DELETE: RequestHandler = async ({ params, request }) => {
-    try {
-        const articleId = params.articleId;
-        if (isNaN(Number(articleId))) {
-            throw new Error("Invalid article ID");
-        }
-        const requestBody = await request.json() as OutputData;
-        const imageBlocks = requestBody.blocks.filter((block) => block.type === 'image');
-        for (const imageBlock of imageBlocks) {
-            const imageUrl = imageBlock.data.file.url;
-            await del(imageUrl);
-        }
-        await deleteArticle(Number(articleId));
-        goto('/articles');
-        return new Response(JSON.stringify(
-          {
-            success: 1,
-          }
-        ));
-    } catch (error) {
-        return new Response(JSON.stringify(
-          {
-            success: 0,
-            error: error
-          }
-        ));
-    }
+	try {
+		const articleId = params.articleId;
+		if (isNaN(Number(articleId))) {
+			throw new Error('Invalid article ID');
+		}
+		const requestBody = (await request.json()) as OutputData;
+		const imageBlocks = requestBody.blocks.filter((block) => block.type === 'image');
+		for (const imageBlock of imageBlocks) {
+			const imageUrl = imageBlock.data.file.url;
+			await del(imageUrl);
+		}
+		await deleteArticle(Number(articleId));
+		goto('/articles');
+		return new Response(
+			JSON.stringify({
+				success: 1
+			})
+		);
+	} catch (error) {
+		return new Response(
+			JSON.stringify({
+				success: 0,
+				error: error
+			})
+		);
+	}
 };
