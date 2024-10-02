@@ -1,6 +1,6 @@
 <script lang="ts">
 	import SignIn from 'clerk-sveltekit/client/SignIn.svelte';
-	import { dark, shadesOfPurple, neobrutalism } from '@clerk/themes';
+	import { dark } from '@clerk/themes';
 	import { theme } from '../stores.ts';
 </script>
 
