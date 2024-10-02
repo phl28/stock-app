@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS "content_search_index" ON "tradeup_articles" USING gin (to_tsvector('english', "content"));

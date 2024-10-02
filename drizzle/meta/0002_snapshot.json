@@ -1,6 +1,6 @@
 {
-	"id": "8159fad8-2bc3-4e26-a308-7f734a4377b2",
-	"prevId": "00000000-0000-0000-0000-000000000000",
+	"id": "ca9bd1d3-012b-49bb-9204-26d6ab05b338",
+	"prevId": "a00789cb-dbd2-4d78-92e1-ce28dc7241a3",
 	"version": "7",
 	"dialect": "postgresql",
 	"tables": {
@@ -24,7 +24,7 @@
 					"name": "content",
 					"type": "jsonb",
 					"primaryKey": false,
-					"notNull": true
+					"notNull": false
 				},
 				"created_at": {
 					"name": "created_at",
@@ -46,6 +46,21 @@
 					"columns": [
 						{
 							"expression": "to_tsvector('english', \"title\")",
+							"asc": true,
+							"isExpression": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "gin",
+					"with": {}
+				},
+				"content_search_index": {
+					"name": "content_search_index",
+					"columns": [
+						{
+							"expression": "to_tsvector('english', \"content\")",
 							"asc": true,
 							"isExpression": true,
 							"nulls": "last"
