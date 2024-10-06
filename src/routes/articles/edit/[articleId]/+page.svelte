@@ -9,7 +9,7 @@
 
 	const handleSaveArticle = async (outputData: any) => {
 		try {
-			const response = await fetch(`/api/update-article/${data.article.articleId}`, {
+			const response = await fetch(`/articles/edit/${data.article.articleId}`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
