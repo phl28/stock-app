@@ -6,7 +6,7 @@
 	export let readOnly = false;
 	export let placeholder = 'What are your thoughts for this week?';
 	export let autofocus = true;
-	export let onSave;
+	export let onSave = undefined;
 
 	let editor;
 
@@ -48,8 +48,8 @@
 						class: ImageTool,
 						config: {
 							endpoints: {
-								byFile: '/api/upload-image',
-								byUrl: '/api/upload-image-by-url'
+								byFile: '/backend/upload-image',
+								byUrl: '/backend/upload-image-by-url'
 							},
 							field: 'image',
 							captionPlaceholder: 'Image caption'
