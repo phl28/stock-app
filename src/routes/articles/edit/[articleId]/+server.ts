@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
+import type { RequestHandler } from '../../update/[articleId]/$types';
 import { updateArticle } from '../../../../server/db/database';
 
 export const POST: RequestHandler = async ({ params, request }) => {

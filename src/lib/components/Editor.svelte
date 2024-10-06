@@ -48,8 +48,8 @@
 						class: ImageTool,
 						config: {
 							endpoints: {
-								byFile: '/backend/upload-image',
-								byUrl: '/backend/upload-image-by-url'
+								byFile: '/articles/upload-image',
+								byUrl: '/articles/upload-image-by-url'
 							},
 							field: 'image',
 							captionPlaceholder: 'Image caption'

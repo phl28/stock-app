@@ -10,13 +10,14 @@
 
 	const handleDeleteArticle = async () => {
 		if (confirm('Are you sure you want to delete this article?')) {
-			const response = await fetch(`/backend/delete-article/${data.article.articleId}`, {
+			const response = await fetch(`/articles/delete/${data.article.articleId}`, {
 				method: 'DELETE',
 				body: JSON.stringify(data.article.content)
 			});
 			if (!response.ok) {
 				throw new Error('Failed to delete article');
 			}
+			goto('/articles');
 			dispatchToast({ type: 'success', message: 'Article deleted successfully!' });
 		}
 	};
