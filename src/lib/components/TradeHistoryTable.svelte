@@ -33,7 +33,7 @@
 	$: hasEditedNotes = Object.keys(editedNotes).length > 0;
 </script>
 
-<div class="w-10/12">
+<div class="w-full">
 	<HistoryNavBar {selectedTrades} {hasEditedNotes} />
 	<div class="overflow-x-auto">
 		<table class="table table-pin-rows table-pin-cols table-xs">

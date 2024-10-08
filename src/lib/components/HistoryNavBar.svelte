@@ -33,7 +33,7 @@
 </script>
 
 <div class="m-2 flex flex-row items-center justify-between">
-	<h5>History</h5>
+	<h5>Trade History</h5>
 	<div class="flex justify-end space-x-2">
 		{#if selectedTrades.size > 0}
 			<form

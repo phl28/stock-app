@@ -5,6 +5,7 @@
 
 	export let data: PageData;
 	$: ({ positions = [], trades = [] } = data);
+	let view = 'trades';
 </script>
 
 <svelte:head>
@@ -15,7 +16,14 @@
 	/>
 </svelte:head>
 
-<div class="flex w-10/12 flex-row gap-8">
-	<PositionsTable {positions} />
-	<TradeHistoryTable {trades} />
+<div class="flex w-full flex-col px-10">
+	<select class="select select-bordered w-full max-w-xs" bind:value={view}>
+		<option value="trades">Trades</option>
+		<option value="positions">Positions</option>
+	</select>
+	{#if view === 'trades'}
+		<TradeHistoryTable {trades} />
+	{:else if view === 'positions'}
+		<PositionsTable {positions} />
+	{/if}
 </div>
