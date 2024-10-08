@@ -42,7 +42,7 @@ export const load: PageServerLoad = async () => {
 
 export const actions = {
 	syncTrades: async () => {
-		// @FIXME: This does not work somehow and the documentatino is not clear.
+		// @FIXME: This does not work somehow and the documentation is not clear.
 		// const result = await TrdGetHistoryOrderList();
 		console.log('Do nothing at the moment');
 	},
