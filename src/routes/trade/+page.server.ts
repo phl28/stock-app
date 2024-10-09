@@ -14,6 +14,7 @@ import { PUBLIC_POLYGON_IO_URL, PUBLIC_SERVER_URL } from '$env/static/public';
 import { error, isHttpError } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types.js';
 import type { FutuResponse } from '$lib/types/serverTypes.js';
+import { dev } from '$app/environment';
 
 
 const checkTickerValid = async (ticker: string) => {
@@ -30,7 +31,7 @@ const checkTickerValid = async (ticker: string) => {
 const fetchFutuTrades = async (startDate?: Date, endDate?: Date) => {
 	const parsedStartDate = startDate?.toISOString().split('T')[0];
 	const parsedEndDate = endDate?.toISOString().split('T')[0];
-	const url = `${PUBLIC_SERVER_URL !== "" ? PUBLIC_SERVER_URL : '/api'}/sync-futu-trades${parsedStartDate ? `?start_date=${parsedStartDate}` : ''}${parsedEndDate && parsedEndDate !== parsedStartDate ? `&end_date=${parsedEndDate}` : ''}`;
+	const url = `${dev ? PUBLIC_SERVER_URL : '/api'}/sync-futu-trades${parsedStartDate ? `?start_date=${parsedStartDate}` : ''}${parsedEndDate && parsedEndDate !== parsedStartDate ? `&end_date=${parsedEndDate}` : ''}`;
 	try {
 		const res = await fetch(url);
 		if (res.ok) {
