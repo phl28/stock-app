@@ -1,7 +1,7 @@
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Query
 import uvicorn
-from futubull import FUTU
+from futubull import FUTU, FUTUResponse
 
 app = FastAPI()
 
@@ -9,7 +9,7 @@ app = FastAPI()
 def sync_futu_trades(
     start_date: str = Query(None, description="Start date in format YYYY-MM-DD"),
     end_date: str = Query(None, description="End date in format YYYY-MM-DD")
-):
+) -> FUTUResponse:
     futu = FUTU()
     try:
         parsed_start_date = datetime.strptime(start_date, "%Y-%m-%d") if start_date else None

@@ -46,7 +46,6 @@ export const actions = {
 	searchArticles: async ({ request }) => {
 		const searchTerm = (await request.formData()).get('searchTerm') as string;
 		const result = await searchArticles(searchTerm);
-		console.log(result);
 		return result satisfies SearchArticlesResponse;
 	}
 } satisfies Actions;
