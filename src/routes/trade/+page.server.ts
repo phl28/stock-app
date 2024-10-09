@@ -3,15 +3,18 @@ import {
 	deleteTradeHistory,
 	deleteTradeHistoryBatch,
 	getAllTradeHistory,
+	getLastTradeHistory,
 	getPositions,
 	insertTradeHistory,
 	updateTradeHistoryBatch
 } from '../../server/db/database';
 import { reviver } from '$lib/helpers/JsonHelpers';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
-import { PUBLIC_POLYGON_IO_URL } from '$env/static/public';
+import { PUBLIC_POLYGON_IO_URL, PUBLIC_SERVER_URL } from '$env/static/public';
 import { error, isHttpError } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types.js';
+import type { FutuResponse } from '$lib/types/serverTypes.js';
+
 
 const checkTickerValid = async (ticker: string) => {
 	const res = await fetch(
@@ -23,6 +26,21 @@ const checkTickerValid = async (ticker: string) => {
 	}
 	return false;
 };
+
+const fetchFutuTrades = async (startDate?: Date, endDate?: Date) => {
+	const parsedStartDate = startDate?.toISOString().split('T')[0];
+	const parsedEndDate = endDate?.toISOString().split('T')[0];
+	const url = `${PUBLIC_SERVER_URL ?? '/api'}/sync-futu-trades${parsedStartDate ? `?start_date=${parsedStartDate}` : ''}${parsedEndDate && parsedEndDate !== parsedStartDate ? `&end_date=${parsedEndDate}` : ''}`;
+	try {
+		const res = await fetch(url);
+		if (res.ok) {
+			const data = await res.json();
+			return data;
+		}
+	} catch (err) {
+		console.error('Error fetching trades from server', err);
+	}
+}
 
 export const load: PageServerLoad = async () => {
 	try {
@@ -42,9 +60,23 @@ export const load: PageServerLoad = async () => {
 
 export const actions = {
 	syncTrades: async () => {
-		// @FIXME: This does not work somehow and the documentation is not clear.
-		// const result = await TrdGetHistoryOrderList();
-		console.log('Do nothing at the moment');
+		const lastTrade = await getLastTradeHistory('FUTU');
+		let futuTrades: FutuResponse;
+		if (lastTrade) {
+			futuTrades = await fetchFutuTrades(lastTrade.executedAt, new Date());
+		} else {
+			futuTrades = await fetchFutuTrades();
+		}
+		if (futuTrades.error) {
+			throw error(400, futuTrades.error);
+		}
+		for (const trade of futuTrades.trades) {
+			const insertTrade = {
+				...trade,
+				executedAt: new Date(trade.executedAt),
+			}
+			await insertTradeHistory(insertTrade);
+		}
 	},
 	addTrade: async ({ request }) => {
 		const formData = await request.formData();

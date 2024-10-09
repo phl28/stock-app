@@ -20,6 +20,14 @@ export const getAllTradeHistory = async () => {
 	return tradeHistory;
 };
 
+export const getLastTradeHistory = async (platform: "FUTU" | "IBKR") => {
+	const lastTrade = await db.query.tradeHistory.findFirst({
+		where: eq(schema.tradeHistory.platform, platform),
+		orderBy: [desc(schema.tradeHistory.executedAt)]
+	});
+	return lastTrade;
+}
+
 export const getPositions = async () => {
 	return await db.query.positions.findMany({
 		orderBy: [desc(schema.positions.lastUpdatedAt)]

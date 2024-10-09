@@ -6,7 +6,7 @@ import tempfile
 from pydantic import BaseModel
 from futu import OpenSecTradeContext, TrdMarket, SecurityFirm, RET_OK, TrdEnv, SysConfig
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, cast
 
 class Region(str, Enum):
     US = "US"
@@ -98,7 +98,6 @@ class FUTU(BaseModel):
 
             start_str = start_date.strftime("%Y-%m-%d %H:%M:%S") if start_date else "2000-06-17 21:15:59"
             end_str = end_date.strftime("%Y-%m-%d %H:%M:%S") if end_date else datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
             ret, data = trd_ctx.history_order_list_query(
                 start=start_str,
                 end=end_str,
@@ -112,8 +111,8 @@ class FUTU(BaseModel):
                     price = Decimal(str(row['dealt_avg_price'])) if row['dealt_avg_price'] else Decimal(str(row['price']))
                     volume = int(row['dealt_qty']) if row['dealt_qty'] else Decimal(str(row['qty']))
                     total_cost = price * volume
-                    code = row['code']
-                    currency = row['currency']
+                    code = cast(str, row['code'])
+                    currency = cast(str, row['currency'])
                     
                     trade = TradeData(
                         region=Region.US if market == TrdMarket.US else Region.HK if market == TrdMarket.HK else Region.UK,
@@ -122,11 +121,11 @@ class FUTU(BaseModel):
                         price=price,
                         totalCost=total_cost,
                         volume=volume,
-                        tradeSide=TradeSide.BUY if row['trd_side'] == 'BUY' or row['trd_side'] == 'BUY_BACK' else TradeSide.SELL,
-                        executedAt=datetime.datetime.strptime(row['updated_time'], "%Y-%m-%d %H:%M:%S"),
+                        tradeSide=TradeSide.BUY if cast(str,row['trd_side']) == 'BUY' or cast(str,row['trd_side']) == 'BUY_BACK' else TradeSide.SELL,
+                        executedAt=datetime.strptime(cast(str,row['updated_time']).split('.')[0], "%Y-%m-%d %H:%M:%S"),
                     )
                     trades.append(trade)
-                
+
                 return FUTUResponse(trades=trades)
             else:
                 return FUTUResponse(trades=[], error=f"history_order_list_query error: {data}")
