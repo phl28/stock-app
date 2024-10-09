@@ -30,7 +30,7 @@ const checkTickerValid = async (ticker: string) => {
 const fetchFutuTrades = async (startDate?: Date, endDate?: Date) => {
 	const parsedStartDate = startDate?.toISOString().split('T')[0];
 	const parsedEndDate = endDate?.toISOString().split('T')[0];
-	const url = `${PUBLIC_SERVER_URL ?? '/api'}/sync-futu-trades${parsedStartDate ? `?start_date=${parsedStartDate}` : ''}${parsedEndDate && parsedEndDate !== parsedStartDate ? `&end_date=${parsedEndDate}` : ''}`;
+	const url = `${PUBLIC_SERVER_URL !== "" ? PUBLIC_SERVER_URL : '/api'}/sync-futu-trades${parsedStartDate ? `?start_date=${parsedStartDate}` : ''}${parsedEndDate && parsedEndDate !== parsedStartDate ? `&end_date=${parsedEndDate}` : ''}`;
 	try {
 		const res = await fetch(url);
 		if (res.ok) {
