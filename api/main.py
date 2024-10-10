@@ -1,7 +1,7 @@
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Query
 import uvicorn
-from futubull import FUTU, FUTUResponse
+from .futubull import FUTU, FUTUResponse
 
 app = FastAPI()
 
