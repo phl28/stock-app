@@ -8,10 +8,6 @@ from futu import OpenSecTradeContext, TrdMarket, SecurityFirm, RET_OK, TrdEnv, S
 from datetime import datetime
 from typing import List, Optional, cast
 
-if 'HOME' not in os.environ:
-    temp_dir = tempfile.gettempdir()
-    os.environ['HOME'] = temp_dir
-
 class Region(str, Enum):
     US = "US"
     HK = "HK"
