@@ -45,6 +45,7 @@
 					<td>Quantity</td>
 					<td>Price</td>
 					<td>Platform</td>
+					<td>Total Amount</td>
 					<td>Side</td>
 					<td>Executed At</td>
 					<td>Notes</td>
@@ -68,6 +69,7 @@
 						<td>{trade.volume}</td>
 						<td>{formatCurrency(trade.price, trade.region === 'US' ? 'USD' : 'HKD')}</td>
 						<td>{trade.platform}</td>
+						<td>{formatCurrency(trade.totalCost, trade.region === 'US' ? 'USD' : 'HKD')}</td>
 						<td>{trade.tradeSide}</td>
 						<td>{new Date(trade.executedAt).toLocaleDateString()}</td>
 						<td>
