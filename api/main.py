@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException, Query
 import uvicorn
 from futubull import FUTU, FUTUResponse
@@ -12,7 +12,7 @@ def sync_futu_trades(
 ) -> FUTUResponse:
     futu = FUTU()
     try:
-        parsed_start_date = datetime.strptime(start_date, "%Y-%m-%d") if start_date else None
+        parsed_start_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=1) if start_date else None
         parsed_end_date = datetime.strptime(end_date, "%Y-%m-%d") if end_date else None
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid date format. Use YYYY-MM-DD. Error: {str(e)}")

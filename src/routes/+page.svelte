@@ -237,9 +237,11 @@
 					</label>
 				</form>
 				<div class="mb-4 space-y-1">
-					<label class="input input-sm input-bordered flex items-center gap-4">
+					<label
+						class="input input-sm input-bordered flex items-center justify-between gap-4 text-nowrap"
+					>
 						Account Size (USD)
-						<input type="number" class="grow" bind:value={accSize} />
+						<input type="number" bind:value={accSize} />
 					</label>
 					<label class="input input-sm input-bordered flex items-center gap-4">
 						Risk
