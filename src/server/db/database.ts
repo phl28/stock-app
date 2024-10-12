@@ -28,8 +28,9 @@ export const getLastTradeHistory = async (platform: "FUTU" | "IBKR") => {
 	return lastTrade;
 }
 
-export const getPositions = async () => {
+export const getActivePositions = async () => {
 	return await db.query.positions.findMany({
+		where: eq(schema.positions.closed, false),
 		orderBy: [desc(schema.positions.openedAt)]
 	});
 };
