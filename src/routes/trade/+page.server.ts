@@ -4,7 +4,7 @@ import {
 	deleteTradeHistoryBatch,
 	getAllTradeHistory,
 	getLastTradeHistory,
-	getPositions,
+	getActivePositions,
 	insertTradeHistory,
 	updateTradeHistoryBatch
 } from '../../server/db/database';
@@ -46,7 +46,7 @@ const fetchFutuTrades = async (startDate?: Date, endDate?: Date) => {
 export const load: PageServerLoad = async () => {
 	try {
 		const trades = await getAllTradeHistory();
-		const positions = await getPositions();
+		const positions = await getActivePositions();
 		return {
 			trades,
 			positions
