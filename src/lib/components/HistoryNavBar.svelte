@@ -19,17 +19,18 @@
 	let platform: string;
 	let side: string;
 	let executedAt: string = new Date().toISOString().split('T')[0];
-	let notes: string;
 
-	function openModal() {
+	let addAnother: boolean = true;
+
+	const openModal = () => {
 		const modal = document.getElementById('add-trade-modal') as HTMLDialogElement;
 		modal.showModal();
-	}
+	};
 
-	function closeModal() {
+	const closeModal = () => {
 		const modal = document.getElementById('add-trade-modal') as HTMLDialogElement;
 		modal.close();
-	}
+	};
 </script>
 
 <div class="m-2 flex flex-row items-center justify-between">
@@ -96,6 +97,9 @@
 							if (result.type === 'success') {
 								dispatchToast({ type: 'success', message: 'Trade added successfully!' });
 								await update();
+								if (!addAnother) {
+									closeModal();
+								}
 							} else if (result.type === 'error') {
 								dispatchToast({ type: 'error', message: result.error.message });
 							}
@@ -205,16 +209,24 @@
 							name="executedAt"
 						/>
 					</div>
-					<div class="modal-action">
-						<form method="dialog">
-							<button class="btn">Close</button>
-						</form>
-						<button
-							class="btn btn-primary"
-							type="submit"
-							on:click={closeModal}
-							disabled={!isFormValid}>Add</button
-						>
+					<div class="flex items-center justify-between">
+						<div class="form-control">
+							<label class="label mt-6 flex cursor-pointer gap-3">
+								<span class="label-text">Add another</span>
+								<input
+									type="checkbox"
+									class="toggle"
+									checked={addAnother}
+									on:change={() => (addAnother = !addAnother)}
+								/>
+							</label>
+						</div>
+						<div class="modal-action">
+							<form method="dialog">
+								<button class="btn">Close</button>
+							</form>
+							<button class="btn btn-primary" type="submit" disabled={!isFormValid}>Add</button>
+						</div>
 					</div>
 				</form>
 			</div>
