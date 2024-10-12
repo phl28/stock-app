@@ -18,6 +18,10 @@ import { dev } from '$app/environment';
 
 
 const checkTickerValid = async (ticker: string) => {
+	if (ticker.at(0) === '(' && ticker.at(-1) === ')') {
+		// this indicates the ticker is wrapped in a bracket and it is delisted.	
+		return true;
+	}
 	const res = await fetch(
 		`${PUBLIC_POLYGON_IO_URL}/v3/reference/tickers?ticker=${ticker}&apiKey=${PRIVATE_POLYGON_IO_API_KEY}`
 	);
