@@ -15,7 +15,7 @@ export type SelectArticle = typeof schema.articles.$inferSelect;
 
 export const getAllTradeHistory = async () => {
 	const tradeHistory = await db.query.tradeHistory.findMany({
-		orderBy: [desc(schema.tradeHistory.executedAt)]
+		orderBy: [desc(schema.tradeHistory.executedAt), desc(schema.tradeHistory.createdAt)]
 	});
 	return tradeHistory;
 };
