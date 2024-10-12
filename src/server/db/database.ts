@@ -30,7 +30,7 @@ export const getLastTradeHistory = async (platform: "FUTU" | "IBKR") => {
 
 export const getPositions = async () => {
 	return await db.query.positions.findMany({
-		orderBy: [desc(schema.positions.lastUpdatedAt)]
+		orderBy: [desc(schema.positions.openedAt)]
 	});
 };
 
