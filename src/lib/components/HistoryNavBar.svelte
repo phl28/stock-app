@@ -4,6 +4,7 @@
 	import type { Trade } from '$lib/types/tradeTypes';
 	import { replacer } from '$lib/helpers/JsonHelpers';
 	import { dispatchToast } from '../../routes/stores';
+	import Papa from 'papaparse';
 
 	export let selectedTrades: Map<number, Trade> = new Map();
 	export let hasEditedNotes: boolean;
@@ -22,13 +23,137 @@
 
 	let addAnother: boolean = true;
 
-	const openModal = () => {
+	const openAddModal = () => {
 		const modal = document.getElementById('add-trade-modal') as HTMLDialogElement;
 		modal.showModal();
 	};
 
-	const closeModal = () => {
+	const closeAddModal = () => {
 		const modal = document.getElementById('add-trade-modal') as HTMLDialogElement;
+		modal.close();
+	};
+
+	const expectedHeaders = [
+		{ label: 'Ticker', value: 'ticker', required: true, similar: ['symbol'] },
+		{ label: 'Region', value: 'region', required: true, similar: [] },
+		{ label: 'Currency', value: 'currency', required: true, similar: [] },
+		{ label: 'Price', value: 'price', required: true, similar: [] },
+		{ label: 'Fees', value: 'fees', required: false, similar: [] },
+		{ label: 'Total Cost', value: 'totalCost', required: true, similar: ['amount'] },
+		{ label: 'Volume', value: 'volume', required: true, similar: ['qty'] },
+		{ label: 'Platform', value: 'platform', required: true, similar: [] },
+		{ label: 'Trade Side', value: 'tradeSide', required: true, similar: ['direction'] },
+		{ label: 'Executed At', value: 'executedAt', required: true, similar: ['fill time'] }
+	];
+
+	const requiredHeaders = expectedHeaders
+		.filter((header) => header.required)
+		.map((header) => header.value);
+
+	let headers: string[] = [];
+	let headerMapping: { [key: string]: string } = {};
+	let file: File | null = null;
+	let importStep: number = 0;
+	let parsedData: { [key: string]: any }[] = [];
+
+	const handleFileUpload = (event: Event) => {
+		const target = event.target as HTMLInputElement;
+		if (target.files) {
+			file = target.files[0];
+		}
+	};
+
+	const parseCsv = () => {
+		if (!file) {
+			dispatchToast({ type: 'error', message: 'Please select a file first.' });
+			return;
+		}
+
+		Papa.parse(file, {
+			complete: (results) => {
+				parsedData = results.data as { [key: string]: any }[];
+				headers = results.meta.fields ?? [];
+				headerMapping = {};
+				headers.forEach((header) => {
+					const match = expectedHeaders.find(
+						(eh) =>
+							eh.similar.some(
+								(similarHeader) =>
+									similarHeader.toLowerCase().includes(header.toLowerCase()) ||
+									(similarHeader !== '' &&
+										header.toLowerCase().includes(similarHeader.toLowerCase()))
+							) || header.toLowerCase().includes(eh.value.toLowerCase())
+					);
+					if (match) {
+						headerMapping[header] = match.value;
+					}
+				});
+				importStep = 1;
+			},
+			error: (error) => {
+				dispatchToast({ type: 'error', message: error.message });
+			},
+			header: true
+		});
+	};
+
+	const importTrades = async () => {
+		const mappedTrades = parsedData.map((row) => {
+			if (!row) return;
+			const mappedRow: { [key: string]: any } = {
+				region: 'US',
+				currency: 'USD',
+				platform: 'FUTU',
+				fees: '',
+				profitLoss: null
+			};
+			Object.entries(headerMapping).forEach(([csvHeader, requiredHeader]) => {
+				if (requiredHeader === '') return;
+				if (requiredHeader === 'executedAt') {
+					mappedRow.executedAt = new Date(row[csvHeader]);
+				} else if (requiredHeader === 'tradeSide') {
+					mappedRow.tradeSide = row[csvHeader]?.toLowerCase().includes('BUY') ? 'BUY' : 'SELL';
+				} else if (requiredHeader === 'volume') {
+					mappedRow[requiredHeader] = parseFloat(row[csvHeader]);
+				} else {
+					mappedRow[requiredHeader] = row[csvHeader];
+				}
+			});
+			if (mappedRow.fees === '') mappedRow.fees = '0';
+			if (!mappedRow.ticker || mappedRow.ticker.trim() === '') {
+				return;
+			}
+			return mappedRow;
+		});
+		const response = await fetch('/trade', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ trades: mappedTrades })
+		});
+
+		if (response.ok) {
+			dispatchToast({ type: 'success', message: 'Trades imported successfully!' });
+		} else {
+			const errorData = await response.json();
+			dispatchToast({ type: 'error', message: errorData.message || 'Failed to import trades.' });
+		}
+		closeImportModal();
+	};
+
+	const openImportModal = () => {
+		importStep = 0;
+		file = null;
+		parsedData = [];
+		headers = [];
+		headerMapping = {};
+		const modal = document.getElementById('import-trade-modal') as HTMLDialogElement;
+		modal.showModal();
+	};
+
+	const closeImportModal = () => {
+		const modal = document.getElementById('import-trade-modal') as HTMLDialogElement;
 		modal.close();
 	};
 </script>
@@ -80,14 +205,58 @@
 				</form>
 			{/if}
 		{/if}
-		<button class="btn btn-neutral" on:click={openModal}>Add Trade</button>
+		<button class="btn btn-neutral" on:click={openAddModal}>Add</button>
+		<button class="btn btn-neutral" on:click={openImportModal}>Bulk Import</button>
 		<form method="POST" action="?/syncTrades">
-			<button class="btn btn-neutral" type="submit">Sync Trades</button>
+			<button class="btn btn-neutral" type="submit">Sync</button>
 		</form>
+
+		<dialog id="import-trade-modal" class="modal">
+			<div class="modal-box">
+				<h3 class="mb-6 text-lg font-bold">Import trades</h3>
+				{#if importStep === 0}
+					<div>
+						<input
+							type="file"
+							class="file-input file-input-bordered w-full max-w-xs"
+							accept=".csv"
+							on:change={handleFileUpload}
+							required
+						/>
+						<div class="modal-action">
+							<button class="btn" on:click={closeImportModal}>Close</button>
+							<button class="btn btn-primary" on:click={parseCsv} disabled={!file}>Next</button>
+						</div>
+					</div>
+				{:else if importStep === 1}
+					<div>
+						<h4 class="mb-4">Map CSV headers to required import headers:</h4>
+						{#each headers as header}
+							<div class="mb-2 flex flex-row items-center justify-between">
+								<span>{header}: </span>
+								<select
+									class="select select-bordered w-full max-w-xs"
+									bind:value={headerMapping[header]}
+								>
+									<option value="">-- Select --</option>
+									{#each expectedHeaders as { label, value }}
+										<option {value}>{label}</option>
+									{/each}
+								</select>
+							</div>
+						{/each}
+						<div class="modal-action">
+							<button class="btn" on:click={() => (importStep = 0)}>Back</button>
+							<button class="btn btn-primary" on:click={importTrades}>Import</button>
+						</div>
+					</div>
+				{/if}
+			</div>
+		</dialog>
 
 		<dialog id="add-trade-modal" class="modal">
 			<div class="modal-box">
-				<h3 class="text-lg font-bold">Add new trade</h3>
+				<h3 class="text-lg font-bold">Add new trade(s)</h3>
 				<p class="py-4">Enter the details of the new trade:</p>
 				<form
 					method="POST"
@@ -98,7 +267,7 @@
 								dispatchToast({ type: 'success', message: 'Trade added successfully!' });
 								await update();
 								if (!addAnother) {
-									closeModal();
+									closeAddModal();
 								}
 							} else if (result.type === 'error') {
 								dispatchToast({ type: 'error', message: result.error.message });
