@@ -136,10 +136,4 @@ export const actions = {
 		await deleteTradeHistoryBatch(ids);
 		return;
 	},
-	bulkImportTrades: async ({ request }) => {
-		const data = await request.json();
-		const trades = data.trades;
-		console.log('trades', trades);
-		return;
-	}
 };
