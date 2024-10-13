@@ -38,114 +38,124 @@ export const getActivePositions = async () => {
 export const insertTradeHistory = async (trade: InsertTrade) => {
 	trade.ticker = trade.ticker.toUpperCase();
 
-	return await db.transaction(async (tx) => {
-		const [insertedTrade] = await tx
-			.insert(schema.tradeHistory)
-			.values({
-				...trade,
-				updatedAt: new Date()
-			})
-			.returning();
+	try {
+		const result = await db.transaction(async (tx) => {
+			const [insertedTrade] = await tx
+				.insert(schema.tradeHistory)
+				.values({
+					...trade,
+					updatedAt: new Date()
+				})
+				.returning();
 
-		const existingPosition = await tx.query.positions.findFirst({
-			where: and(
-				eq(schema.positions.ticker, trade.ticker),
-				eq(schema.positions.platform, trade.platform as any),
-				eq(schema.positions.region, trade.region as any)
-			)
+
+			const existingPosition = await tx.query.positions.findFirst({
+				where: and(
+					eq(schema.positions.ticker, trade.ticker),
+					eq(schema.positions.platform, trade.platform as any),
+					eq(schema.positions.region, trade.region as any)
+				)
+			});
+
+			if (existingPosition) {
+				let updatedVolume, updatedTotalCost, updatedAveragePrice, realizedProfitLoss;
+				const isClosingTrade =
+					(existingPosition.isShort && trade.tradeSide === 'BUY') ||
+					(!existingPosition.isShort && trade.tradeSide === 'SELL');
+
+				if (isClosingTrade) {
+					const closingVolume = Math.min(Math.abs(existingPosition.volume), trade.volume);
+					const remainingVolume = Math.abs(existingPosition.volume) - closingVolume;
+
+					if (existingPosition.isShort) {
+						realizedProfitLoss =
+							Number(existingPosition.realizedProfitLoss) +
+							(Number(existingPosition.averagePrice) - Number(trade.price)) * closingVolume -
+							Number(trade.fees);
+					} else {
+						realizedProfitLoss =
+							Number(existingPosition.realizedProfitLoss) +
+							(Number(trade.price) - Number(existingPosition.averagePrice)) * closingVolume -
+							Number(trade.fees);
+					}
+
+					updatedVolume = remainingVolume * (existingPosition.isShort ? -1 : 1);
+					updatedTotalCost = Number(existingPosition.totalCost) - Number(trade.totalCost);
+					updatedAveragePrice = remainingVolume > 0 ? updatedTotalCost / remainingVolume : 0;
+
+					if (trade.volume > Math.abs(existingPosition.volume)) {
+						const flippedVolume = trade.volume - Math.abs(existingPosition.volume);
+						updatedVolume = flippedVolume * (existingPosition.isShort ? 1 : -1);
+						updatedTotalCost = Number(trade.price) * flippedVolume;
+						updatedAveragePrice = Number(trade.price);
+					}
+				} else {
+					if (existingPosition.isShort) {
+						updatedVolume = existingPosition.volume - trade.volume;
+					} else {
+						updatedVolume = existingPosition.volume + trade.volume;
+					}
+					updatedTotalCost = Number(existingPosition.totalCost) + Number(trade.totalCost);
+					updatedAveragePrice = Math.abs(updatedTotalCost / updatedVolume);
+					realizedProfitLoss = Number(existingPosition.realizedProfitLoss);
+				}
+
+				if (updatedVolume === 0) {
+					await tx
+						.update(schema.positions)
+						.set({
+							volume: updatedVolume,
+							totalCost: String(updatedTotalCost),
+							averagePrice: String(updatedAveragePrice),
+							lastUpdatedAt: new Date(),
+							realizedProfitLoss: String(realizedProfitLoss),
+							closed: true,
+							closedAt: new Date(),
+							isShort: false
+						})
+						.where(eq(schema.positions.id, existingPosition.id));
+				} else {
+					await tx
+						.update(schema.positions)
+						.set({
+							volume: updatedVolume,
+							totalCost: String(updatedTotalCost),
+							averagePrice: String(updatedAveragePrice),
+							lastUpdatedAt: new Date(),
+							realizedProfitLoss: String(realizedProfitLoss),
+							isShort: updatedVolume < 0
+						})
+						.where(eq(schema.positions.id, existingPosition.id));
+				}
+			} else {
+				const newPosition: InsertPosition = {
+					ticker: trade.ticker,
+					region: trade.region,
+					volume: trade.tradeSide === 'SELL' ? -trade.volume : trade.volume,
+					averagePrice: trade.price,
+					totalCost: trade.totalCost,
+					openedAt: trade.executedAt,
+					lastUpdatedAt: new Date(),
+					platform: trade.platform,
+					notes: '',
+					realizedProfitLoss: '0',
+					isShort: trade.tradeSide === 'SELL'
+				};
+
+				await tx.insert(schema.positions).values(newPosition);
+			}
+
+			return insertedTrade;
 		});
-
-		if (existingPosition) {
-			let updatedVolume, updatedTotalCost, updatedAveragePrice, realizedProfitLoss;
-			const isClosingTrade =
-				(existingPosition.isShort && trade.tradeSide === 'BUY') ||
-				(!existingPosition.isShort && trade.tradeSide === 'SELL');
-
-			if (isClosingTrade) {
-				const closingVolume = Math.min(Math.abs(existingPosition.volume), trade.volume);
-				const remainingVolume = Math.abs(existingPosition.volume) - closingVolume;
-
-				if (existingPosition.isShort) {
-					realizedProfitLoss =
-						Number(existingPosition.realizedProfitLoss) +
-						(Number(existingPosition.averagePrice) - Number(trade.price)) * closingVolume -
-						Number(trade.fees);
-				} else {
-					realizedProfitLoss =
-						Number(existingPosition.realizedProfitLoss) +
-						(Number(trade.price) - Number(existingPosition.averagePrice)) * closingVolume -
-						Number(trade.fees);
-				}
-
-				updatedVolume = remainingVolume * (existingPosition.isShort ? -1 : 1);
-				updatedTotalCost = Number(existingPosition.totalCost) - Number(trade.totalCost);
-				updatedAveragePrice = remainingVolume > 0 ? updatedTotalCost / remainingVolume : 0;
-
-				if (trade.volume > Math.abs(existingPosition.volume)) {
-					const flippedVolume = trade.volume - Math.abs(existingPosition.volume);
-					updatedVolume = flippedVolume * (existingPosition.isShort ? 1 : -1);
-					updatedTotalCost = Number(trade.price) * flippedVolume;
-					updatedAveragePrice = Number(trade.price);
-				}
-			} else {
-				if (existingPosition.isShort) {
-					updatedVolume = existingPosition.volume - trade.volume;
-				} else {
-					updatedVolume = existingPosition.volume + trade.volume;
-				}
-				updatedTotalCost = Number(existingPosition.totalCost) + Number(trade.totalCost);
-				updatedAveragePrice = Math.abs(updatedTotalCost / updatedVolume);
-				realizedProfitLoss = Number(existingPosition.realizedProfitLoss);
-			}
-
-			if (updatedVolume === 0) {
-				await tx
-					.update(schema.positions)
-					.set({
-						volume: updatedVolume,
-						totalCost: String(updatedTotalCost),
-						averagePrice: String(updatedAveragePrice),
-						lastUpdatedAt: new Date(),
-						realizedProfitLoss: String(realizedProfitLoss),
-						closed: true,
-						closedAt: new Date(),
-						isShort: false
-					})
-					.where(eq(schema.positions.id, existingPosition.id));
-			} else {
-				await tx
-					.update(schema.positions)
-					.set({
-						volume: updatedVolume,
-						totalCost: String(updatedTotalCost),
-						averagePrice: String(updatedAveragePrice),
-						lastUpdatedAt: new Date(),
-						realizedProfitLoss: String(realizedProfitLoss),
-						isShort: updatedVolume < 0
-					})
-					.where(eq(schema.positions.id, existingPosition.id));
-			}
-		} else {
-			const newPosition: InsertPosition = {
-				ticker: trade.ticker,
-				region: trade.region,
-				volume: trade.tradeSide === 'SELL' ? -trade.volume : trade.volume,
-				averagePrice: trade.price,
-				totalCost: trade.totalCost,
-				openedAt: trade.executedAt,
-				lastUpdatedAt: new Date(),
-				platform: trade.platform,
-				notes: '',
-				realizedProfitLoss: '0',
-				isShort: trade.tradeSide === 'SELL'
-			};
-
-			await tx.insert(schema.positions).values(newPosition);
-		}
-
-		return insertedTrade;
-	});
+		return result;
+	} catch (error) {
+		throw error;
+	}
 };
+
+export const bulkInsertTradeHistory = async () => {
+	// @TODO: Implement bulk insert using copy and raw SQL
+}
 
 export const updateTradeHistoryBatch = async (trades: InsertTrade[]) => {
 	const values = trades.map(

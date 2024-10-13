@@ -16,7 +16,6 @@ import type { PageServerLoad } from './$types.js';
 import type { FutuResponse } from '$lib/types/serverTypes.js';
 import { dev } from '$app/environment';
 
-
 const checkTickerValid = async (ticker: string) => {
 	if (ticker.at(0) === '(' && ticker.at(-1) === ')') {
 		// this indicates the ticker is wrapped in a bracket and it is delisted.	
@@ -82,6 +81,7 @@ export const actions = {
 			}
 			await insertTradeHistory(insertTrade);
 		}
+		return;
 	},
 	addTrade: async ({ request }) => {
 		const formData = await request.formData();
@@ -110,6 +110,7 @@ export const actions = {
 			parseFloat(newTrade.fees)
 		).toString();
 		await insertTradeHistory(newTrade);
+		return;
 	},
 	updateTradeBatch: async ({ request }) => {
 		const formData = await request.formData();
@@ -120,16 +121,25 @@ export const actions = {
 			tradeList.push(trade);
 		}
 		await updateTradeHistoryBatch(tradeList);
+		return;
 	},
 	deleteTrade: async ({ request }) => {
 		const formData = await request.formData();
 		const id = parseInt(formData.get('id') as string);
 		await deleteTradeHistory(id);
+		return;
 	},
 	deleteTradesBatch: async ({ request }) => {
 		const formData = await request.formData();
 		const stringIds = formData.getAll('id') as string[];
 		const ids = stringIds.map((id) => parseInt(id));
 		await deleteTradeHistoryBatch(ids);
+		return;
+	},
+	bulkImportTrades: async ({ request }) => {
+		const data = await request.json();
+		const trades = data.trades;
+		console.log('trades', trades);
+		return;
 	}
 };
