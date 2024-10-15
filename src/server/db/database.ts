@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/vercel-postgres';
 import { sql } from '@vercel/postgres';
 
 import * as schema from './schema';
-import { eq, inArray, sql as dsql, and, gte, lte, desc } from 'drizzle-orm';
+import { eq, inArray, sql as dsql, and, gte, lte, desc, count } from 'drizzle-orm';
 
 export const db = drizzle(sql, { schema });
 
@@ -18,6 +18,19 @@ export const getAllTradeHistory = async () => {
 		orderBy: [desc(schema.tradeHistory.executedAt), desc(schema.tradeHistory.createdAt)]
 	});
 	return tradeHistory;
+};
+
+export const getNumOfTradeHistory = async () => {
+	const counts = await db.select({ count: count() }).from(schema.tradeHistory);
+	return counts;
+}
+
+export const getPaginatedTradeHistory = async (pageNumber: number = 1, pageSize: number = 9) => {
+	const trades = await db.select().from(schema.tradeHistory)
+						.orderBy(desc(schema.tradeHistory.executedAt), desc(schema.tradeHistory.createdAt))
+						.limit(pageSize)
+						.offset((pageNumber - 1) * pageSize);
+	return trades;
 };
 
 export const getLastTradeHistory = async (platform: "FUTU" | "IBKR") => {
@@ -382,12 +395,13 @@ export const getArticles = async (pageSize: number, pageNumber: number = 1) => {
 		.orderBy(desc(schema.articles.articleId))
 		.limit(pageSize)
 		.offset((pageNumber - 1) * pageSize);
-	const counts = db.select({ count: dsql<number>`count(*)`.mapWith(Number) }).from(schema.articles);
+	const counts = await db.select({ count: count() }).from(schema.articles);
+	const articleCount = counts[0].count;
 	return {
 		articles,
 		currentPage: pageNumber,
-		totalPages: Math.ceil(Number(counts) / pageSize),
-		totalArticles: Number(counts)
+		totalPages: Math.ceil(Number(articleCount) / pageSize),
+		totalArticles: Number(articleCount)
 	};
 };
 

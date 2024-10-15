@@ -115,7 +115,7 @@
 		{/if}
 	</div>
 	{#if data.totalPages > 1}
-		<div class="join mt-auto justify-center">
+		<div class="join mt-6 justify-center">
 			<button class="btn join-item" on:click={handlePageDecrement}>«</button>
 			<button class="btn join-item">{data.currentPage}</button>
 			<button class="btn join-item" on:click={handlePageIncrement}>»</button>
