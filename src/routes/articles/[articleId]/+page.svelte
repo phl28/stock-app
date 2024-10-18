@@ -2,7 +2,7 @@
 	import Editor from '$lib/components/Editor.svelte';
 	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
 	import type { PageData } from './$types';
-	import { dispatchToast } from '../../stores';
+	import { dispatchToast } from '@/routes/stores';
 	import { Trash2, Pencil } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 

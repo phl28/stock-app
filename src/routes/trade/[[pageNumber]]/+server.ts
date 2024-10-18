@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types'
-import { insertTradeHistory } from '../../../server/db/database';
+import { insertTradeHistory } from '@/server/db/database';
 
 export const POST: RequestHandler = async ({ request }) => {
     try {

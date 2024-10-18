@@ -1,5 +1,5 @@
 import { error, redirect, type Actions } from '@sveltejs/kit';
-import { addArticle, getPaginatedArticles, searchArticles } from '../../../../server/db/database.js';
+import { addArticle, getPaginatedArticles, searchArticles } from '@/server/db/database.js';
 import type { PageServerLoad } from './$types.js'
 
 type ArticleData = {

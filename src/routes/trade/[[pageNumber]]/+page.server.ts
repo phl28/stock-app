@@ -8,7 +8,7 @@ import {
 	insertTradeHistory,
 	updateTradeHistoryBatch,
 	getPaginatedTradeHistory
-} from '../../../server/db/database.js';
+} from '@/server/db/database.js';
 import { reviver } from '$lib/helpers/JsonHelpers';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL, PUBLIC_SERVER_URL } from '$env/static/public';
