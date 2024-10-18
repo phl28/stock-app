@@ -25,12 +25,19 @@ export const getNumOfTradeHistory = async () => {
 	return counts;
 }
 
-export const getPaginatedTradeHistory = async (pageNumber: number = 1, pageSize: number = 9) => {
+export const getPaginatedTradeHistory = async (pageNumber: number = 1, pageSize: number = 20) => {
 	const trades = await db.select().from(schema.tradeHistory)
 						.orderBy(desc(schema.tradeHistory.executedAt), desc(schema.tradeHistory.createdAt))
 						.limit(pageSize)
 						.offset((pageNumber - 1) * pageSize);
-	return trades;
+	const counts = await getNumOfTradeHistory();
+	const tradeCount = counts[0].count;
+	return {
+		trades,
+		currentPage: pageNumber,
+		totalPages: Math.ceil(Number(tradeCount) / pageSize),
+		totalTrades: Number(tradeCount)
+	};
 };
 
 export const getLastTradeHistory = async (platform: "FUTU" | "IBKR") => {
@@ -388,7 +395,7 @@ export const getPositionPerformance = async (positionId: number) => {
 	return null;
 };
 
-export const getArticles = async (pageSize: number, pageNumber: number = 1) => {
+export const getPaginatedArticles = async (pageSize: number, pageNumber: number = 1) => {
 	const articles = await db
 		.select()
 		.from(schema.articles)

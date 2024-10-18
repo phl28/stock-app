@@ -17,7 +17,7 @@
 			if (!response.ok) {
 				throw new Error('Failed to delete article');
 			}
-			goto('/articles');
+			goto('/articles/page/1');
 			dispatchToast({ type: 'success', message: 'Article deleted successfully!' });
 		}
 	};

@@ -1,6 +1,6 @@
 import { error, redirect, type Actions } from '@sveltejs/kit';
-import { addArticle, getArticles, searchArticles } from '../../server/db/database';
-import type { PageServerLoad } from './$types';
+import { addArticle, getPaginatedArticles, searchArticles } from '../../../../server/db/database.js';
+import type { PageServerLoad } from './$types.js'
 
 type ArticleData = {
 	createdAt: Date;
@@ -20,9 +20,10 @@ type SearchArticlesResponse = {
 	articles: ArticleData[];
 };
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ params }) => {
 	try {
-		const result = await getArticles(9, 1);
+		const pageNumber = Number(params.pageNumber) ?? 1;
+		const result = await getPaginatedArticles(9, pageNumber);
 		return result satisfies ArticlesResponse;
 	} catch (err) {
 		error(404, 'Articles not found');

@@ -17,7 +17,7 @@
 			</div>
 			<a
 				class="hover:bg-primary-focus btn btn-primary btn-lg rounded-full px-8 py-3 text-lg font-semibold transition-colors duration-300"
-				href="/articles">Get Started Now</a
+				href="/articles/page/1">Get Started Now</a
 			>
 		</div>
 	</div>

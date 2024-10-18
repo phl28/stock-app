@@ -6,8 +6,9 @@ import {
 	getLastTradeHistory,
 	getActivePositions,
 	insertTradeHistory,
-	updateTradeHistoryBatch
-} from '../../server/db/database';
+	updateTradeHistoryBatch,
+	getPaginatedTradeHistory
+} from '../../../server/db/database.js';
 import { reviver } from '$lib/helpers/JsonHelpers';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL, PUBLIC_SERVER_URL } from '$env/static/public';
@@ -46,13 +47,17 @@ const fetchFutuTrades = async (startDate?: Date, endDate?: Date) => {
 	}
 }
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({params}) => {
 	try {
-		const trades = await getAllTradeHistory();
+		const pageNumber = isNaN(Number(params.pageNumber)) ? 1 : Number(params.pageNumber);
+		const {trades, currentPage, totalPages, totalTrades} = await getPaginatedTradeHistory(pageNumber);
 		const positions = await getActivePositions();
 		return {
 			trades,
-			positions
+			positions,
+			currentPage,
+			totalPages,
+			totalTrades
 		};
 	} catch (err) {
 		if (isHttpError(err)) {

@@ -7,7 +7,7 @@
 <div class="flex flex-col items-center justify-center">
 	{#if $theme}
 		<SignIn
-			redirectUrl="/trade/"
+			redirectUrl="/trade/1"
 			appearance={{
 				baseTheme: dark,
 				elements: {
@@ -16,6 +16,6 @@
 			}}
 		/>
 	{:else}
-		<SignIn redirectUrl="/trade/" />
+		<SignIn redirectUrl="/trade/1" />
 	{/if}
 </div>
