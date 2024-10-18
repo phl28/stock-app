@@ -1,4 +1,4 @@
-import { deleteArticle } from '../../../../server/db/database';
+import { deleteArticle } from '@/server/db/database';
 import type { RequestHandler } from './$types';
 import { del } from '@vercel/blob';
 import type { OutputData } from '@editorjs/editorjs';

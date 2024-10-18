@@ -2,7 +2,7 @@
 	import Editor from '$lib/components/Editor.svelte';
 	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
 	import type { PageData } from './$types';
-	import { dispatchToast } from '../../stores';
+	import { dispatchToast } from '@/routes/stores';
 	import { Trash2, Pencil } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 
@@ -17,7 +17,7 @@
 			if (!response.ok) {
 				throw new Error('Failed to delete article');
 			}
-			goto('/articles');
+			goto('/articles/page/1');
 			dispatchToast({ type: 'success', message: 'Article deleted successfully!' });
 		}
 	};

@@ -23,17 +23,17 @@
 	</div>
 	<nav>
 		<ul>
-			<li aria-current={$page.url.pathname.startsWith('/dashboard') ? 'page' : undefined}>
+			<li aria-current={$page.url.pathname.startsWith('/dashboard') ? 'dashboard' : undefined}>
 				<a href="/dashboard">Dashboard</a>
 			</li>
-			<li aria-current={$page.url.pathname.startsWith('/') ? 'page' : undefined}>
+			<li aria-current={$page.url.pathname.startsWith('/') ? 'calculator' : undefined}>
 				<a href="/">Stock calculator</a>
 			</li>
-			<li aria-current={$page.url.pathname.startsWith('/trade') ? 'page' : undefined}>
-				<a href="/trade">Trade</a>
+			<li aria-current={$page.url.pathname.startsWith('/trade') ? 'trade' : undefined}>
+				<a href="/trade/1">Trade</a>
 			</li>
-			<li aria-current={$page.url.pathname.startsWith('/articles') ? 'page' : undefined}>
-				<a href="/articles">Articles</a>
+			<li aria-current={$page.url.pathname.startsWith('/articles') ? 'articles' : undefined}>
+				<a href="/articles/page/1">Articles</a>
 			</li>
 		</ul>
 	</nav>

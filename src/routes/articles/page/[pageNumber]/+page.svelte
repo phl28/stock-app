@@ -4,6 +4,8 @@
 	import { Search } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import type { ActionResult } from '@sveltejs/kit';
+	import { goto } from '$app/navigation';
+	import { generatePageNumbers } from '$lib/helpers/pageHelpers.js';
 
 	export let data: PageData;
 
@@ -17,14 +19,18 @@
 
 	const handlePageIncrement = () => {
 		if (data.currentPage < data.totalPages) {
-			data.currentPage += 1;
+			handlePageRedirect(data.currentPage + 1);
 		}
 	};
 
 	const handlePageDecrement = () => {
 		if (data.currentPage > 1) {
-			data.currentPage -= 1;
+			handlePageRedirect(data.currentPage - 1);
 		}
+	};
+
+	const handlePageRedirect = (pageNumber: number) => {
+		goto(`/articles/page/${pageNumber}`);
 	};
 
 	let searchTerm: string = '';
@@ -37,6 +43,8 @@
 			searchResults = [];
 		}
 	};
+
+	$: pageNumbers = generatePageNumbers(data.currentPage, data.totalPages);
 </script>
 
 <section class="container mx-auto flex flex-grow flex-col">
@@ -77,7 +85,7 @@
 						{#each searchResults as article}
 							<li>
 								<a
-									href={`articles/${article.articleId}`}
+									href={`/articles/${article.articleId}`}
 									class="flex w-full items-center justify-between gap-2 px-4 py-2 text-left text-sm leading-5 text-base-content"
 								>
 									{article.title}
@@ -102,7 +110,7 @@
 
 							<div class="card-actions">
 								<a
-									href={`articles/${article.articleId}`}
+									href={`/articles/${article.articleId}`}
 									class="btn btn-outline btn-neutral btn-sm w-full"
 								>
 									Read More
@@ -114,11 +122,26 @@
 			</div>
 		{/if}
 	</div>
-	{#if data.totalPages > 1}
-		<div class="join mt-auto justify-center">
-			<button class="btn join-item" on:click={handlePageDecrement}>«</button>
-			<button class="btn join-item">{data.currentPage}</button>
-			<button class="btn join-item" on:click={handlePageIncrement}>»</button>
-		</div>
-	{/if}
+	<div class="join mt-6 justify-center">
+		<button
+			class={`btn join-item ${data.currentPage === 1 ? 'btn-disabled' : ''}`}
+			on:click={handlePageDecrement}>«</button
+		>
+		{#each pageNumbers as pageNum}
+			{#if typeof pageNum === 'number'}
+				<button
+					class={`btn join-item ${pageNum === data.currentPage ? 'btn-active' : ''}`}
+					on:click={() => handlePageRedirect(pageNum)}
+				>
+					{pageNum}
+				</button>
+			{:else}
+				<button class="btn btn-disabled join-item">...</button>
+			{/if}
+		{/each}
+		<button
+			class={`btn join-item ${data.currentPage === data.totalPages ? 'btn-disabled' : ''}`}
+			on:click={handlePageIncrement}>»</button
+		>
+	</div>
 </section>

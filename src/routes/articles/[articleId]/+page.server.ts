@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { getArticle } from '../../../server/db/database.js';
+import { getArticle } from '@/server/db/database.js';
 import type { PageServerLoad } from './$types.js';
 
 export const load: PageServerLoad = async ({ params }) => {

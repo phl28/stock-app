@@ -5,6 +5,7 @@
 	import { replacer } from '$lib/helpers/JsonHelpers';
 	import { dispatchToast } from '../../routes/stores';
 	import Papa from 'papaparse';
+	import { invalidateAll } from '$app/navigation';
 
 	export let selectedTrades: Map<number, Trade> = new Map();
 	export let hasEditedNotes: boolean;
@@ -97,7 +98,11 @@
 		});
 	};
 
+	type ImportState = 'idle' | 'pending' | 'resolved' | 'rejected';
+	let importState: ImportState = 'idle';
+
 	const importTrades = async () => {
+		importState = 'pending';
 		const mappedTrades = parsedData.map((row) => {
 			if (!row) return;
 			const mappedRow: { [key: string]: any } = {
@@ -125,21 +130,30 @@
 			}
 			return mappedRow;
 		});
-		const response = await fetch('/trade', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({ trades: mappedTrades })
-		});
+		try {
+			const response = await fetch('/trade', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ trades: mappedTrades })
+			});
 
-		if (response.ok) {
+			if (!response.ok) {
+				throw new Error('Failed to import trades');
+			}
 			dispatchToast({ type: 'success', message: 'Trades imported successfully!' });
-		} else {
-			const errorData = await response.json();
-			dispatchToast({ type: 'error', message: errorData.message || 'Failed to import trades.' });
+			importState = 'resolved';
+			await invalidateAll();
+		} catch (error) {
+			dispatchToast({
+				type: 'error',
+				message: (error as Error).message || 'Failed to import trades.'
+			});
+			importState = 'rejected';
+		} finally {
+			closeImportModal();
 		}
-		closeImportModal();
 	};
 
 	const openImportModal = () => {
@@ -155,6 +169,7 @@
 	const closeImportModal = () => {
 		const modal = document.getElementById('import-trade-modal') as HTMLDialogElement;
 		modal.close();
+		importState = 'idle';
 	};
 </script>
 
@@ -247,7 +262,18 @@
 						{/each}
 						<div class="modal-action">
 							<button class="btn" on:click={() => (importStep = 0)}>Back</button>
-							<button class="btn btn-primary" on:click={importTrades}>Import</button>
+							<button
+								class="btn btn-primary"
+								on:click={importTrades}
+								disabled={importState !== 'idle'}
+							>
+								{#if importState === 'idle'}
+									Import
+								{:else if importState === 'pending'}
+									<span class="loading loading-spinner loading-sm"></span>
+									Importing...
+								{/if}
+							</button>
 						</div>
 					</div>
 				{/if}
