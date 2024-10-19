@@ -46,26 +46,28 @@
 	{:else if view === 'positions'}
 		<PositionsTable {positions} />
 	{/if}
-	<div class="join mt-6 justify-center">
-		<button
-			class={`btn join-item ${data.currentPage === 1 ? 'btn-disabled' : ''}`}
-			on:click={handlePageDecrement}>«</button
-		>
-		{#each pageNumbers as pageNum}
-			{#if typeof pageNum === 'number'}
-				<button
-					class={`btn join-item ${pageNum === data.currentPage ? 'btn-active' : ''}`}
-					on:click={() => handlePageRedirect(pageNum)}
-				>
-					{pageNum}
-				</button>
-			{:else}
-				<button class="btn btn-disabled join-item">...</button>
-			{/if}
-		{/each}
-		<button
-			class={`btn join-item ${data.currentPage === data.totalPages ? 'btn-disabled' : ''}`}
-			on:click={handlePageIncrement}>»</button
-		>
-	</div>
+	{#if data.totalPages > 0}
+		<div class="join mt-6 justify-center">
+			<button
+				class={`btn join-item ${data.currentPage === 1 ? 'btn-disabled' : ''}`}
+				on:click={handlePageDecrement}>«</button
+			>
+			{#each pageNumbers as pageNum}
+				{#if typeof pageNum === 'number'}
+					<button
+						class={`btn join-item ${pageNum === data.currentPage ? 'btn-active' : ''}`}
+						on:click={() => handlePageRedirect(pageNum)}
+					>
+						{pageNum}
+					</button>
+				{:else}
+					<button class="btn btn-disabled join-item">...</button>
+				{/if}
+			{/each}
+			<button
+				class={`btn join-item ${data.currentPage === data.totalPages ? 'btn-disabled' : ''}`}
+				on:click={handlePageIncrement}>»</button
+			>
+		</div>
+	{/if}
 </div>
