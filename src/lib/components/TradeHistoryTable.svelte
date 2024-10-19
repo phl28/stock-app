@@ -4,18 +4,29 @@
 	import type { Trade } from '$lib/types/tradeTypes.js';
 
 	export let trades: Trade[];
-	// export let allTickers: string[];
 
 	let selectedTrades: Map<number, Trade> = new Map();
-	function toggleSelection(trade: Trade) {
-		selectedTrades.has(trade.id)
-			? selectedTrades.delete(trade.id)
-			: selectedTrades.set(trade.id, trade);
+	const toggleSelection = (trade: Trade) => {
+		if (selectedTrades.has(trade.id)) {
+			selectedTrades.delete(trade.id);
+			if (selectedAll) {
+				selectedAll = false;
+			}
+		} else {
+			selectedTrades.set(trade.id, trade);
+		}
 		selectedTrades = selectedTrades;
-	}
+	};
+	let selectedAll: boolean = false;
+	const toggleSelectAll = () => {
+		selectedAll
+			? selectedTrades.clear()
+			: (selectedTrades = new Map(trades.map((trade) => [trade.id, trade])));
+		selectedAll = !selectedAll;
+	};
 
 	let editedNotes: { [key: number]: string } = {};
-	function handleNoteChange(trade: Trade, newNote: string) {
+	const handleNoteChange = (trade: Trade, newNote: string) => {
 		if (newNote !== trades.find((t) => t.id === trade.id)?.notes) {
 			editedNotes[trade.id] = newNote;
 			selectedTrades.set(trade.id, { ...trade, notes: newNote });
@@ -28,7 +39,7 @@
 			}
 		}
 		editedNotes = editedNotes;
-	}
+	};
 
 	$: hasEditedNotes = Object.keys(editedNotes).length > 0;
 </script>
@@ -39,7 +50,16 @@
 		<table class="table table-pin-rows table-pin-cols table-xs">
 			<thead>
 				<tr>
-					<td>Active</td>
+					<td
+						><label>
+							<input
+								type="checkbox"
+								class="checkbox"
+								on:change={toggleSelectAll}
+								checked={selectedAll}
+							/>
+						</label></td
+					>
 					<td>Ticker</td>
 					<td>Region</td>
 					<td>Quantity</td>

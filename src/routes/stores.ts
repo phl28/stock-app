@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 import type { Toast } from '$lib/types';
 
-function toggleDarkTheme() {
+const toggleDarkTheme = () => {
 	// by default dark theme is off
 	const { subscribe, update } = writable(false);
 
