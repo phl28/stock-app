@@ -8,7 +8,7 @@ import { checkPercentage } from '$lib/helpers/DataHelpers';
  * @param stop stop price
  * @returns the stop loss percentage
  */
-function calcStopLossPerc(entry: number, stop: number) {
+const calcStopLossPerc = (entry: number, stop: number) => {
 	if (entry < stop || entry < 0 || stop < 0) return 0;
 	return (entry - stop) / entry;
 }
@@ -20,7 +20,7 @@ function calcStopLossPerc(entry: number, stop: number) {
  * @param positionAmt
  * @returns
  */
-function calcStopLossAmt(entry: number, stop: number, positionAmt: number) {
+const calcStopLossAmt = (entry: number, stop: number, positionAmt: number) => {
 	if (positionAmt < 0 || entry < stop || entry < 0 || stop < 0) return 0;
 	positionAmt = Math.floor(positionAmt);
 	return (entry - stop) * positionAmt;
@@ -33,7 +33,7 @@ function calcStopLossAmt(entry: number, stop: number, positionAmt: number) {
  * @param entry
  * @returns
  */
-function calcPositionAmt(accSize: number, positionSize: number, entry: number) {
+const calcPositionAmt = (accSize: number, positionSize: number, entry: number) => {
 	if (accSize < 0 || !checkPercentage(positionSize) || entry < 0) return 0;
 	return Math.round((accSize * positionSize) / entry);
 }
@@ -44,7 +44,7 @@ function calcPositionAmt(accSize: number, positionSize: number, entry: number) {
  * @param stopLossPerc
  * @returns
  */
-function calcPositionSize(risk: number, stopLossPerc: number) {
+const calcPositionSize = (risk: number, stopLossPerc: number) => {
 	if (!checkPercentage(risk) || !checkPercentage(stopLossPerc)) return 0;
 	return risk / stopLossPerc;
 }
@@ -57,12 +57,12 @@ function calcPositionSize(risk: number, stopLossPerc: number) {
  * @param riskReward
  * @returns
  */
-function calcProfitPerc(
+const calcProfitPerc = (
 	target?: number,
 	entry?: number,
 	stopLossPerc?: number,
 	riskReward?: number
-) {
+) => {
 	if (riskReward != null && stopLossPerc != null) {
 		return riskReward * stopLossPerc;
 	}
@@ -80,12 +80,12 @@ function calcProfitPerc(
  * @param risk
  * @returns
  */
-function calcRewardPerc(
+const calcRewardPerc = (
 	profitPerc?: number,
 	positionSize?: number,
 	riskReward?: number,
 	risk?: number
-) {
+) => {
 	if (risk != null && checkPercentage(risk) && riskReward != null) {
 		return risk * riskReward;
 	}
@@ -106,7 +106,7 @@ function calcRewardPerc(
  * @param reward
  * @returns
  */
-function calcRewardToRisk(risk: number, reward: number) {
+const calcRewardToRisk = (risk: number, reward: number) => {
 	if (!checkPercentage(risk) || !checkPercentage(reward)) return 0;
 	return reward / risk;
 }
@@ -117,7 +117,7 @@ function calcRewardToRisk(risk: number, reward: number) {
  * @param profitPerc
  * @returns
  */
-function calcCoverPrice(entry: number, profitPerc: number) {
+const calcCoverPrice = (entry: number, profitPerc: number) => {
 	if (entry < 0 || !checkPercentage(profitPerc)) return 0;
 	return entry * profitPerc + entry;
 }

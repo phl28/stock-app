@@ -5,14 +5,14 @@
 	export let positions: Position[];
 
 	let editedNotes: { [key: number]: string } = {};
-	function handleNoteChange(position: Position, newNote: string) {
+	const handleNoteChange = (position: Position, newNote: string) => {
 		if (newNote !== positions.find((p) => p.id === position.id)?.notes) {
 			editedNotes[position.id] = newNote;
 		} else {
 			delete editedNotes[position.id];
 		}
 		editedNotes = editedNotes;
-	}
+	};
 </script>
 
 <div class="w-full">

@@ -25,7 +25,7 @@
 	$: data = calculateData(input);
 	const { calcProfitPerc, calcRewardPerc, calcCoverPrice } = calculator;
 	const riskReward = [2.0, 3.0, 4.0, 5.0];
-	function calculateData(input: CalculatorInput): TableData[] {
+	const calculateData = (input: CalculatorInput): TableData[] => {
 		return riskReward.map((item) => {
 			const reward = calcRewardPerc(undefined, undefined, item, input.risk / 100);
 			const profit = calcProfitPerc(undefined, undefined, input.stopLossPerc, item);
@@ -37,7 +37,7 @@
 				coverPrice
 			};
 		});
-	}
+	};
 	let customRR: number;
 	let customReward: number;
 	let customProfit: number;

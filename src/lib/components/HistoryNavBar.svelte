@@ -117,7 +117,7 @@
 				if (requiredHeader === 'executedAt') {
 					mappedRow.executedAt = new Date(row[csvHeader]);
 				} else if (requiredHeader === 'tradeSide') {
-					mappedRow.tradeSide = row[csvHeader]?.toLowerCase().includes('BUY') ? 'BUY' : 'SELL';
+					mappedRow.tradeSide = row[csvHeader]?.toLowerCase().includes('buy') ? 'BUY' : 'SELL';
 				} else if (requiredHeader === 'volume') {
 					mappedRow[requiredHeader] = parseFloat(row[csvHeader]);
 				} else {

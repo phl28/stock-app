@@ -46,7 +46,7 @@
 	{:else if view === 'positions'}
 		<PositionsTable {positions} />
 	{/if}
-	{#if data.totalPages > 0}
+	{#if data.totalPages > 0 && view === 'trades'}
 		<div class="join mt-6 justify-center">
 			<button
 				class={`btn join-item ${data.currentPage === 1 ? 'btn-disabled' : ''}`}

@@ -8,6 +8,7 @@ export const POST: RequestHandler = async ({ request }) => {
         for (const trade of trades) {
             const newTrade = {
                 ...trade,
+                price: trade.price.replace(/,/g, ''),
                 totalCost: trade.totalCost.replace(/,/g, ''),
                 executedAt: new Date(trade.executedAt),
             }

@@ -73,17 +73,17 @@
 		}
 	}
 
-	function handleCandlestickSeriesReference(ref: ISeriesApi<'Candlestick'> | null) {
+	const handleCandlestickSeriesReference = (ref: ISeriesApi<'Candlestick'> | null) => {
 		chartSeries = ref;
-	}
+	};
 
-	function handleVolumeSeriesReference(ref: ISeriesApi<'Histogram'> | null) {
+	const handleVolumeSeriesReference = (ref: ISeriesApi<'Histogram'> | null) => {
 		volumeSeries = ref;
-	}
+	};
 
-	function handleLineSeriesReference(ref: ISeriesApi<'Line'> | null) {
+	const handleLineSeriesReference = (ref: ISeriesApi<'Line'> | null) => {
 		lineSeries = ref;
-	}
+	};
 
 	const THEMES = {
 		Dark: {

@@ -68,7 +68,6 @@ export const insertTradeHistory = async (trade: InsertTrade) => {
 				})
 				.returning();
 
-
 			const existingPosition = await tx.query.positions.findFirst({
 				where: and(
 					eq(schema.positions.ticker, trade.ticker),
@@ -172,10 +171,6 @@ export const insertTradeHistory = async (trade: InsertTrade) => {
 		throw error;
 	}
 };
-
-export const bulkInsertTradeHistory = async () => {
-	// @TODO: Implement bulk insert using copy and raw SQL
-}
 
 export const updateTradeHistoryBatch = async (trades: InsertTrade[]) => {
 	const values = trades.map(
