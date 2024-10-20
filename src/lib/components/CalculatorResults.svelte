@@ -1,5 +1,5 @@
 <script lang="ts">
-	import calculator from '../calculator/calculator';
+	import calculator from '$lib/calculator/calculator';
 	export let input = {
 		risk: 0.0003,
 		entry: 100,

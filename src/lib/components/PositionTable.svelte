@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { formatCurrency } from '$lib/helpers/currencyHelpers';
 	import type { Position } from '$lib/types/tradeTypes.js';
+	import PositionNavBar from './PositionNavBar.svelte';
 
 	export let positions: Position[];
 
@@ -13,10 +14,12 @@
 		}
 		editedNotes = editedNotes;
 	};
+
+	$: hasEditedNotes = Object.keys(editedNotes).length > 0;
 </script>
 
 <div class="w-full">
-	<h5 class="m-2 leading-[48px]">Positions</h5>
+	<PositionNavBar {hasEditedNotes} editedPositions={editedNotes} />
 	<div class="overflow-x-auto">
 		<table class="table table-pin-rows table-pin-cols table-xs">
 			<thead>

@@ -128,6 +128,11 @@ export const actions = {
 		await updateTradeHistoryBatch(tradeList);
 		return;
 	},
+	updatePositionBatch: async ({ request }) => {
+		const formData = await request.formData();
+		const positions = formData.get('positions') as string;
+		const updatedPositions = JSON.parse(positions, reviver) as Map<number, string>;
+	},
 	deleteTrade: async ({ request }) => {
 		const formData = await request.formData();
 		const id = parseInt(formData.get('id') as string);
