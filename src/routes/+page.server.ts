@@ -47,16 +47,12 @@ export const actions = {
 				const stockData = await res.json();
 				return { stockData, smaData: [], error: null } as ChartResponse;
 			} else {
-				console.error('Error fetching stock data', res.status);
 				return error(500, { message: 'Error fetching stock data' });
 			}
 		} catch (err) {
-			console.error('Error fetching stock data', err);
-			return {
-				stockData: null,
-				smaData: null,
-				error: err
-			};
+			if (err instanceof Error) {
+				return error(500, { message: err.message });
+			}
 		}
 	}
 };
