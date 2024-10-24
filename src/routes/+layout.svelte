@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import Header from '../lib/components/Header.svelte';
+	import Header from '$lib/components/Header.svelte';
 	import githubLight from '$lib/images/github-mark.svg';
 	import githubDark from '$lib/images/github-mark-white.svg';
 	import { theme } from './stores.ts';

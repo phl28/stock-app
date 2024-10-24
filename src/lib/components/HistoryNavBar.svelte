@@ -3,7 +3,7 @@
 	import { TradeSide, Platform, Region, Currency } from '$lib/types/tradeTypes';
 	import type { Trade } from '$lib/types/tradeTypes';
 	import { replacer } from '$lib/helpers/JsonHelpers';
-	import { dispatchToast } from '../../routes/stores';
+	import { dispatchToast } from '@/routes/stores';
 	import Papa from 'papaparse';
 	import { invalidateAll } from '$app/navigation';
 
@@ -71,7 +71,8 @@
 		}
 
 		Papa.parse(file, {
-			complete: (results) => {
+			complete: (results: any) => {
+				// @FIXME type is temporary here
 				parsedData = results.data as { [key: string]: any }[];
 				headers = results.meta.fields ?? [];
 				headerMapping = {};
@@ -91,7 +92,8 @@
 				});
 				importStep = 1;
 			},
-			error: (error) => {
+			error: (error: any) => {
+				// @FIXME type is temporary here
 				dispatchToast({ type: 'error', message: error.message });
 			},
 			header: true

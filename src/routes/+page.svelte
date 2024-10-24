@@ -184,6 +184,8 @@
 	let accGrowth: number = 0;
 	let riskReward: number = 0;
 
+	let stockTickInputValid: boolean = false;
+
 	$: {
 		stopLossPerc = calcStopLossPerc(entry, stop);
 		positionSize = calcPositionSize(risk / 100, stopLossPerc);
@@ -192,6 +194,7 @@
 		profit = calcProfitPerc(target, entry);
 		accGrowth = calcRewardPerc(profit, positionSize);
 		riskReward = calcRewardToRisk(risk / 100, accGrowth);
+		stockTickInputValid = stockTickInput.length > 0;
 	}
 </script>
 
@@ -215,8 +218,10 @@
 						return async ({ result, update }) => {
 							if (result.type === 'error') {
 								dispatchToast({ type: 'error', message: result.error.message });
+								stockTickInput = '';
 							} else if (result.type === 'success') {
-								update();
+								await update();
+								stockTickInput = '';
 							}
 						};
 					}}
@@ -232,7 +237,9 @@
 								bind:value={stockTickInput}
 								class="input input-sm input-bordered me-2 w-full max-w-xs"
 							/>
-							<button class="btn btn-primary btn-sm" type="submit">Submit</button>
+							<button class="btn btn-primary btn-sm" type="submit" disabled={!stockTickInputValid}
+								>Submit</button
+							>
 						</div>
 					</label>
 				</form>
