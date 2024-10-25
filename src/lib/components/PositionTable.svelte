@@ -5,17 +5,17 @@
 
 	export let positions: Position[];
 
-	let editedNotes: { [key: number]: string } = {};
+	let editedNotes: Map<number, string> = new Map<number, string>();
 	const handleNoteChange = (position: Position, newNote: string) => {
 		if (newNote !== positions.find((p) => p.id === position.id)?.notes) {
-			editedNotes[position.id] = newNote;
+			editedNotes.set(position.id, newNote);
 		} else {
-			delete editedNotes[position.id];
+			editedNotes.delete(position.id);
 		}
 		editedNotes = editedNotes;
 	};
 
-	$: hasEditedNotes = Object.keys(editedNotes).length > 0;
+	$: hasEditedNotes = editedNotes.size > 0;
 </script>
 
 <div class="w-full">
@@ -63,8 +63,8 @@
 							<textarea
 								placeholder="Notes"
 								class="textarea textarea-bordered textarea-xs w-full max-w-xs"
-								value={editedNotes[position.id] !== undefined
-									? editedNotes[position.id]
+								value={editedNotes.get(position.id) !== undefined
+									? editedNotes.get(position.id)
 									: position.notes}
 								on:input={(e) => handleNoteChange(position, e.currentTarget.value)}
 							></textarea>

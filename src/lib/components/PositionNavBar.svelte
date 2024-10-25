@@ -3,7 +3,7 @@
 	import { replacer } from '$lib/helpers/JsonHelpers';
 	import { dispatchToast } from '@/routes/stores';
 
-	export let editedPositions: { [key: number]: string } = {};
+	export let editedPositions: Map<number, string> = new Map<number, string>();
 	export let hasEditedNotes: boolean;
 </script>
 
@@ -17,7 +17,7 @@
 				use:enhance={() => {
 					return async ({ result, update }) => {
 						if (result.type === 'success') {
-							editedPositions = {};
+							editedPositions = new Map();
 							dispatchToast({ type: 'success', message: 'Position updated successfully!' });
 							await update();
 						} else if (result.type === 'error') {
