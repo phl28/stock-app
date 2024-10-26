@@ -10,7 +10,7 @@
 	setTimeout(() => dispatch('dismiss'), 3000);
 </script>
 
-<div class="toast z-10" transition:fade>
+<div class="toast relative p-1" transition:fade>
 	<div
 		class="alert"
 		class:alert-info={type === 'info'}
