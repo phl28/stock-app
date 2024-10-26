@@ -4,17 +4,22 @@
 	import { dispatchToast, theme } from './stores.ts';
 	import { convertUnixTimestampToDate } from '$lib/helpers/DataHelpers.js';
 	import { enhance } from '$app/forms';
-	import type { StockData, VolumeData, ChartResponse } from '$lib/types/chartTypes.js';
+	import type { StockData, VolumeData } from '$lib/types/chartTypes.js';
 	import CalculatorResults from '$lib/components/CalculatorResults.svelte';
 	import calculator from '$lib/calculator/calculator';
 	import { onMount, tick } from 'svelte';
 
-	export let form: ChartResponse | undefined;
 	export let data;
 
 	onMount(() => {
 		if (data.error) {
 			dispatchToast({ type: 'error', message: data.error });
+		} else if (data && data.stockData) {
+			try {
+				fillChartData(data);
+			} catch (err) {
+				dispatchToast({ type: 'error', message: 'Error initializing chart' });
+			}
 		}
 	});
 
@@ -27,7 +32,11 @@
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
 	let lineSeries: ISeriesApi<'Line'> | null = null;
 
-	const fillChartData = (data: any) => {
+	const fillChartData = async (data: any) => {
+		if (!data.stockData.results) {
+			dispatchToast({ type: 'error', message: 'No data found' });
+			return;
+		}
 		let stock: StockData[] = [];
 		let volume: VolumeData[] = [];
 		let prevClose = 0;
@@ -56,23 +65,13 @@
 		stockTick = data.stockData.ticker;
 		stockData = stock;
 		volumeData = volume;
-		tick().then(() => {
-			if (chartSeries) {
-				chartSeries.setData(stockData);
-			}
-			if (volumeSeries) {
-				volumeSeries.setData(volumeData);
-			}
-		});
-	};
-	$: {
-		if (form && form.stockData) {
-			fillChartData(form);
-		} else if (data && data.stockData) {
-			fillChartData(data);
+		await tick();
+		if (!chartSeries || !volumeSeries) {
+			return;
 		}
-	}
-
+		chartSeries.setData(stockData);
+		volumeSeries.setData(volumeData);
+	};
 	const handleCandlestickSeriesReference = (ref: ISeriesApi<'Candlestick'> | null) => {
 		chartSeries = ref;
 	};
@@ -184,6 +183,8 @@
 	let accGrowth: number = 0;
 	let riskReward: number = 0;
 
+	let stockTickInputValid: boolean = false;
+
 	$: {
 		stopLossPerc = calcStopLossPerc(entry, stop);
 		positionSize = calcPositionSize(risk / 100, stopLossPerc);
@@ -192,6 +193,7 @@
 		profit = calcProfitPerc(target, entry);
 		accGrowth = calcRewardPerc(profit, positionSize);
 		riskReward = calcRewardToRisk(risk / 100, accGrowth);
+		stockTickInputValid = stockTickInput.length > 0;
 	}
 </script>
 
@@ -213,10 +215,16 @@
 					action="?/fetchStockData"
 					use:enhance={() => {
 						return async ({ result, update }) => {
+							stockTickInput = '';
 							if (result.type === 'error') {
 								dispatchToast({ type: 'error', message: result.error.message });
 							} else if (result.type === 'success') {
-								update();
+								await update({ reset: false });
+								fillChartData(result.data);
+							} else if (result.type === 'failure') {
+								dispatchToast({ type: 'error', message: String(result.data?.message) });
+							} else {
+								dispatchToast({ type: 'error', message: 'An unexpected error occurred' });
 							}
 						};
 					}}
@@ -232,7 +240,9 @@
 								bind:value={stockTickInput}
 								class="input input-sm input-bordered me-2 w-full max-w-xs"
 							/>
-							<button class="btn btn-primary btn-sm" type="submit">Submit</button>
+							<button class="btn btn-primary btn-sm" type="submit" disabled={!stockTickInputValid}
+								>Submit</button
+							>
 						</div>
 					</label>
 				</form>

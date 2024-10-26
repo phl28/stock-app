@@ -13,6 +13,7 @@ export type SelectPosition = typeof schema.positions.$inferSelect;
 export type InsertArticle = typeof schema.articles.$inferInsert;
 export type SelectArticle = typeof schema.articles.$inferSelect;
 
+// Trade History
 export const getAllTradeHistory = async () => {
 	const tradeHistory = await db.query.tradeHistory.findMany({
 		orderBy: [desc(schema.tradeHistory.executedAt), desc(schema.tradeHistory.createdAt)]
@@ -47,13 +48,6 @@ export const getLastTradeHistory = async (platform: "FUTU" | "IBKR") => {
 	});
 	return lastTrade;
 }
-
-export const getActivePositions = async () => {
-	return await db.query.positions.findMany({
-		where: eq(schema.positions.closed, false),
-		orderBy: [desc(schema.positions.openedAt)]
-	});
-};
 
 export const insertTradeHistory = async (trade: InsertTrade) => {
 	trade.ticker = trade.ticker.toUpperCase();
@@ -359,6 +353,14 @@ export const deleteTradeHistoryBatch = async (ids: number[]) => {
 	});
 };
 
+// Positions
+export const getActivePositions = async () => {
+	return await db.query.positions.findMany({
+		where: eq(schema.positions.closed, false),
+		orderBy: [desc(schema.positions.openedAt)]
+	});
+};
+
 export const getClosedPositions = async (startDate: Date, endDate: Date) => {
 	return await db.query.positions.findMany({
 		where: and(
@@ -390,6 +392,26 @@ export const getPositionPerformance = async (positionId: number) => {
 	return null;
 };
 
+export const updatePositionNotes = async (positions: Pick<InsertPosition, 'id' | 'notes'>[]) => {
+	const values = positions.map(
+		(position) => dsql`(${position.id}, ${position.notes})`
+	);
+
+	const query = dsql`
+		WITH updates(id, notes) AS (
+		VALUES ${dsql.join(values, ',')}
+		)
+		UPDATE ${schema.positions} AS p
+		SET
+		notes = u.notes
+		FROM updates AS u
+		WHERE p.id = u.id::INTEGER
+	`;
+
+	return await db.execute(query);
+};
+
+// Articles
 export const getPaginatedArticles = async (pageSize: number, pageNumber: number = 1) => {
 	const articles = await db
 		.select()

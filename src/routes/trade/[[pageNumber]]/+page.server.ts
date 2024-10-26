@@ -2,12 +2,12 @@ import type { Currency, Platform, Region, Trade, TradeSide } from '$lib/types/tr
 import {
 	deleteTradeHistory,
 	deleteTradeHistoryBatch,
-	getAllTradeHistory,
 	getLastTradeHistory,
 	getActivePositions,
 	insertTradeHistory,
 	updateTradeHistoryBatch,
-	getPaginatedTradeHistory
+	getPaginatedTradeHistory,
+	updatePositionNotes
 } from '@/server/db/database.js';
 import { reviver } from '$lib/helpers/JsonHelpers';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
@@ -126,6 +126,17 @@ export const actions = {
 			tradeList.push(trade);
 		}
 		await updateTradeHistoryBatch(tradeList);
+		return;
+	},
+	updatePositionBatch: async ({ request }) => {
+		const formData = await request.formData();
+		const positions = formData.get('positions') as string;
+		const updatedPositions = JSON.parse(positions, reviver) as Map<number, string>;
+		const positionsList: { id: number; notes: string }[] = [];
+		for (let id of updatedPositions.keys()) {
+			positionsList.push({id: id, notes: updatedPositions.get(id) ?? ""});
+		}
+		await updatePositionNotes(positionsList);
 		return;
 	},
 	deleteTrade: async ({ request }) => {

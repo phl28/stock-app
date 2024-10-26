@@ -1,6 +1,10 @@
+<script>
+	import stockPhoto from '$lib/images/stock-photo.png';
+</script>
+
 <div
 	class="hero min-h-screen bg-cover bg-center"
-	style="background-image: url(https://36zmt77vh5f6eisw.public.blob.vercel-storage.com/stock-photo-QbjaeQ4QZ5wOuREZT8ExDyk7MeSSVI.png);"
+	style="background-image: url({stockPhoto}); background-size: cover;"
 >
 	<div class="hero-overlay bg-black bg-opacity-70"></div>
 	<div class="hero-content text-center text-neutral-content">
