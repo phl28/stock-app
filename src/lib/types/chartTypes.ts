@@ -14,5 +14,6 @@ export interface VolumeData {
 
 export interface ChartResponse {
 	stockData: any;
+	smaData: any[];
 	error: any;
 }
