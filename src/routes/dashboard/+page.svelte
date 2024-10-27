@@ -2,6 +2,13 @@
 	import stockPhoto from '$lib/images/stock-photo.png';
 </script>
 
+<svelte:head>
+	<title>Trade up</title>
+	<meta
+		name="description"
+		content="Trade up - An app designed to help you embark on your stock investing journey with ease."
+	/>
+</svelte:head>
 <div
 	class="hero min-h-screen bg-cover bg-center"
 	style="background-image: url({stockPhoto}); background-size: cover;"
