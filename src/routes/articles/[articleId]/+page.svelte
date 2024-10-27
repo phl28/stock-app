@@ -34,6 +34,12 @@
 			</div>
 		</SignedIn>
 		<span class="flex justify-center text-3xl font-bold">{data.article.title}</span>
+		<p class="px-4 text-center text-sm text-neutral-500">
+			DISCLAIMER: The analysis provided is based on personal opinion and research. Not financial
+			advice. See our full <a href="/articles/disclaimer" class="underline decoration-sky-500"
+				>disclaimer</a
+			> for details
+		</p>
 		<Editor readOnly={true} data={data.article.content ?? {}} autofocus={false} />
 	</section>
 {/if}

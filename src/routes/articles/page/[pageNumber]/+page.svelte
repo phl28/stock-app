@@ -47,6 +47,14 @@
 	$: pageNumbers = generatePageNumbers(data.currentPage, data.totalPages);
 </script>
 
+<svelte:head>
+	<title>Trade up - Articles</title>
+	<meta
+		name="description"
+		content="Trade up - Articles - A place where personal ideas and thoughts are shared."
+	/>
+</svelte:head>
+
 <section class="container mx-auto flex flex-grow flex-col">
 	<SignedIn>
 		<div class="flex justify-end">

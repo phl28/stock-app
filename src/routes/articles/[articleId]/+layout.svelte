@@ -1,3 +1,15 @@
+<script lang="ts">
+	import { page } from '$app/stores';
+</script>
+
+<svelte:head>
+	<title>Trade up - Article {$page.params.articleId}</title>
+	<meta
+		name="description"
+		content="Trade up - Articles - A place where personal ideas and thoughts are shared."
+	/>
+</svelte:head>
+
 <section>
 	<main>
 		<slot />
