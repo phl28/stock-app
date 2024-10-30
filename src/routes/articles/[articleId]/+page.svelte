@@ -10,7 +10,7 @@
 
 	const handleDeleteArticle = async () => {
 		if (confirm('Are you sure you want to delete this article?')) {
-			const response = await fetch(`/articles/delete/${data.article.articleId}`, {
+			const response = await fetch(`/articles/${data.article.articleId}/delete`, {
 				method: 'DELETE',
 				body: JSON.stringify(data.article.content)
 			});
@@ -27,7 +27,7 @@
 	<section class="container flex flex-grow flex-col gap-4">
 		<SignedIn>
 			<div class="flex justify-end gap-2">
-				<a class="btn btn-circle btn-ghost" href={`/articles/edit/${data.article.articleId}`}
+				<a class="btn btn-circle btn-ghost" href={`/articles/${data.article.articleId}/edit`}
 					><Pencil /></a
 				>
 				<button class="btn btn-circle btn-error" on:click={handleDeleteArticle}><Trash2 /></button>

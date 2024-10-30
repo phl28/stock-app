@@ -12,6 +12,7 @@
 	type ArticleData = {
 		createdAt: Date;
 		updatedAt: Date | null;
+		publishedAt: Date | null;
 		title: string;
 		content: unknown;
 		articleId: number;
@@ -111,10 +112,20 @@
 				{#each data.articles as article (article.articleId)}
 					<div class="card bordered card-normal bg-base-100 shadow-xl">
 						<div class="card-body">
-							<h2 class="card-title">
+							<h2 class="card-title justify-between">
 								{article.title}
+								<SignedIn
+									><div
+										class={`badge badge-sm ${article.publishedAt ? 'badge-primary' : 'badge-neutral'}`}
+									>
+										{article.publishedAt ? 'Published' : 'Draft'}
+									</div></SignedIn
+								>
 							</h2>
-							<span class="text-xs">Uploaded on: {article.createdAt.toLocaleDateString()}</span>
+							<span class="text-xs"
+								>Uploaded on: {article.publishedAt?.toLocaleDateString() ??
+									article.createdAt.toLocaleDateString()}</span
+							>
 
 							<div class="card-actions">
 								<a

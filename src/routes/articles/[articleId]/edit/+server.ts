@@ -12,7 +12,8 @@ export const POST: RequestHandler = async ({ params, request }) => {
 		articleId: Number(articleId),
 		title: requestBody.title,
 		content: requestBody.content
+
 	};
-	const updatedArticle = await updateArticle(article);
+	const updatedArticle = await updateArticle(article, requestBody.publish);
 	return new Response(JSON.stringify(updatedArticle));
 };
