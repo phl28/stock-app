@@ -92,6 +92,7 @@ export const articles = pgTable(
 		createdAt: timestamp('created_at')
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
+		publishedAt: timestamp('published_at'),
 		updatedAt: timestamp('updatedAt')
 	},
 	(article) => ({

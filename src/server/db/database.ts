@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/vercel-postgres';
 import { sql } from '@vercel/postgres';
 
 import * as schema from './schema';
-import { eq, inArray, sql as dsql, and, gte, lte, desc, count } from 'drizzle-orm';
+import { eq, inArray, sql as dsql, and, gte, lte, desc, count, isNotNull } from 'drizzle-orm';
 
 export const db = drizzle(sql, { schema });
 
@@ -412,10 +412,15 @@ export const updatePositionNotes = async (positions: Pick<InsertPosition, 'id' |
 };
 
 // Articles
-export const getPaginatedArticles = async (pageSize: number, pageNumber: number = 1) => {
+export const getPaginatedArticles = async (pageSize: number, pageNumber: number = 1, published: boolean = true) => {
+	const condition = published 
+        ? isNotNull(schema.articles.publishedAt)  
+        : undefined;
+	
 	const articles = await db
 		.select()
 		.from(schema.articles)
+		.where(condition)
 		.orderBy(desc(schema.articles.articleId))
 		.limit(pageSize)
 		.offset((pageNumber - 1) * pageSize);
@@ -454,8 +459,11 @@ export const addArticle = async (article: InsertArticle) => {
 	return articleId;
 };
 
-export const updateArticle = async (article: InsertArticle) => {
+export const updateArticle = async (article: InsertArticle, publish: boolean = false) => {
 	if (!article.articleId) throw new Error('Article ID is required');
+	if (publish) {
+		article.publishedAt = new Date();
+	}
 	return await db
 		.update(schema.articles)
 		.set(article)
