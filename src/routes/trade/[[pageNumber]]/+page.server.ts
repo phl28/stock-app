@@ -9,7 +9,7 @@ import {
 	getPaginatedTradeHistory,
 	updatePositionNotes
 } from '@/server/db/database.js';
-import { reviver } from '$lib/helpers/jsonHelpers.js';
+import { reviver } from '$lib/helpers/jsonHelpers';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL, PUBLIC_SERVER_URL } from '$env/static/public';
 import { error, isHttpError } from '@sveltejs/kit';
