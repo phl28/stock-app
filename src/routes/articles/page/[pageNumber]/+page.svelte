@@ -5,7 +5,7 @@
 	import { enhance } from '$app/forms';
 	import type { ActionResult } from '@sveltejs/kit';
 	import { goto } from '$app/navigation';
-	import { generatePageNumbers } from '$lib/helpers/pageHelpers';
+	import { generatePageNumbers } from '$lib/helpers/PageHelpers';
 
 	export let data: PageData;
 

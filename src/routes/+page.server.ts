@@ -25,7 +25,7 @@ export const load: PageServerLoad = async () => {
 		}
 	} catch (err) {
 		console.error('Error fetching stock data', err);
-		return {stockData: [], smaData: [], error: null} as ChartResponse;
+		return { stockData: [], smaData: [], error: null } as ChartResponse;
 	}
 };
 
@@ -37,7 +37,7 @@ export const actions = {
 			return fail(400, { message: 'Ticker is required' });
 		}
 		if (!PUBLIC_POLYGON_IO_URL || !API_KEY) {
-			return fail(500, { message: "An unexpected error occurred" });
+			return fail(500, { message: 'An unexpected error occurred' });
 		}
 
 		const today = new Date();
@@ -61,7 +61,7 @@ export const actions = {
 			if (err instanceof Error) {
 				return fail(500, { message: err.message });
 			}
-			return fail(500, { message: "An unexpected error occurred" });
+			return fail(500, { message: 'An unexpected error occurred' });
 		}
 	}
 };

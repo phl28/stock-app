@@ -24,13 +24,15 @@ export const getAllTradeHistory = async () => {
 export const getNumOfTradeHistory = async () => {
 	const counts = await db.select({ count: count() }).from(schema.tradeHistory);
 	return counts;
-}
+};
 
 export const getPaginatedTradeHistory = async (pageNumber: number = 1, pageSize: number = 20) => {
-	const trades = await db.select().from(schema.tradeHistory)
-						.orderBy(desc(schema.tradeHistory.executedAt), desc(schema.tradeHistory.createdAt))
-						.limit(pageSize)
-						.offset((pageNumber - 1) * pageSize);
+	const trades = await db
+		.select()
+		.from(schema.tradeHistory)
+		.orderBy(desc(schema.tradeHistory.executedAt), desc(schema.tradeHistory.createdAt))
+		.limit(pageSize)
+		.offset((pageNumber - 1) * pageSize);
 	const counts = await getNumOfTradeHistory();
 	const tradeCount = counts[0].count;
 	return {
@@ -41,13 +43,13 @@ export const getPaginatedTradeHistory = async (pageNumber: number = 1, pageSize:
 	};
 };
 
-export const getLastTradeHistory = async (platform: "FUTU" | "IBKR") => {
+export const getLastTradeHistory = async (platform: 'FUTU' | 'IBKR') => {
 	const lastTrade = await db.query.tradeHistory.findFirst({
 		where: eq(schema.tradeHistory.platform, platform),
 		orderBy: [desc(schema.tradeHistory.executedAt)]
 	});
 	return lastTrade;
-}
+};
 
 export const insertTradeHistory = async (trade: InsertTrade) => {
 	trade.ticker = trade.ticker.toUpperCase();
@@ -393,9 +395,7 @@ export const getPositionPerformance = async (positionId: number) => {
 };
 
 export const updatePositionNotes = async (positions: Pick<InsertPosition, 'id' | 'notes'>[]) => {
-	const values = positions.map(
-		(position) => dsql`(${position.id}, ${position.notes})`
-	);
+	const values = positions.map((position) => dsql`(${position.id}, ${position.notes})`);
 
 	const query = dsql`
 		WITH updates(id, notes) AS (
@@ -412,11 +412,13 @@ export const updatePositionNotes = async (positions: Pick<InsertPosition, 'id' |
 };
 
 // Articles
-export const getPaginatedArticles = async (pageSize: number, pageNumber: number = 1, published: boolean = true) => {
-	const condition = published 
-        ? isNotNull(schema.articles.publishedAt)  
-        : undefined;
-	
+export const getPaginatedArticles = async (
+	pageSize: number,
+	pageNumber: number = 1,
+	published: boolean = true
+) => {
+	const condition = published ? isNotNull(schema.articles.publishedAt) : undefined;
+
 	const articles = await db
 		.select()
 		.from(schema.articles)

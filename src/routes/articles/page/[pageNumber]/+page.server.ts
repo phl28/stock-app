@@ -23,7 +23,9 @@ type SearchArticlesResponse = {
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	try {
-		const session = locals.session ? locals.session as { userId: string; claims: { [key: string]: any } } : null;
+		const session = locals.session
+			? (locals.session as { userId: string; claims: { [key: string]: any } })
+			: null;
 		let publishedOnly = true;
 		if (session?.userId) {
 			publishedOnly = false;

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import HistoryNavBar from '$lib/components/HistoryNavBar.svelte';
-	import { formatCurrency } from '$lib/helpers/currencyHelpers';
+	import { formatCurrency } from '$lib/helpers/CurrencyHelpers';
 	import type { Trade } from '$lib/types/tradeTypes';
 
 	export let trades: Trade[];

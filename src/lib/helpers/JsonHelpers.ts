@@ -7,7 +7,7 @@ export const replacer = (key: any, value: any) => {
 	} else {
 		return value;
 	}
-}
+};
 
 export const reviver = (key: any, value: any) => {
 	if (typeof value === 'object' && value !== null) {
@@ -16,4 +16,4 @@ export const reviver = (key: any, value: any) => {
 		}
 	}
 	return value;
-}
+};

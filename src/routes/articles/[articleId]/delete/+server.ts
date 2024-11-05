@@ -9,7 +9,7 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 		if (isNaN(Number(articleId))) {
 			throw new Error('Invalid article ID');
 		}
-		const requestBody = (await request.json()) as OutputData;	
+		const requestBody = (await request.json()) as OutputData;
 		const imageBlocks = requestBody?.blocks.filter((block) => block.type === 'image');
 		if (imageBlocks) {
 			for (const imageBlock of imageBlocks) {

@@ -4,7 +4,7 @@ export const convertUnixTimestampToDate = (unixTimestamp: number) => {
 	const month = String(date.getMonth() + 1).padStart(2, '0');
 	const day = String(date.getDate()).padStart(2, '0');
 	return `${year}-${month}-${day}`;
-}
+};
 
 /**
  * This function is used to check if a percentage is valid, a percentage is valid if it is between 0 and 1 when allowOverHundred is false
@@ -13,7 +13,7 @@ export const convertUnixTimestampToDate = (unixTimestamp: number) => {
  * @param allowOverHundred
  * @returns
  */
-export const checkPercentage =(
+export const checkPercentage = (
 	percentage: number,
 	allowNeg: boolean = false,
 	allowOverHundred: boolean = false
@@ -26,4 +26,4 @@ export const checkPercentage =(
 		valid = false;
 	}
 	return valid;
-}
+};

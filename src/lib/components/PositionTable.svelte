@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatCurrency } from '$lib/helpers/currencyHelpers';
+	import { formatCurrency } from '$lib/helpers/CurrencyHelpers';
 	import type { Position } from '$lib/types/tradeTypes';
 	import PositionNavBar from './PositionNavBar.svelte';
 

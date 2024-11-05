@@ -2,7 +2,7 @@
 	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
 	import { ColorType, CrosshairMode, type ISeriesApi } from 'lightweight-charts';
 	import { dispatchToast, theme } from './stores.ts';
-	import { convertUnixTimestampToDate } from '$lib/helpers/dataHelpers';
+	import { convertUnixTimestampToDate } from '$lib/helpers/DataHelpers';
 	import { enhance } from '$app/forms';
 	import type { StockData, VolumeData } from '$lib/types/chartTypes';
 	import CalculatorResults from '$lib/components/CalculatorResults.svelte';
