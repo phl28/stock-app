@@ -8,13 +8,13 @@ import {
 	updateTradeHistoryBatch,
 	getPaginatedTradeHistory,
 	updatePositionNotes
-} from '@/server/db/database.js';
+} from '@/server/db/database';
 import { reviver } from '$lib/helpers/jsonHelpers';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL, PUBLIC_SERVER_URL } from '$env/static/public';
 import { error, isHttpError } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types.js';
-import type { FutuResponse } from '$lib/types/serverTypes.js';
+import type { FutuResponse } from '$lib/types/serverTypes';
 import { dev } from '$app/environment';
 
 const checkTickerValid = async (ticker: string) => {
