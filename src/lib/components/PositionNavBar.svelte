@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { replacer } from '$lib/helpers/JsonHelpers';
+	import { replacer } from '$lib/helpers/jsonHelpers';
 	import { dispatchToast } from '@/routes/stores';
 
 	export let editedPositions: Map<number, string> = new Map<number, string>();

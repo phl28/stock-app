@@ -1,4 +1,4 @@
-import { checkPercentage } from '$lib/helpers/DataHelpers';
+import { checkPercentage } from '$lib/helpers/dataHelpers';
 
 // Used in the calculator page (all percentages are represented as a number between 0 and 1)
 
