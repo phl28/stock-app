@@ -1,6 +1,7 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
+	import { compressImage } from '$lib/helpers/imageCompressor';
 
 	export let data = {};
 	export let readOnly = false;
@@ -48,11 +49,33 @@
 						class: ImageTool,
 						config: {
 							endpoints: {
-								byFile: '/articles/upload-image',
-								byUrl: '/articles/upload-image-by-url'
+								byFile: '/articles/upload-image'
 							},
 							field: 'image',
-							captionPlaceholder: 'Image caption'
+							captionPlaceholder: 'Image caption',
+							uploader: {
+								async uploadByFile(file) {
+									const compressedBlob = await compressImage(file);
+									const formData = new FormData();
+									formData.append('image', compressedBlob, file.name);
+									const response = await fetch('/articles/upload-image', {
+										method: 'POST',
+										body: formData
+									});
+									return response.json();
+								},
+								async uploadByUrl(url) {
+									const blob = await fetch(url).then((res) => res.blob());
+									const compressedBlob = await compressImage(blob);
+									const formData = new FormData();
+									formData.append('image', compressedBlob, `image-${Date.now()}.jpeg`);
+									const response = await fetch('/articles/upload-image', {
+										method: 'POST',
+										body: formData
+									});
+									return response.json();
+								}
+							}
 						}
 					},
 					checklist: CheckList,
