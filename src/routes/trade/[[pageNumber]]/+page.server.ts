@@ -8,18 +8,18 @@ import {
 	updateTradeHistoryBatch,
 	getPaginatedTradeHistory,
 	updatePositionNotes
-} from '@/server/db/database.js';
-import { reviver } from '$lib/helpers/jsonHelpers.js';
+} from '@/server/db/database';
+import { reviver } from '@/lib/helpers/JsonHelpers.js';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL, PUBLIC_SERVER_URL } from '$env/static/public';
 import { error, isHttpError } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types.js';
-import type { FutuResponse } from '$lib/types/serverTypes.js';
+import type { FutuResponse } from '$lib/types/serverTypes';
 import { dev } from '$app/environment';
 
 const checkTickerValid = async (ticker: string) => {
 	if (ticker.at(0) === '(' && ticker.at(-1) === ')') {
-		// this indicates the ticker is wrapped in a bracket and it is delisted.	
+		// this indicates the ticker is wrapped in a bracket and it is delisted.
 		return true;
 	}
 	const res = await fetch(
@@ -45,12 +45,13 @@ const fetchFutuTrades = async (startDate?: Date, endDate?: Date) => {
 	} catch (err) {
 		console.error('Error fetching trades from server', err);
 	}
-}
+};
 
-export const load: PageServerLoad = async ({params}) => {
+export const load: PageServerLoad = async ({ params }) => {
 	try {
 		const pageNumber = isNaN(Number(params.pageNumber)) ? 1 : Number(params.pageNumber);
-		const {trades, currentPage, totalPages, totalTrades} = await getPaginatedTradeHistory(pageNumber);
+		const { trades, currentPage, totalPages, totalTrades } =
+			await getPaginatedTradeHistory(pageNumber);
 		const positions = await getActivePositions();
 		return {
 			trades,
@@ -82,8 +83,8 @@ export const actions = {
 		for (const trade of futuTrades.trades) {
 			const insertTrade = {
 				...trade,
-				executedAt: new Date(trade.executedAt),
-			}
+				executedAt: new Date(trade.executedAt)
+			};
 			await insertTradeHistory(insertTrade);
 		}
 		return;
@@ -134,7 +135,7 @@ export const actions = {
 		const updatedPositions = JSON.parse(positions, reviver) as Map<number, string>;
 		const positionsList: { id: number; notes: string }[] = [];
 		for (let id of updatedPositions.keys()) {
-			positionsList.push({id: id, notes: updatedPositions.get(id) ?? ""});
+			positionsList.push({ id: id, notes: updatedPositions.get(id) ?? '' });
 		}
 		await updatePositionNotes(positionsList);
 		return;
@@ -151,5 +152,5 @@ export const actions = {
 		const ids = stringIds.map((id) => parseInt(id));
 		await deleteTradeHistoryBatch(ids);
 		return;
-	},
+	}
 };

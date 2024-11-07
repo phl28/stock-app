@@ -1,5 +1,5 @@
 import { error, redirect, type Actions } from '@sveltejs/kit';
-import { addArticle, getPaginatedArticles, searchArticles } from '@/server/db/database.js';
+import { addArticle, getPaginatedArticles, searchArticles } from '@/server/db/database';
 import type { PageServerLoad } from './$types.js';
 
 type ArticleData = {
@@ -23,7 +23,9 @@ type SearchArticlesResponse = {
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	try {
-		const session = locals.session ? locals.session as { userId: string; claims: { [key: string]: any } } : null;
+		const session = locals.session
+			? (locals.session as { userId: string; claims: { [key: string]: any } })
+			: null;
 		let publishedOnly = true;
 		if (session?.userId) {
 			publishedOnly = false;

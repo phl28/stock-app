@@ -9,7 +9,7 @@ const toggleDarkTheme = () => {
 		subscribe,
 		toggle: () => update((n) => !n)
 	};
-}
+};
 
 export const theme = toggleDarkTheme();
 

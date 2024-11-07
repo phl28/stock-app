@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { TradeSide, Platform, Region, Currency } from '$lib/types/tradeTypes';
 	import type { Trade } from '$lib/types/tradeTypes';
-	import { replacer } from '$lib/helpers/jsonHelpers';
+	import { replacer } from '$lib/helpers/JsonHelpers';
 	import { dispatchToast } from '@/routes/stores';
 	import Papa from 'papaparse';
 	import { invalidateAll } from '$app/navigation';

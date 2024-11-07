@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { formatCurrency } from '$lib/helpers/currencyHelpers';
-	import type { Position } from '$lib/types/tradeTypes.js';
+	import { formatCurrency } from '$lib/helpers/CurrencyHelpers';
+	import type { Position } from '$lib/types/tradeTypes';
 	import PositionNavBar from './PositionNavBar.svelte';
 
 	export let positions: Position[];

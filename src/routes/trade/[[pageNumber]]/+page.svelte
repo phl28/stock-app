@@ -3,7 +3,7 @@
 	import PositionsTable from '$lib/components/PositionTable.svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
-	import { generatePageNumbers } from '$lib/helpers/pageHelpers';
+	import { generatePageNumbers } from '$lib/helpers/PageHelpers';
 
 	export let data: PageData;
 	$: ({ positions = [], trades = [] } = data);

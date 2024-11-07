@@ -1,4 +1,4 @@
-import { checkPercentage } from '$lib/helpers/dataHelpers';
+import { checkPercentage } from '$lib/helpers/DataHelpers';
 
 // Used in the calculator page (all percentages are represented as a number between 0 and 1)
 
@@ -11,7 +11,7 @@ import { checkPercentage } from '$lib/helpers/dataHelpers';
 const calcStopLossPerc = (entry: number, stop: number) => {
 	if (entry < stop || entry < 0 || stop < 0) return 0;
 	return (entry - stop) / entry;
-}
+};
 
 /**
  * To calculate the stop loss amount (in dollars)
@@ -24,7 +24,7 @@ const calcStopLossAmt = (entry: number, stop: number, positionAmt: number) => {
 	if (positionAmt < 0 || entry < stop || entry < 0 || stop < 0) return 0;
 	positionAmt = Math.floor(positionAmt);
 	return (entry - stop) * positionAmt;
-}
+};
 
 /**
  * To caluclate the position amount (e.g. 5 stocks of AAPl)
@@ -36,7 +36,7 @@ const calcStopLossAmt = (entry: number, stop: number, positionAmt: number) => {
 const calcPositionAmt = (accSize: number, positionSize: number, entry: number) => {
 	if (accSize < 0 || !checkPercentage(positionSize) || entry < 0) return 0;
 	return Math.round((accSize * positionSize) / entry);
-}
+};
 
 /**
  * To calculate the position size in percentage (between 0 and 1)
@@ -47,7 +47,7 @@ const calcPositionAmt = (accSize: number, positionSize: number, entry: number) =
 const calcPositionSize = (risk: number, stopLossPerc: number) => {
 	if (!checkPercentage(risk) || !checkPercentage(stopLossPerc)) return 0;
 	return risk / stopLossPerc;
-}
+};
 
 /**
  * To calculate the profit percentage in this position
@@ -70,7 +70,7 @@ const calcProfitPerc = (
 		return (target - entry) / entry;
 	}
 	return 0;
-}
+};
 
 /**
  * To calculate the reward in the total account for this position
@@ -98,7 +98,7 @@ const calcRewardPerc = (
 		return profitPerc * positionSize;
 	}
 	return 0;
-}
+};
 
 /**
  * To calculate the reward to risk ratio
@@ -109,7 +109,7 @@ const calcRewardPerc = (
 const calcRewardToRisk = (risk: number, reward: number) => {
 	if (!checkPercentage(risk) || !checkPercentage(reward)) return 0;
 	return reward / risk;
-}
+};
 
 /**
  * For different types of targets, what is the price that we should leave the position at
@@ -120,7 +120,7 @@ const calcRewardToRisk = (risk: number, reward: number) => {
 const calcCoverPrice = (entry: number, profitPerc: number) => {
 	if (entry < 0 || !checkPercentage(profitPerc)) return 0;
 	return entry * profitPerc + entry;
-}
+};
 
 export default {
 	calcStopLossPerc,

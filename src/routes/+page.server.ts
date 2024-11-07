@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL } from '$env/static/public';
-import type { ChartResponse } from '$lib/types/chartTypes.js';
+import type { ChartResponse } from '$lib/types/chartTypes';
 import type { PageServerLoad } from './$types';
 
 const API_KEY = PRIVATE_POLYGON_IO_API_KEY;
@@ -25,7 +25,7 @@ export const load: PageServerLoad = async () => {
 		}
 	} catch (err) {
 		console.error('Error fetching stock data', err);
-		return {stockData: [], smaData: [], error: null} as ChartResponse;
+		return { stockData: [], smaData: [], error: null } as ChartResponse;
 	}
 };
 
@@ -37,7 +37,7 @@ export const actions = {
 			return fail(400, { message: 'Ticker is required' });
 		}
 		if (!PUBLIC_POLYGON_IO_URL || !API_KEY) {
-			return fail(500, { message: "An unexpected error occurred" });
+			return fail(500, { message: 'An unexpected error occurred' });
 		}
 
 		const today = new Date();
@@ -61,7 +61,7 @@ export const actions = {
 			if (err instanceof Error) {
 				return fail(500, { message: err.message });
 			}
-			return fail(500, { message: "An unexpected error occurred" });
+			return fail(500, { message: 'An unexpected error occurred' });
 		}
 	}
 };
