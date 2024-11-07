@@ -9,7 +9,7 @@
 - [x] Actually set up the database
 - [x] Attach datbase to the UI
 - [x] Add authentication
-- [ ] Allow mass importing trades from csv
+- [x] Allow mass importing trades from csv
 - [ ] Improve UX
 - [x] Make Position Calculations
 - [ ] Dashboard for analytics
