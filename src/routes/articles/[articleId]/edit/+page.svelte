@@ -30,6 +30,26 @@
 			dispatchToast({ type: 'error', message: 'Failed to save article' });
 		}
 	};
+
+	const handleRemoveImages = async (removedImagesUrl: string[]) => {
+		try {
+			const response = await fetch(`/articles/delete-image`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					imageUrls: removedImagesUrl
+				})
+			});
+			if (!response.ok) {
+				throw new Error('Failed to delete images');
+			}
+			dispatchToast({ type: 'success', message: 'Images deleted successfully!' });
+		} catch (error) {
+			dispatchToast({ type: 'error', message: 'Failed to delete images' });
+		}
+	};
 </script>
 
 {#if data}
@@ -38,7 +58,12 @@
 			Title
 			<input type="text" class="grow" placeholder="Title here" bind:value={title} />
 		</label>
-		<Editor readOnly={false} data={data.article.content ?? {}} onSave={handleSaveArticle}>
+		<Editor
+			readOnly={false}
+			data={data.article.content ?? {}}
+			onSave={handleSaveArticle}
+			removeImages={handleRemoveImages}
+		>
 			<div class="form-control">
 				<label class="label flex cursor-pointer gap-3">
 					<span class="label-text">Publish</span>
