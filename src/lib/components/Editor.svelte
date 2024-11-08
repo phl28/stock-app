@@ -8,8 +8,10 @@
 	export let placeholder = 'What are your thoughts for this week?';
 	export let autofocus = true;
 	export let onSave = undefined;
+	export let removeImages = undefined;
 
 	let editor;
+	const removedImagesUrl = [];
 
 	onMount(async () => {
 		if (browser) {
@@ -21,6 +23,15 @@
 			const CheckList = (await import('@editorjs/checklist')).default;
 			const Table = (await import('@editorjs/table')).default;
 			const Embed = (await import('@editorjs/embed')).default;
+
+			class CustomImageTool extends ImageTool {
+				removed() {
+					const fileUrl = this._data.file.url;
+					if (fileUrl.includes('blob.vercel-storage.com')) {
+						removedImagesUrl.push(fileUrl);
+					}
+				}
+			}
 
 			editor = new EditorJS({
 				/**
@@ -46,7 +57,7 @@
 					quote: Quote,
 					embed: Embed,
 					image: {
-						class: ImageTool,
+						class: CustomImageTool,
 						config: {
 							endpoints: {
 								byFile: '/articles/upload-image'
@@ -106,6 +117,11 @@
 			.save()
 			.then((outputData) => {
 				onSave(outputData);
+				if (removedImagesUrl.length > 0) {
+					// remove images from storage
+					removeImages(removedImagesUrl);
+					removedImagesUrl.length = 0;
+				}
 			})
 			.catch((error) => {
 				console.error('Saving failed: ', error);
