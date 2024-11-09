@@ -75,7 +75,7 @@
 	>
 		<div class="flex justify-center">
 			<div class="dropdown my-4 w-1/2">
-				<label class="input input-bordered flex w-full items-center gap-2">
+				<label class="input input-bordered relative flex w-full items-center gap-2">
 					<input
 						type="text"
 						class="grow"
@@ -83,7 +83,7 @@
 						placeholder="Search for articles"
 						bind:value={searchTerm}
 					/>
-					<button type="submit" tabindex="0"><Search /></button>
+					<button type="submit" tabindex="0" class="absolute right-2"><Search /></button>
 				</label>
 				{#if searchResults.length > 0}
 					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
@@ -108,7 +108,7 @@
 	</form>
 	<div class="flex-grow">
 		{#if data.articles}
-			<div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+			<div class="m-2 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
 				{#each data.articles as article (article.articleId)}
 					<div class="card bordered card-normal bg-base-100 shadow-xl">
 						<div class="card-body">

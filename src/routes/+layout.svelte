@@ -15,11 +15,11 @@
 
 <div data-theme={$theme ? 'dark' : 'light'} class="app">
 	<Toasts />
-	<Header />
-
-	<main>
-		<slot />
-	</main>
+	<Header>
+		<main>
+			<slot />
+		</main>
+	</Header>
 
 	<footer>
 		Check out the GitHub repository!
@@ -39,6 +39,8 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
+		max-width: 100%;
+		width: 100%;
 	}
 
 	main {
@@ -46,7 +48,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		width: 100%;
+		max-width: 100%;
 		box-sizing: border-box;
 	}
 
@@ -61,11 +63,5 @@
 	footer img {
 		height: 3rem;
 		width: 3rem;
-	}
-
-	@media (min-width: 480px) {
-		footer {
-			padding: 12px 0;
-		}
 	}
 </style>
