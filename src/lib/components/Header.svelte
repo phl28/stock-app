@@ -15,7 +15,7 @@
 	};
 </script>
 
-<header>
+<div class="mb-4 flex w-full flex-col items-center justify-between lg:flex-row">
 	<div class="corner">
 		<a href="/">
 			<img src={logo} alt="TradeUp" />
@@ -86,15 +86,9 @@
 			</SignInButton>
 		</SignedOut>
 	</div>
-</header>
+</div>
 
 <style>
-	header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
 	.corner a {
 		display: flex;
 		align-items: center;

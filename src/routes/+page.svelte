@@ -10,6 +10,19 @@
 	import { onMount, tick } from 'svelte';
 
 	export let data;
+	let containerWidth = 600;
+	let containerHeight = 300;
+	let container: HTMLDivElement;
+	let resizeObserver: ResizeObserver;
+
+	const updateDimensions = (entries: ResizeObserverEntry[]) => {
+		for (const entry of entries) {
+			const { width } = entry.contentRect;
+			containerWidth = width;
+			console.log('containerWidth', containerWidth);
+			containerHeight = Math.round(width * 0.5); // 60% of width
+		}
+	};
 
 	onMount(() => {
 		if (data.error) {
@@ -21,6 +34,19 @@
 				dispatchToast({ type: 'error', message: 'Error initializing chart' });
 			}
 		}
+		if (container) {
+			containerWidth = container.clientWidth;
+			containerHeight = Math.round(containerWidth * 0.6);
+
+			resizeObserver = new ResizeObserver(updateDimensions);
+			resizeObserver.observe(container);
+		}
+
+		return () => {
+			if (resizeObserver) {
+				resizeObserver.disconnect();
+			}
+		};
 	});
 
 	let stockData: StockData[];
@@ -142,9 +168,9 @@
 		text: `${stockTickInput.toUpperCase()} 1D`
 	};
 
-	const chartOptions = {
-		height: 300,
-		width: 600,
+	$: chartOptions = {
+		width: containerWidth,
+		height: containerHeight,
 		crosshair: {
 			mode: CrosshairMode.Magnet
 		},
@@ -205,105 +231,103 @@
 	/>
 </svelte:head>
 
-<div class="w-3/4">
-	<div class="flex flex-row items-center justify-center gap-10">
-		<div class="flex flex-col">
+<div class="container">
+	<div class="flex w-full flex-col items-center justify-center gap-4 p-4 lg:flex-row lg:gap-10">
+		<div class="flex w-full flex-col lg:w-1/3">
 			<h1 class="ms-1 {stockTick ? '' : 'hidden'}">{stockTick}</h1>
-			<div>
-				<form
-					method="POST"
-					action="?/fetchStockData"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							stockTickInput = '';
-							if (result.type === 'error') {
-								dispatchToast({ type: 'error', message: result.error.message });
-							} else if (result.type === 'success') {
-								await update({ reset: false });
-								fillChartData(result.data);
-							} else if (result.type === 'failure') {
-								dispatchToast({ type: 'error', message: String(result.data?.message) });
-							} else {
-								dispatchToast({ type: 'error', message: 'An unexpected error occurred' });
-							}
-						};
-					}}
-				>
-					<label class="form-control mb-5 w-full max-w-xs">
-						<div class="label">
-							<span class="label-text">Enter the stock ticker</span>
-						</div>
-						<div class="flex">
-							<input
-								type="text"
-								name="ticker"
-								bind:value={stockTickInput}
-								class="input input-sm input-bordered me-2 w-full max-w-xs"
-							/>
-							<button class="btn btn-primary btn-sm" type="submit" disabled={!stockTickInputValid}
-								>Submit</button
-							>
-						</div>
-					</label>
-				</form>
-				<div class="mb-4 space-y-1">
-					<label
-						class="input input-sm input-bordered flex items-center justify-between gap-4 text-nowrap"
-					>
-						Account Size (USD)
-						<input type="number" bind:value={accSize} />
-					</label>
-					<label class="input input-sm input-bordered flex items-center gap-4">
-						Risk
-						<input type="text" bind:value={risk} class="grow" />
-						<span>%</span>
-					</label>
-				</div>
-				<div class="space-y-1">
-					<label class="input input-sm input-bordered flex items-center gap-4">
-						Entry
-						<input type="number" bind:value={entry} class="grow" />
-					</label>
-					<label class="input input-sm input-bordered flex items-center gap-4">
-						Stop
-						<input type="number" bind:value={stop} class="grow" />
-					</label>
-					<label class="input input-sm input-bordered flex items-center gap-4">
-						Target
-						<input type="number" bind:value={target} class="grow" />
-					</label>
-				</div>
+
+			<form
+				method="POST"
+				action="?/fetchStockData"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						stockTickInput = '';
+						if (result.type === 'error') {
+							dispatchToast({ type: 'error', message: result.error.message });
+						} else if (result.type === 'success') {
+							await update({ reset: false });
+							fillChartData(result.data);
+						} else if (result.type === 'failure') {
+							dispatchToast({ type: 'error', message: String(result.data?.message) });
+						} else {
+							dispatchToast({ type: 'error', message: 'An unexpected error occurred' });
+						}
+					};
+				}}
+			>
+				<label class="form-control mb-5 w-full">
+					<div class="label">
+						<span class="label-text">Enter the stock ticker</span>
+					</div>
+					<div class="flex">
+						<input
+							type="text"
+							name="ticker"
+							bind:value={stockTickInput}
+							class="input input-sm input-bordered me-2 w-full"
+						/>
+						<button class="btn btn-primary btn-sm" type="submit" disabled={!stockTickInputValid}
+							>Submit</button
+						>
+					</div>
+				</label>
+			</form>
+			<div class="mb-4 w-full space-y-1">
+				<label class="input input-sm input-bordered flex items-center justify-between gap-2">
+					<span class="whitespace-nowrap">Account Size (USD)</span>
+					<input type="number" bind:value={accSize} class="w-1/2 text-right" />
+				</label>
+				<label class="input input-sm input-bordered flex items-center gap-2">
+					<span>Risk</span>
+					<input type="text" bind:value={risk} class="flex-1 text-right" />
+					<span>%</span>
+				</label>
 			</div>
-			<div>
+			<div class="w-full space-y-1">
+				<label class="input input-sm input-bordered flex items-center gap-2">
+					<span>Entry</span>
+					<input type="number" bind:value={entry} class="flex-1 text-right" />
+				</label>
+				<label class="input input-sm input-bordered flex items-center gap-2">
+					<span>Stop</span>
+					<input type="number" bind:value={stop} class="flex-1 text-right" />
+				</label>
+				<label class="input input-sm input-bordered flex items-center gap-2">
+					<span>Target</span>
+					<input type="number" bind:value={target} class="flex-1 text-right" />
+				</label>
+			</div>
+			<div class="w-full space-y-1">
 				<div class="input input-sm flex items-center gap-2">
 					<strong>Stop Loss:</strong>
-					{stopLossAmt.toFixed(2)}
-					({(stopLossPerc * 100).toFixed(2)} %)
+					<span class="flex-1 text-right">
+						{stopLossAmt.toFixed(2)} ({(stopLossPerc * 100).toFixed(2)}%)
+					</span>
 				</div>
 				<div class="input input-sm flex items-center gap-2">
 					<strong>Position Amount:</strong>
-					{positionAmt}
+					<span class="flex-1 text-right">{positionAmt}</span>
 				</div>
 				<div class="input input-sm flex items-center gap-2">
 					<strong>Position Size:</strong>
-					{(positionSize * 100).toFixed(2)} %
+					<span class="flex-1 text-right">{(positionSize * 100).toFixed(2)}%</span>
 				</div>
 				<div class="input input-sm flex items-center gap-2">
 					<strong>Profit:</strong>
-					{(profit * 100).toFixed(2)} %
+					<span class="flex-1 text-right">{(profit * 100).toFixed(2)}%</span>
 				</div>
 				<div class="input input-sm flex items-center gap-2">
 					<strong>Account Growth:</strong>
-					{(accGrowth * 100).toFixed(2)} %
+					<span class="flex-1 text-right">{(accGrowth * 100).toFixed(2)}%</span>
 				</div>
 				<div class="input input-sm flex items-center gap-2">
 					<strong>Reward / Risk:</strong>
-					{riskReward.toFixed(2)}
+					<span class="flex-1 text-right">{riskReward.toFixed(2)}</span>
 				</div>
 			</div>
 		</div>
-		<div class="flex flex-col">
-			<div>
+		<div class="flex w-full flex-col lg:w-2/3" bind:this={container}>
+			<div class="w-full grow">
 				<Chart {...chartOptions} {watermark} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
 					<CandlestickSeries
 						bind:data={stockData}
