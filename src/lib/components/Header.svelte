@@ -81,7 +81,7 @@
 		</div>
 		<slot />
 	</div>
-	<div class="drawer-side">
+	<div class="drawer-side z-10">
 		<label for="my-drawer-3" aria-label="close sidebar" class="drawer-overlay"></label>
 		<ul class="menu min-h-full w-60 bg-base-200">
 			<li class="w-1/2">
