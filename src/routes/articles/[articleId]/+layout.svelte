@@ -1,5 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
+
+	const children_render = $derived(children);
 </script>
 
 <svelte:head>
@@ -11,7 +18,7 @@
 </svelte:head>
 
 <main class="container">
-	<slot />
+	{@render children_render?.()}
 </main>
 <footer class="flex justify-center">
 	<a href="https://www.buymeacoffee.com/alui" target="_blank"

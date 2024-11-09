@@ -3,12 +3,27 @@
 	import { browser } from '$app/environment';
 	import { compressImage } from '$lib/helpers/ImageCompressor';
 
-	export let data = {};
-	export let readOnly = false;
-	export let placeholder = 'What are your thoughts for this week?';
-	export let autofocus = true;
-	export let onSave = undefined;
-	export let removeImages = undefined;
+	/**
+	 * @typedef {Object} Props
+	 * @property {any} [data]
+	 * @property {boolean} [readOnly]
+	 * @property {string} [placeholder]
+	 * @property {boolean} [autofocus]
+	 * @property {any} [onSave]
+	 * @property {any} [removeImages]
+	 * @property {import('svelte').Snippet} [children]
+	 */
+
+	/** @type {Props} */
+	let {
+		data = {},
+		readOnly = false,
+		placeholder = 'What are your thoughts for this week?',
+		autofocus = true,
+		onSave = undefined,
+		removeImages = undefined,
+		children
+	} = $props();
 
 	let editor;
 	const removedImagesUrl = [];
@@ -127,6 +142,8 @@
 				console.error('Saving failed: ', error);
 			});
 	};
+
+	const children_render = $derived(children);
 </script>
 
 <div
@@ -135,7 +152,7 @@
 ></div>
 {#if !readOnly}
 	<div class="flex items-center justify-end gap-2">
-		<slot></slot>
-		<button class="btn btn-neutral" on:click={save}>Save</button>
+		{@render children_render?.()}
+		<button class="btn btn-neutral" onclick={save}>Save</button>
 	</div>
 {/if}

@@ -8,9 +8,16 @@
 	import { dev } from '$app/environment';
 	import { inject } from '@vercel/analytics';
 	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
 
 	injectSpeedInsights();
 	inject({ mode: dev ? 'development' : 'production' });
+
+	const children_render = $derived(children);
 </script>
 
 <div data-theme={$theme ? 'dark' : 'light'} class="app">
@@ -18,7 +25,7 @@
 	<Header />
 
 	<main>
-		<slot />
+		{@render children_render?.()}
 	</main>
 
 	<footer>

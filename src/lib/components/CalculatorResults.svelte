@@ -1,12 +1,14 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import calculator from '$lib/calculator/calculator';
-	export let input = {
+	let { input = {
 		risk: 0.0003,
 		entry: 100,
 		stop: 96,
 		target: 120,
 		stopLossPerc: 0.004
-	};
+	} } = $props();
 
 	interface CalculatorInput {
 		risk: number;
@@ -22,7 +24,6 @@
 		profit: number;
 		coverPrice: number;
 	}
-	$: data = calculateData(input);
 	const { calcProfitPerc, calcRewardPerc, calcCoverPrice } = calculator;
 	const riskReward = [2.0, 3.0, 4.0, 5.0];
 	const calculateData = (input: CalculatorInput): TableData[] => {
@@ -38,15 +39,16 @@
 			};
 		});
 	};
-	let customRR: number;
-	let customReward: number;
-	let customProfit: number;
-	let customCoverPrice: number;
-	$: {
+	let customRR: number = $state();
+	let customReward: number = $state();
+	let customProfit: number = $state();
+	let customCoverPrice: number = $state();
+	let data = $derived(calculateData(input));
+	run(() => {
 		customReward = calcRewardPerc(undefined, undefined, customRR, input.risk / 100);
 		customProfit = calcProfitPerc(undefined, undefined, input.stopLossPerc, customRR);
 		customCoverPrice = calcCoverPrice(input.entry, customProfit);
-	}
+	});
 </script>
 
 <div class="overflow-x-auto">

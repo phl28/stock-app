@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
 	import { ColorType, CrosshairMode, type ISeriesApi } from 'lightweight-charts';
 	import { dispatchToast, theme } from './stores.ts';
@@ -9,7 +11,7 @@
 	import calculator from '$lib/calculator/calculator';
 	import { onMount, tick } from 'svelte';
 
-	export let data;
+	let { data } = $props();
 
 	onMount(() => {
 		if (data.error) {
@@ -23,11 +25,11 @@
 		}
 	});
 
-	let stockData: StockData[];
-	let volumeData: VolumeData[];
+	let stockData: StockData[] = $state();
+	let volumeData: VolumeData[] = $state();
 
-	let stockTickInput: string = 'AAPL';
-	let stockTick: string;
+	let stockTickInput: string = $state('AAPL');
+	let stockTick: string = $state();
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
 	let lineSeries: ISeriesApi<'Line'> | null = null;
@@ -170,22 +172,22 @@
 		calcRewardToRisk
 	} = calculator;
 
-	let accSize: number = 1000000;
-	let entry: number = 100;
-	let stop: number = 96;
-	let target: number = 120;
-	let risk: number = 0.3;
-	let stopLossAmt: number = 300;
-	let stopLossPerc: number = 0.004;
-	let positionAmt: number = 0;
-	let positionSize: number = 0;
-	let profit: number = 0;
-	let accGrowth: number = 0;
-	let riskReward: number = 0;
+	let accSize: number = $state(1000000);
+	let entry: number = $state(100);
+	let stop: number = $state(96);
+	let target: number = $state(120);
+	let risk: number = $state(0.3);
+	let stopLossAmt: number = $state(300);
+	let stopLossPerc: number = $state(0.004);
+	let positionAmt: number = $state(0);
+	let positionSize: number = $state(0);
+	let profit: number = $state(0);
+	let accGrowth: number = $state(0);
+	let riskReward: number = $state(0);
 
-	let stockTickInputValid: boolean = false;
+	let stockTickInputValid: boolean = $state(false);
 
-	$: {
+	run(() => {
 		stopLossPerc = calcStopLossPerc(entry, stop);
 		positionSize = calcPositionSize(risk / 100, stopLossPerc);
 		positionAmt = calcPositionAmt(accSize, positionSize, entry);
@@ -194,7 +196,7 @@
 		accGrowth = calcRewardPerc(profit, positionSize);
 		riskReward = calcRewardToRisk(risk / 100, accGrowth);
 		stockTickInputValid = stockTickInput.length > 0;
-	}
+	});
 </script>
 
 <svelte:head>

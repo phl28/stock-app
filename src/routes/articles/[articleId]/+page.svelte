@@ -6,7 +6,11 @@
 	import { Trash2, Pencil } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 
 	const handleDeleteArticle = async () => {
 		if (confirm('Are you sure you want to delete this article?')) {
@@ -30,7 +34,7 @@
 				<a class="btn btn-circle btn-ghost" href={`/articles/${data.article.articleId}/edit`}
 					><Pencil /></a
 				>
-				<button class="btn btn-circle btn-error" on:click={handleDeleteArticle}><Trash2 /></button>
+				<button class="btn btn-circle btn-error" onclick={handleDeleteArticle}><Trash2 /></button>
 			</div>
 		</SignedIn>
 		<span class="flex justify-center text-3xl font-bold">{data.article.title}</span>

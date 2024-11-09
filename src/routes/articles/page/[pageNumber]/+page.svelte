@@ -7,7 +7,11 @@
 	import { goto } from '$app/navigation';
 	import { generatePageNumbers } from '$lib/helpers/PageHelpers';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 
 	type ArticleData = {
 		createdAt: Date;
@@ -34,8 +38,8 @@
 		goto(`/articles/page/${pageNumber}`);
 	};
 
-	let searchTerm: string = '';
-	let searchResults: ArticleData[] = [];
+	let searchTerm: string = $state('');
+	let searchResults: ArticleData[] = $state([]);
 
 	const handleSearchResults = (result: ActionResult) => {
 		if (result.type === 'success') {
@@ -45,7 +49,7 @@
 		}
 	};
 
-	$: pageNumbers = generatePageNumbers(data.currentPage, data.totalPages);
+	let pageNumbers = $derived(generatePageNumbers(data.currentPage, data.totalPages));
 </script>
 
 <svelte:head>
@@ -86,7 +90,7 @@
 					<button type="submit" tabindex="0"><Search /></button>
 				</label>
 				{#if searchResults.length > 0}
-					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 					<ul
 						tabindex="0"
 						class="menu dropdown-content z-[1] w-full rounded-box bg-base-100 p-2 shadow"
@@ -144,13 +148,13 @@
 	<div class="join mt-6 justify-center">
 		<button
 			class={`btn join-item ${data.currentPage === 1 ? 'btn-disabled' : ''}`}
-			on:click={handlePageDecrement}>«</button
+			onclick={handlePageDecrement}>«</button
 		>
 		{#each pageNumbers as pageNum}
 			{#if typeof pageNum === 'number'}
 				<button
 					class={`btn join-item ${pageNum === data.currentPage ? 'btn-active' : ''}`}
-					on:click={() => handlePageRedirect(pageNum)}
+					onclick={() => handlePageRedirect(pageNum)}
 				>
 					{pageNum}
 				</button>
@@ -160,7 +164,7 @@
 		{/each}
 		<button
 			class={`btn join-item ${data.currentPage === data.totalPages ? 'btn-disabled' : ''}`}
-			on:click={handlePageIncrement}>»</button
+			onclick={handlePageIncrement}>»</button
 		>
 	</div>
 </section>

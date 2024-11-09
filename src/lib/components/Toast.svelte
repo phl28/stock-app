@@ -5,9 +5,16 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let type = 'error';
+	interface Props {
+		type?: string;
+		children?: import('svelte').Snippet;
+	}
+
+	let { type = 'error', children }: Props = $props();
 
 	setTimeout(() => dispatch('dismiss'), 3000);
+
+	const children_render = $derived(children);
 </script>
 
 <div class="toast relative p-1" transition:fade>
@@ -26,6 +33,6 @@
 			<TriangleAlert />
 		{:else}
 			<Info />
-		{/if}<slot />
+		{/if}{@render children_render?.()}
 	</div>
 </div>

@@ -3,8 +3,12 @@
 	import { replacer } from '$lib/helpers/JsonHelpers';
 	import { dispatchToast } from '@/routes/stores';
 
-	export let editedPositions: Map<number, string> = new Map<number, string>();
-	export let hasEditedNotes: boolean;
+	interface Props {
+		editedPositions?: Map<number, string>;
+		hasEditedNotes: boolean;
+	}
+
+	let { editedPositions = $bindable(new Map<number, string>()), hasEditedNotes }: Props = $props();
 </script>
 
 <div class="m-2 flex flex-row items-center justify-between">

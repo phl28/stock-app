@@ -3,9 +3,13 @@
 	import type { Position } from '$lib/types/tradeTypes';
 	import PositionNavBar from './PositionNavBar.svelte';
 
-	export let positions: Position[];
+	interface Props {
+		positions: Position[];
+	}
 
-	let editedNotes: Map<number, string> = new Map<number, string>();
+	let { positions }: Props = $props();
+
+	let editedNotes: Map<number, string> = $state(new Map<number, string>());
 	const handleNoteChange = (position: Position, newNote: string) => {
 		if (newNote !== positions.find((p) => p.id === position.id)?.notes) {
 			editedNotes.set(position.id, newNote);
@@ -15,7 +19,7 @@
 		editedNotes = editedNotes;
 	};
 
-	$: hasEditedNotes = editedNotes.size > 0;
+	let hasEditedNotes = $derived(editedNotes.size > 0);
 </script>
 
 <div class="w-full">
@@ -66,7 +70,7 @@
 								value={editedNotes.get(position.id) !== undefined
 									? editedNotes.get(position.id)
 									: position.notes}
-								on:input={(e) => handleNoteChange(position, e.currentTarget.value)}
+								oninput={(e) => handleNoteChange(position, e.currentTarget.value)}
 							></textarea>
 						</td>
 					</tr>

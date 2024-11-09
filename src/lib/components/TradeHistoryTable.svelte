@@ -3,9 +3,13 @@
 	import { formatCurrency } from '$lib/helpers/CurrencyHelpers';
 	import type { Trade } from '$lib/types/tradeTypes';
 
-	export let trades: Trade[];
+	interface Props {
+		trades: Trade[];
+	}
 
-	let selectedTrades: Map<number, Trade> = new Map();
+	let { trades }: Props = $props();
+
+	let selectedTrades: Map<number, Trade> = $state(new Map());
 	const toggleSelection = (trade: Trade) => {
 		if (selectedTrades.has(trade.id)) {
 			selectedTrades.delete(trade.id);
@@ -17,7 +21,7 @@
 		}
 		selectedTrades = selectedTrades;
 	};
-	let selectedAll: boolean = false;
+	let selectedAll: boolean = $state(false);
 	const toggleSelectAll = () => {
 		selectedAll
 			? selectedTrades.clear()
@@ -25,7 +29,7 @@
 		selectedAll = !selectedAll;
 	};
 
-	let editedNotes: { [key: number]: string } = {};
+	let editedNotes: { [key: number]: string } = $state({});
 	const handleNoteChange = (trade: Trade, newNote: string) => {
 		if (newNote !== trades.find((t) => t.id === trade.id)?.notes) {
 			editedNotes[trade.id] = newNote;
@@ -41,7 +45,7 @@
 		editedNotes = editedNotes;
 	};
 
-	$: hasEditedNotes = Object.keys(editedNotes).length > 0;
+	let hasEditedNotes = $derived(Object.keys(editedNotes).length > 0);
 </script>
 
 <div class="w-full">
@@ -55,7 +59,7 @@
 							<input
 								type="checkbox"
 								class="checkbox"
-								on:change={toggleSelectAll}
+								onchange={toggleSelectAll}
 								checked={selectedAll}
 							/>
 						</label></td
@@ -79,7 +83,7 @@
 								<input
 									type="checkbox"
 									class="checkbox"
-									on:change={() => toggleSelection(trade)}
+									onchange={() => toggleSelection(trade)}
 									checked={selectedTrades.has(trade.id)}
 								/>
 							</label>
@@ -97,7 +101,7 @@
 								placeholder="Notes"
 								class="textarea textarea-bordered textarea-xs w-full max-w-xs"
 								value={editedNotes[trade.id] !== undefined ? editedNotes[trade.id] : trade.notes}
-								on:input={(e) => handleNoteChange(trade, e.currentTarget.value)}
+								oninput={(e) => handleNoteChange(trade, e.currentTarget.value)}
 							></textarea>
 						</td>
 					</tr>

@@ -3,10 +3,14 @@
 	import { dispatchToast } from '@/routes/stores';
 	import type { PageData } from './$types';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
 
-	let title: string = data.article.title;
-	let publish: boolean = false;
+	let { data }: Props = $props();
+
+	let title: string = $state(data.article.title);
+	let publish: boolean = $state(false);
 
 	const handleSaveArticle = async (outputData: any) => {
 		try {
@@ -71,7 +75,7 @@
 						type="checkbox"
 						class="toggle"
 						checked={publish}
-						on:change={() => (publish = !publish)}
+						onchange={() => (publish = !publish)}
 					/>
 				</label>
 			</div>
