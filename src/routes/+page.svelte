@@ -327,7 +327,7 @@
 			</div>
 		</div>
 		<div class="flex w-full flex-col lg:w-2/3" bind:this={container}>
-			<div class="w-full grow">
+			<div class="z-0 w-full grow">
 				<Chart {...chartOptions} {watermark} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
 					<CandlestickSeries
 						bind:data={stockData}

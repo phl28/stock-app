@@ -7,84 +7,94 @@
 	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte';
 	import SignInButton from 'clerk-sveltekit/client/SignInButton.svelte';
 	import { dark } from '@clerk/themes';
+	import { AlignJustify, Sun, Moon } from 'lucide-svelte';
 
 	const toggle = () => {
 		theme.toggle();
 		document.getElementById('toggle')?.classList.toggle('fa-moon');
 		document.getElementById('toggle')?.classList.toggle('fa-sun');
 	};
+
+	const closeDrawer = () => {
+		const drawerToggle = document.getElementById('my-drawer-3');
+		if (drawerToggle instanceof HTMLInputElement) {
+			drawerToggle.checked = false;
+		}
+	};
+
+	const navItems = [
+		{ href: '/dashboard', label: 'Dashboard' },
+		{ href: '/', label: 'Stock calculator' },
+		{ href: '/trade/1', label: 'Trade' },
+		{ href: '/articles/page/1', label: 'Articles' }
+	];
 </script>
 
-<div class="mb-4 flex w-full flex-col items-center justify-between lg:flex-row">
-	<div class="corner">
-		<a href="/">
-			<img src={logo} alt="TradeUp" />
-		</a>
+<div class="drawer">
+	<input id="my-drawer-3" type="checkbox" class="drawer-toggle" />
+	<div class="drawer-content flex flex-col">
+		<div class="navbar mb-4 flex w-full flex-row items-center justify-between">
+			<div>
+				<div class="flex-none lg:hidden">
+					<label for="my-drawer-3" aria-label="open sidebar" class="btn btn-square btn-ghost">
+						<AlignJustify />
+					</label>
+				</div>
+				<div class="corner">
+					<a href="/">
+						<img src={logo} alt="TradeUp" />
+					</a>
+				</div>
+			</div>
+			<nav class="hidden flex-none lg:flex">
+				<ul id="nav-list-normal">
+					{#each navItems as item}
+						<li><a href={item.href}>{item.label}</a></li>
+					{/each}
+				</ul>
+			</nav>
+			<div class="flex items-center justify-end pe-3">
+				<label class="mx-2 flex cursor-pointer gap-2">
+					<Sun />
+					<input type="checkbox" on:click={toggle} class="theme-controller toggle" />
+					<Moon />
+				</label>
+				<SignedIn>
+					{#if $theme}
+						<UserButton
+							appearance={{
+								baseTheme: dark,
+								userProfile: { baseTheme: dark }
+							}}
+							afterSignOutUrl="/"
+						/>
+					{:else}
+						<UserButton afterSignOutUrl="/" />
+					{/if}
+				</SignedIn>
+				<SignedOut>
+					<SignInButton>
+						<button class="btn btn-primary btn-sm">Sign in</button>
+					</SignInButton>
+				</SignedOut>
+			</div>
+		</div>
+		<slot />
 	</div>
-	<nav>
-		<ul>
-			<li aria-current={$page.url.pathname.startsWith('/dashboard') ? 'dashboard' : undefined}>
-				<a href="/dashboard">Dashboard</a>
+	<div class="drawer-side">
+		<label for="my-drawer-3" aria-label="close sidebar" class="drawer-overlay"></label>
+		<ul class="menu min-h-full w-60 bg-base-200">
+			<li class="w-1/2">
+				<a href="/" class="p-0" on:click={closeDrawer}>
+					<img src={logo} alt="TradeUp" />
+				</a>
 			</li>
-			<li aria-current={$page.url.pathname.startsWith('/') ? 'calculator' : undefined}>
-				<a href="/">Stock calculator</a>
-			</li>
-			<li aria-current={$page.url.pathname.startsWith('/trade') ? 'trade' : undefined}>
-				<a href="/trade/1">Trade</a>
-			</li>
-			<li aria-current={$page.url.pathname.startsWith('/articles') ? 'articles' : undefined}>
-				<a href="/articles/page/1">Articles</a>
-			</li>
+			{#each navItems as item}
+				<li class="w-full font-semibold">
+					<a href={item.href} on:click={closeDrawer}>{item.label}</a>
+				</li>
+			{/each}
 		</ul>
-	</nav>
-	<div class="flex items-center justify-end pe-3">
-		<label class="mx-2 flex cursor-pointer gap-2">
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				width="20"
-				height="20"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				><circle cx="12" cy="12" r="5" /><path
-					d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"
-				/></svg
-			>
-			<input type="checkbox" on:click={toggle} class="theme-controller toggle" />
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				width="20"
-				height="20"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg
-			>
-		</label>
-		<SignedIn>
-			{#if $theme}
-				<UserButton
-					appearance={{
-						baseTheme: dark,
-						userProfile: { baseTheme: dark }
-					}}
-					afterSignOutUrl="/"
-				/>
-			{:else}
-				<UserButton afterSignOutUrl="/" />
-			{/if}
-		</SignedIn>
-		<SignedOut>
-			<SignInButton>
-				<button class="btn btn-primary btn-sm">Sign in</button>
-			</SignInButton>
-		</SignedOut>
 	</div>
 </div>
 
@@ -103,15 +113,7 @@
 		object-fit: contain;
 	}
 
-	nav {
-		flex-grow: 1;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		flex-grow: 1;
-	}
-
-	ul {
+	#nav-list-normal {
 		position: relative;
 		padding: 0;
 		margin: 0;
@@ -121,25 +123,17 @@
 		align-items: center;
 		list-style: none;
 		background-size: contain;
+		flex-grow: 1;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex-grow: 1;
 	}
 
 	li {
 		position: relative;
 		height: 100%;
 	}
-
-	li[aria-current='page']::before {
-		--size: 6px;
-		content: '';
-		width: 0;
-		height: 0;
-		position: absolute;
-		top: 0;
-		/* left: calc(50% - var(--size)); */
-		/* border: var(--size) solid transparent; */
-		/* border-top: var(--size) solid var(--color-theme-1); */
-	}
-
 	nav a {
 		/* font-family: var(--font-family); */
 		display: flex;

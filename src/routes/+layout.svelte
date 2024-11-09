@@ -15,11 +15,11 @@
 
 <div data-theme={$theme ? 'dark' : 'light'} class="app">
 	<Toasts />
-	<Header />
-
-	<main>
-		<slot />
-	</main>
+	<Header>
+		<main>
+			<slot />
+		</main>
+	</Header>
 
 	<footer>
 		Check out the GitHub repository!
