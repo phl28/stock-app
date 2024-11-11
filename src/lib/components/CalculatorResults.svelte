@@ -48,8 +48,8 @@
 	}
 </script>
 
-<div class="overflow-hidden rounded-lg border bg-base-100">
-	<table class="table table-sm w-full">
+<div class="overflow-auto rounded-lg border bg-base-100">
+	<table class="table table-sm h-full">
 		<thead>
 			<tr>
 				<th class="bg-base-200">Risk/Reward</th>

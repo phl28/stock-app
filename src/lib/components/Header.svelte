@@ -21,7 +21,7 @@
 	const closeMenu = () => (isOpen = false);
 </script>
 
-<header class="navbar">
+<header class="navbar w-screen">
 	<div class="container mx-auto flex items-center justify-between px-4">
 		<div class="flex items-center gap-8">
 			<a href="/" class="flex items-center gap-2">

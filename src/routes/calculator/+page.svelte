@@ -19,8 +19,8 @@
 	const updateDimensions = (entries: ResizeObserverEntry[]) => {
 		for (const entry of entries) {
 			const { width } = entry.contentRect;
-			containerWidth = width;
-			containerHeight = Math.round(width * 0.5);
+			containerWidth = Math.min(width, container.parentElement?.clientWidth ?? width);
+			containerHeight = Math.round(containerWidth * 0.5);
 		}
 	};
 
@@ -35,8 +35,9 @@
 			}
 		}
 		if (container) {
-			containerWidth = container.clientWidth;
-			containerHeight = Math.round(containerWidth * 0.6);
+			const parentWidth = container.parentElement?.clientWidth ?? 600;
+			containerWidth = Math.min(parentWidth, 600);
+			containerHeight = Math.round(containerWidth * 0.5);
 
 			resizeObserver = new ResizeObserver(updateDimensions);
 			resizeObserver.observe(container);
@@ -230,7 +231,7 @@
 		</p>
 	</div>
 
-	<div class="grid gap-8 lg:grid-cols-2">
+	<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
 		<!-- Calculator Panel -->
 		<div class="card bg-base-100 p-6 shadow-lg">
 			<div class="mb-6">
@@ -381,10 +382,10 @@
 		</div>
 
 		<!-- Chart Panel -->
-		<div class="card flex bg-base-100 p-6 shadow-lg" bind:this={container}>
+		<div class="card flex flex-col bg-base-100 p-4 shadow-lg sm:p-6" bind:this={container}>
 			<CalculatorResults input={{ risk, entry, stop, target, stopLossPerc }} />
 			<div class="divider my-6"></div>
-			<div class="relative h-full w-full flex-grow px-2">
+			<div class="relative w-full px-2">
 				<Chart {...chartOptions} {watermark} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
 					<CandlestickSeries
 						bind:data={stockData}
