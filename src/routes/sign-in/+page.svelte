@@ -4,7 +4,7 @@
 	import { theme } from '@/routes/stores.ts';
 </script>
 
-<div class="flex flex-col items-center justify-center">
+<div class="my-auto flex h-[calc(100vh-var(--header-height))] items-center justify-center">
 	{#if $theme}
 		<SignIn
 			redirectUrl="/trade/1"

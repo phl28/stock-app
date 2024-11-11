@@ -29,45 +29,57 @@
 </script>
 
 <svelte:head>
-	<title>Trade</title>
-	<meta
-		name="description"
-		content="Allows users to see their past trades and be able to get insights out of it."
-	/>
+	<title>Trade History & Positions</title>
+	<meta name="description" content="View and manage your trading history and active positions." />
 </svelte:head>
 
-<div class="flex w-full flex-col px-10">
-	<select class="select select-bordered w-full max-w-xs" bind:value={view}>
-		<option value="trades">Trades</option>
-		<option value="positions">Positions</option>
-	</select>
-	{#if view === 'trades'}
-		<TradeHistoryTable {trades} />
-	{:else if view === 'positions'}
-		<PositionsTable {positions} />
-	{/if}
-	{#if data.totalPages > 0 && view === 'trades'}
-		<div class="join mt-6 justify-center">
-			<button
-				class={`btn join-item ${data.currentPage === 1 ? 'btn-disabled' : ''}`}
-				on:click={handlePageDecrement}>«</button
-			>
-			{#each pageNumbers as pageNum}
-				{#if typeof pageNum === 'number'}
-					<button
-						class={`btn join-item ${pageNum === data.currentPage ? 'btn-active' : ''}`}
-						on:click={() => handlePageRedirect(pageNum)}
-					>
-						{pageNum}
-					</button>
-				{:else}
-					<button class="btn btn-disabled join-item">...</button>
-				{/if}
-			{/each}
-			<button
-				class={`btn join-item ${data.currentPage === data.totalPages ? 'btn-disabled' : ''}`}
-				on:click={handlePageIncrement}>»</button
-			>
+<div class="mx-auto max-w-7xl px-4 py-8">
+	<div class="mb-8">
+		<h1 class="text-center">Trade Management</h1>
+		<p class="mt-2 text-center text-base-content/60">
+			Track your trading history and manage your positions
+		</p>
+	</div>
+
+	<div class="card bg-base-100 p-6 shadow-lg">
+		<div class="mb-6">
+			<select class="select select-bordered w-full max-w-xs" bind:value={view}>
+				<option value="trades">Trade History</option>
+				<option value="positions">Active Positions</option>
+			</select>
 		</div>
-	{/if}
+
+		{#if view === 'trades'}
+			<TradeHistoryTable {trades} />
+		{:else if view === 'positions'}
+			<PositionsTable {positions} />
+		{/if}
+
+		{#if data.totalPages > 0 && view === 'trades'}
+			<div class="mt-8 flex justify-center">
+				<div class="join">
+					<button
+						class={`btn join-item ${data.currentPage === 1 ? 'btn-disabled' : ''}`}
+						on:click={handlePageDecrement}>«</button
+					>
+					{#each pageNumbers as pageNum}
+						{#if typeof pageNum === 'number'}
+							<button
+								class={`btn join-item ${pageNum === data.currentPage ? 'btn-active' : ''}`}
+								on:click={() => handlePageRedirect(pageNum)}
+							>
+								{pageNum}
+							</button>
+						{:else}
+							<button class="btn btn-disabled join-item">...</button>
+						{/if}
+					{/each}
+					<button
+						class={`btn join-item ${data.currentPage === data.totalPages ? 'btn-disabled' : ''}`}
+						on:click={handlePageIncrement}>»</button
+					>
+				</div>
+			</div>
+		{/if}
+	</div>
 </div>
