@@ -2,17 +2,17 @@ import type { RequestHandler } from './$types';
 import { del } from '@vercel/blob';
 
 type DeleteImageRequest = {
-    imageUrls: string[]
-}
+	imageUrls: string[];
+};
 
 export const DELETE: RequestHandler = async ({ request }) => {
 	try {
 		const jsonRequest = (await request.json()) as DeleteImageRequest;
-        const imageUrls = jsonRequest.imageUrls;
-        for (const imageUrl of imageUrls) {
-            await del(imageUrl);
-        }
-        return new Response(
+		const imageUrls = jsonRequest.imageUrls;
+		for (const imageUrl of imageUrls) {
+			await del(imageUrl);
+		}
+		return new Response(
 			JSON.stringify({
 				success: 1
 			})
