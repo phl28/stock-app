@@ -3,22 +3,66 @@
 @tailwind utilities;
 
 @layer base {
+	:root {
+		--header-height: 4rem;
+	}
+
+	body {
+		@apply bg-base-100 text-base-content antialiased;
+	}
+
 	h1 {
-		@apply text-4xl;
+		@apply text-4xl font-bold tracking-tight;
 	}
 	h2 {
-		@apply text-3xl;
+		@apply text-3xl font-semibold tracking-tight;
 	}
 	h3 {
-		@apply text-2xl;
+		@apply text-2xl font-semibold tracking-tight;
 	}
 	h4 {
-		@apply text-xl;
+		@apply text-xl font-semibold tracking-tight;
 	}
 	h5 {
-		@apply text-lg;
+		@apply text-lg font-semibold tracking-tight;
 	}
 	h6 {
-		@apply text-base;
+		@apply text-base font-semibold tracking-tight;
+	}
+}
+
+@layer components {
+	.btn {
+		@apply transition-all duration-200;
+	}
+
+	.card {
+		@apply transition-all duration-200 hover:shadow-lg;
+	}
+
+	.input,
+	.select,
+	.textarea {
+		@apply transition-all duration-200;
+	}
+
+	.table {
+		@apply rounded-lg bg-base-100 shadow;
+	}
+
+	.table th {
+		@apply bg-base-200 text-base-content/80;
+	}
+
+	.table tr {
+		@apply hover:bg-base-200/50;
+	}
+
+	.navbar {
+		@apply fixed top-0 z-50 h-[var(--header-height)] border-b bg-base-100/80 backdrop-blur;
+	}
+
+	main {
+		@apply mt-[var(--header-height)] min-h-[calc(100vh-var(--header-height))] px-4 py-6;
 	}
 }

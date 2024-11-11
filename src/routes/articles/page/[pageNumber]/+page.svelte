@@ -49,118 +49,121 @@
 </script>
 
 <svelte:head>
-	<title>Trade up - Articles</title>
-	<meta
-		name="description"
-		content="Trade up - Articles - A place where personal ideas and thoughts are shared."
-	/>
+	<title>Trading Articles & Insights</title>
+	<meta name="description" content="Explore trading insights, analysis, and educational content." />
 </svelte:head>
 
-<section class="container mx-auto flex flex-grow flex-col">
-	<SignedIn>
-		<div class="flex justify-end">
-			<form method="POST" action="?/createArticle">
-				<button type="submit" class="btn btn-circle">+</button>
-			</form>
-		</div>
-	</SignedIn>
-	<form
-		method="POST"
-		action="?/searchArticles"
-		use:enhance={() => {
-			return async ({ result }) => {
-				handleSearchResults(result);
-			};
-		}}
-	>
-		<div class="flex justify-center">
-			<div class="dropdown my-4 w-1/2">
-				<label class="input input-bordered relative flex w-full items-center gap-2">
+<div class="mx-auto max-w-7xl px-4 py-8">
+	<div class="mb-8">
+		<h1 class="text-center">Trading Insights</h1>
+		<p class="mt-2 text-center text-base-content/60">
+			Explore trading analysis, strategies, and market insights
+		</p>
+	</div>
+
+	<div class="card bg-base-100 p-6 shadow-lg">
+		<SignedIn>
+			<div class="mb-6 flex justify-end">
+				<form method="POST" action="?/createArticle">
+					<button type="submit" class="btn btn-primary">New Article</button>
+				</form>
+			</div>
+		</SignedIn>
+
+		<form
+			method="POST"
+			action="?/searchArticles"
+			use:enhance={() => {
+				return async ({ result }) => {
+					handleSearchResults(result);
+				};
+			}}
+			class="mb-8 flex w-full"
+		>
+			<div class="dropdown mx-auto w-full max-w-2xl">
+				<label class="input input-bordered flex items-center gap-2">
 					<input
 						type="text"
 						class="grow"
 						name="searchTerm"
-						placeholder="Search for articles"
+						placeholder="Search articles..."
 						bind:value={searchTerm}
 					/>
-					<button type="submit" tabindex="0" class="absolute right-2"><Search /></button>
+					<button type="submit" class="btn btn-circle btn-ghost">
+						<Search class="h-5 w-5" />
+					</button>
 				</label>
 				{#if searchResults.length > 0}
-					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-					<ul
-						tabindex="0"
-						class="menu dropdown-content z-[1] w-full rounded-box bg-base-100 p-2 shadow"
-					>
+					<ul class="menu dropdown-content z-[1] mt-2 w-full rounded-box bg-base-100 p-2 shadow-lg">
 						{#each searchResults as article}
 							<li>
 								<a
 									href={`/articles/${article.articleId}`}
-									class="flex w-full items-center justify-between gap-2 px-4 py-2 text-left text-sm leading-5 text-base-content"
+									class="flex items-center justify-between gap-2 px-4 py-3 hover:bg-base-200"
 								>
-									{article.title}
+									<span class="font-medium">{article.title}</span>
+									<span class="text-sm opacity-60">
+										{new Date(article.createdAt).toLocaleDateString()}
+									</span>
 								</a>
 							</li>
 						{/each}
 					</ul>
 				{/if}
 			</div>
-		</div>
-	</form>
-	<div class="flex-grow">
-		{#if data.articles}
-			<div class="m-2 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-				{#each data.articles as article (article.articleId)}
-					<div class="card bordered card-normal bg-base-100 shadow-xl">
-						<div class="card-body">
-							<h2 class="card-title justify-between">
-								{article.title}
-								<SignedIn
-									><div
-										class={`badge badge-sm ${article.publishedAt ? 'badge-primary' : 'badge-neutral'}`}
-									>
-										{article.publishedAt ? 'Published' : 'Draft'}
-									</div></SignedIn
-								>
-							</h2>
-							<span class="text-xs"
-								>Uploaded on: {article.publishedAt?.toLocaleDateString() ??
-									article.createdAt.toLocaleDateString()}</span
-							>
+		</form>
 
-							<div class="card-actions">
-								<a
-									href={`/articles/${article.articleId}`}
-									class="btn btn-outline btn-neutral btn-sm w-full"
-								>
-									Read More
-								</a>
-							</div>
+		<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+			{#each data.articles as article (article.articleId)}
+				<div class="card bg-base-200 transition-all hover:shadow-lg">
+					<div class="card-body">
+						<div class="flex items-start justify-between gap-4">
+							<h2 class="card-title flex-1">{article.title}</h2>
+							<SignedIn>
+								<div class={`badge ${article.publishedAt ? 'badge-primary' : 'badge-neutral'}`}>
+									{article.publishedAt ? 'Published' : 'Draft'}
+								</div>
+							</SignedIn>
+						</div>
+						<p class="text-sm text-base-content/60">
+							{article.publishedAt?.toLocaleDateString() ?? article.createdAt.toLocaleDateString()}
+						</p>
+						<div class="card-actions mt-4">
+							<a
+								href={`/articles/${article.articleId}`}
+								class="btn btn-outline btn-neutral btn-sm w-full"
+							>
+								Read More
+							</a>
 						</div>
 					</div>
-				{/each}
-			</div>
-		{/if}
-	</div>
-	<div class="join mt-6 justify-center">
-		<button
-			class={`btn join-item ${data.currentPage === 1 ? 'btn-disabled' : ''}`}
-			on:click={handlePageDecrement}>«</button
-		>
-		{#each pageNumbers as pageNum}
-			{#if typeof pageNum === 'number'}
+				</div>
+			{/each}
+		</div>
+
+		<div class="mt-8 flex justify-center">
+			<div class="join">
 				<button
-					class={`btn join-item ${pageNum === data.currentPage ? 'btn-active' : ''}`}
-					on:click={() => handlePageRedirect(pageNum)}
+					class={`btn join-item ${data.currentPage === 1 ? 'btn-disabled' : ''}`}
+					on:click={handlePageDecrement}>«</button
 				>
-					{pageNum}
-				</button>
-			{:else}
-				<button class="btn btn-disabled join-item">...</button>
-			{/if}
-		{/each}
-		<button
-			class={`btn join-item ${data.currentPage === data.totalPages ? 'btn-disabled' : ''}`}
-			on:click={handlePageIncrement}>»</button
-		>
+				{#each pageNumbers as pageNum}
+					{#if typeof pageNum === 'number'}
+						<button
+							class={`btn join-item ${pageNum === data.currentPage ? 'btn-active' : ''}`}
+							on:click={() => handlePageRedirect(pageNum)}
+						>
+							{pageNum}
+						</button>
+					{:else}
+						<button class="btn btn-disabled join-item">...</button>
+					{/if}
+				{/each}
+				<button
+					class={`btn join-item ${data.currentPage === data.totalPages ? 'btn-disabled' : ''}`}
+					on:click={handlePageIncrement}>»</button
+				>
+			</div>
+		</div>
 	</div>
-</section>
+</div>

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { page } from '$app/stores';
 	import logo from '$lib/images/logo-no-background.png';
 	import { theme } from '@/routes/stores.ts';
@@ -7,144 +7,106 @@
 	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte';
 	import SignInButton from 'clerk-sveltekit/client/SignInButton.svelte';
 	import { dark } from '@clerk/themes';
-	import { AlignJustify, Sun, Moon } from 'lucide-svelte';
-
-	const toggle = () => {
-		theme.toggle();
-		document.getElementById('toggle')?.classList.toggle('fa-moon');
-		document.getElementById('toggle')?.classList.toggle('fa-sun');
-	};
-
-	const closeDrawer = () => {
-		const drawerToggle = document.getElementById('my-drawer-3');
-		if (drawerToggle instanceof HTMLInputElement) {
-			drawerToggle.checked = false;
-		}
-	};
+	import { Menu, Sun, Moon } from 'lucide-svelte';
 
 	const navItems = [
-		{ href: '/dashboard', label: 'Dashboard' },
-		{ href: '/', label: 'Stock calculator' },
+		{ href: '/', label: 'Home' },
+		{ href: '/calculator', label: 'Calculator' },
 		{ href: '/trade/1', label: 'Trade' },
 		{ href: '/articles/page/1', label: 'Articles' }
 	];
+
+	let isOpen = false;
+	const toggleMenu = () => (isOpen = !isOpen);
+	const closeMenu = () => (isOpen = false);
 </script>
 
-<div class="drawer">
-	<input id="my-drawer-3" type="checkbox" class="drawer-toggle" />
-	<div class="drawer-content flex flex-col">
-		<div class="navbar mb-4 flex w-full flex-row items-center justify-between">
-			<div>
-				<div class="flex-none lg:hidden">
-					<label for="my-drawer-3" aria-label="open sidebar" class="btn btn-square btn-ghost">
-						<AlignJustify />
-					</label>
-				</div>
-				<div class="corner">
-					<a href="/">
-						<img src={logo} alt="TradeUp" />
-					</a>
-				</div>
-			</div>
-			<nav class="hidden flex-none lg:flex">
-				<ul id="nav-list-normal">
-					{#each navItems as item}
-						<li><a href={item.href}>{item.label}</a></li>
+<header class="navbar">
+	<div class="container mx-auto flex items-center justify-between px-4">
+		<div class="flex items-center gap-8">
+			<a href="/" class="flex items-center gap-2">
+				<img src={logo} alt="TradeUp" class="h-16 w-auto" />
+			</a>
+
+			<nav class="hidden lg:block">
+				<ul class="flex items-center gap-6">
+					{#each navItems as { href, label }}
+						<li>
+							<a
+								{href}
+								class="text-sm font-medium transition-colors hover:text-primary"
+								class:text-primary={$page.url.pathname === href}
+							>
+								{label}
+							</a>
+						</li>
 					{/each}
 				</ul>
 			</nav>
-			<div class="flex items-center justify-end pe-3">
-				<label class="mx-2 flex cursor-pointer gap-2">
-					<Sun />
-					<input type="checkbox" on:click={toggle} class="theme-controller toggle" />
-					<Moon />
-				</label>
-				<SignedIn>
-					{#if $theme}
-						<UserButton
-							appearance={{
-								baseTheme: dark,
-								userProfile: { baseTheme: dark }
-							}}
-							afterSignOutUrl="/"
-						/>
-					{:else}
-						<UserButton afterSignOutUrl="/" />
-					{/if}
-				</SignedIn>
-				<SignedOut>
-					<SignInButton>
-						<button class="btn btn-primary btn-sm">Sign in</button>
-					</SignInButton>
-				</SignedOut>
-			</div>
 		</div>
-		<slot />
+
+		<div class="flex items-center gap-4">
+			<button class="btn btn-circle btn-ghost" on:click={() => theme.toggle()}>
+				{#if $theme}
+					<Sun class="h-5 w-5" />
+				{:else}
+					<Moon class="h-5 w-5" />
+				{/if}
+			</button>
+
+			<SignedIn>
+				{#if $theme}
+					<UserButton
+						appearance={{
+							baseTheme: dark
+						}}
+						userProfileProps={{ appearance: { baseTheme: dark } }}
+						afterSignOutUrl="/"
+					/>
+				{:else}
+					<UserButton afterSignOutUrl="/" />
+				{/if}
+			</SignedIn>
+
+			<SignedOut>
+				<SignInButton>
+					<button class="btn btn-primary btn-sm">Sign in</button>
+				</SignInButton>
+			</SignedOut>
+
+			<button class="btn btn-circle btn-ghost lg:hidden" on:click={toggleMenu}>
+				<Menu class="h-5 w-5" />
+			</button>
+		</div>
 	</div>
-	<div class="drawer-side z-10">
-		<label for="my-drawer-3" aria-label="close sidebar" class="drawer-overlay"></label>
-		<ul class="menu min-h-full w-60 bg-base-200">
-			<li class="w-1/2">
-				<a href="/" class="p-0" on:click={closeDrawer}>
-					<img src={logo} alt="TradeUp" />
-				</a>
-			</li>
-			{#each navItems as item}
-				<li class="w-full font-semibold">
-					<a href={item.href} on:click={closeDrawer}>{item.label}</a>
-				</li>
-			{/each}
-		</ul>
+</header>
+{#if isOpen}
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<div
+		class="fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity lg:hidden"
+		on:click={closeMenu}
+	/>
+	<div
+		class="fixed right-0 top-[var(--header-height)] z-50 h-[calc(100vh-var(--header-height))] w-64 transform overflow-y-auto bg-base-100 p-6 shadow-xl transition-transform lg:hidden"
+		class:translate-x-0={isOpen}
+		class:translate-x-full={!isOpen}
+	>
+		<nav>
+			<ul class="flex flex-col gap-4">
+				{#each navItems as { href, label }}
+					<li>
+						<a
+							{href}
+							class="block text-sm font-medium transition-colors hover:text-primary"
+							class:text-primary={$page.url.pathname === href}
+							on:click={closeMenu}
+						>
+							{label}
+						</a>
+					</li>
+				{/each}
+			</ul>
+		</nav>
 	</div>
-</div>
-
-<style>
-	.corner a {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		height: 100%;
-	}
-
-	.corner img {
-		width: 10em;
-		height: 10em;
-		object-fit: contain;
-	}
-
-	#nav-list-normal {
-		position: relative;
-		padding: 0;
-		margin: 0;
-		height: 3em;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		list-style: none;
-		background-size: contain;
-		flex-grow: 1;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		flex-grow: 1;
-	}
-
-	li {
-		position: relative;
-		height: 100%;
-	}
-	nav a {
-		/* font-family: var(--font-family); */
-		display: flex;
-		height: 100%;
-		align-items: center;
-		padding: 0 0.5rem;
-		font-weight: 700;
-		font-size: 0.8rem;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		text-decoration: none;
-		/* transition: color 0.2s linear; */
-	}
-</style>
+{/if}
