@@ -465,6 +465,8 @@ export const updateArticle = async (article: InsertArticle, publish: boolean = f
 	if (!article.articleId) throw new Error('Article ID is required');
 	if (publish) {
 		article.publishedAt = new Date();
+	} else {
+		article.publishedAt = null;
 	}
 	return await db
 		.update(schema.articles)
