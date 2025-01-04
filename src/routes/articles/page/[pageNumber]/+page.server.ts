@@ -1,6 +1,7 @@
 import { error, redirect, type Actions } from '@sveltejs/kit';
 import { addArticle, getPaginatedArticles, searchArticles } from '@/server/db/database';
 import type { PageServerLoad } from './$types.js';
+import { assertHasSession } from '@/lib/types/utils.js';
 
 type ArticleData = {
 	createdAt: Date;
@@ -22,12 +23,16 @@ type SearchArticlesResponse = {
 };
 
 export const load: PageServerLoad = async ({ params, locals }) => {
+	let userId: string | null = null;
 	try {
-		const session = locals.session
-			? (locals.session as { userId: string; claims: { [key: string]: any } })
-			: null;
+		assertHasSession(locals);
+		userId = locals.session.userId;
+	} catch (err) {
+		console.error('User is not logged in');
+	}
+	try {
 		let publishedOnly = true;
-		if (session?.userId) {
+		if (userId) {
 			publishedOnly = false;
 		}
 		const pageNumber = Number(params.pageNumber) ?? 1;
@@ -39,9 +44,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions = {
-	createArticle: async () => {
+	createArticle: async ({ locals }) => {
+		assertHasSession(locals);
 		const article = {
-			title: new Date().toLocaleDateString()
+			title: new Date().toLocaleDateString(),
+			createdBy: locals.session.userId
 		};
 		let articleId: number;
 		try {

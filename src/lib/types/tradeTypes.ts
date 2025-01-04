@@ -43,6 +43,7 @@ export type Trade = {
 	notes: string | null;
 	createdAt: Date;
 	updatedAt: Date | null;
+	createdBy: string;
 };
 
 export type Position = {
@@ -59,4 +60,5 @@ export type Position = {
 	notes: string | null;
 	closed: boolean;
 	closedAt: Date | null;
+	createdBy: string;
 };

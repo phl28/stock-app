@@ -16,6 +16,7 @@ import { error, isHttpError } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types.js';
 import type { FutuResponse } from '$lib/types/serverTypes';
 import { dev } from '$app/environment';
+import { assertHasSession } from '@/lib/types/utils.js';
 
 const checkTickerValid = async (ticker: string) => {
 	if (ticker.at(0) === '(' && ticker.at(-1) === ')') {
@@ -47,12 +48,15 @@ const fetchFutuTrades = async (startDate?: Date, endDate?: Date) => {
 	}
 };
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
 	try {
+		assertHasSession(locals);
 		const pageNumber = isNaN(Number(params.pageNumber)) ? 1 : Number(params.pageNumber);
-		const { trades, currentPage, totalPages, totalTrades } =
-			await getPaginatedTradeHistory(pageNumber);
-		const positions = await getActivePositions();
+		const { trades, currentPage, totalPages, totalTrades } = await getPaginatedTradeHistory({
+			pageNumber,
+			userId: locals.session.userId
+		});
+		const positions = await getActivePositions({ userId: locals.session.userId });
 		return {
 			trades,
 			positions,
@@ -69,8 +73,12 @@ export const load: PageServerLoad = async ({ params }) => {
 };
 
 export const actions = {
-	syncTrades: async () => {
-		const lastTrade = await getLastTradeHistory('FUTU');
+	syncTrades: async ({ locals }) => {
+		assertHasSession(locals);
+		const lastTrade = await getLastTradeHistory({
+			userId: locals.session.userId,
+			platform: 'FUTU'
+		});
 		let futuTrades: FutuResponse;
 		if (lastTrade) {
 			futuTrades = await fetchFutuTrades(lastTrade.executedAt, new Date());
@@ -83,13 +91,15 @@ export const actions = {
 		for (const trade of futuTrades.trades) {
 			const insertTrade = {
 				...trade,
+				createdBy: locals.session.userId,
 				executedAt: new Date(trade.executedAt)
 			};
 			await insertTradeHistory(insertTrade);
 		}
 		return;
 	},
-	addTrade: async ({ request }) => {
+	addTrade: async ({ request, locals }) => {
+		assertHasSession(locals);
 		const formData = await request.formData();
 		const newTrade = {
 			ticker: (formData.get('ticker') as string).toUpperCase(),
@@ -102,7 +112,8 @@ export const actions = {
 			tradeSide: formData.get('side') as TradeSide,
 			executedAt: new Date(formData.get('executedAt') as string),
 			profitLoss: formData.get('profitLoss') as string,
-			totalCost: ''
+			totalCost: '',
+			createdBy: locals.session.userId
 		};
 		const isTickerValid = await checkTickerValid(newTrade.ticker);
 		if (!isTickerValid) {
@@ -118,18 +129,20 @@ export const actions = {
 		await insertTradeHistory(newTrade);
 		return;
 	},
-	updateTradeBatch: async ({ request }) => {
+	updateTradeBatch: async ({ request, locals }) => {
+		assertHasSession(locals);
 		const formData = await request.formData();
 		const trades = formData.get('trades') as string;
 		const updatedTrades = JSON.parse(trades, reviver) as Map<number, Trade>;
 		const tradeList: Trade[] = [];
 		for (let trade of updatedTrades.values()) {
-			tradeList.push(trade);
+			tradeList.push({ ...trade, createdBy: locals.session.userId });
 		}
 		await updateTradeHistoryBatch(tradeList);
 		return;
 	},
-	updatePositionBatch: async ({ request }) => {
+	updatePositionBatch: async ({ request, locals }) => {
+		assertHasSession(locals);
 		const formData = await request.formData();
 		const positions = formData.get('positions') as string;
 		const updatedPositions = JSON.parse(positions, reviver) as Map<number, string>;
@@ -137,20 +150,22 @@ export const actions = {
 		for (let id of updatedPositions.keys()) {
 			positionsList.push({ id: id, notes: updatedPositions.get(id) ?? '' });
 		}
-		await updatePositionNotes(positionsList);
+		await updatePositionNotes({ userId: locals.session.userId, positions: positionsList });
 		return;
 	},
-	deleteTrade: async ({ request }) => {
+	deleteTrade: async ({ request, locals }) => {
+		assertHasSession(locals);
 		const formData = await request.formData();
 		const id = parseInt(formData.get('id') as string);
-		await deleteTradeHistory(id);
+		await deleteTradeHistory({ userId: locals.session.userId, id });
 		return;
 	},
-	deleteTradesBatch: async ({ request }) => {
+	deleteTradesBatch: async ({ request, locals }) => {
+		assertHasSession(locals);
 		const formData = await request.formData();
 		const stringIds = formData.getAll('id') as string[];
 		const ids = stringIds.map((id) => parseInt(id));
-		await deleteTradeHistoryBatch(ids);
+		await deleteTradeHistoryBatch({ userId: locals.session.userId, ids });
 		return;
 	}
 };
