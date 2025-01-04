@@ -29,6 +29,20 @@
       "when": 1730236018784,
       "tag": "0003_complete_ben_urich",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1736026211560,
+      "tag": "0004_wandering_oracle",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1736026506428,
+      "tag": "0005_nasty_adam_warlock",
+      "breakpoints": true
     }
   ]
 }

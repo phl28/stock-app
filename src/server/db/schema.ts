@@ -47,7 +47,8 @@ export const positions = pgTable(
 		platform: platform('platform').notNull().default('FUTU'),
 		notes: text('notes'),
 		closed: boolean('closed').notNull().default(false),
-		closedAt: timestamp('closedAt')
+		closedAt: timestamp('closedAt'),
+		createdBy: text('createdBy').notNull()
 	},
 	(position) => ({
 		tickerIndex: index('position_ticker_idx').on(position.ticker)
@@ -70,11 +71,11 @@ export const tradeHistory = pgTable(
 		executedAt: timestamp('executedAt').notNull(),
 		profitLoss: decimal('profitLoss', { precision: 20, scale: 8 }),
 		notes: text('notes'),
-
 		createdAt: timestamp('created_at')
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		updatedAt: timestamp('updatedAt')
+		updatedAt: timestamp('updatedAt'),
+		createdBy: text('createdBy').notNull()
 	},
 	(trade) => ({
 		tickerIndex: index('trade_ticker_idx').on(trade.ticker),
@@ -93,7 +94,8 @@ export const articles = pgTable(
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		publishedAt: timestamp('published_at'),
-		updatedAt: timestamp('updatedAt')
+		updatedAt: timestamp('updatedAt'),
+		createdBy: text('createdBy').notNull()
 	},
 	(article) => ({
 		titleSearchIndex: index('title_search_index').using(

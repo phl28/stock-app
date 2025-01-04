@@ -154,7 +154,8 @@ export const insertTradeHistory = async (trade: InsertTrade) => {
 					platform: trade.platform,
 					notes: '',
 					realizedProfitLoss: '0',
-					isShort: trade.tradeSide === 'SELL'
+					isShort: trade.tradeSide === 'SELL',
+					createdBy: trade.createdBy
 				};
 
 				await tx.insert(schema.positions).values(newPosition);
@@ -356,24 +357,33 @@ export const deleteTradeHistoryBatch = async (ids: number[]) => {
 };
 
 // Positions
-export const getActivePositions = async () => {
+export const getActivePositions = async ({ userId }: { userId: string }) => {
 	return await db.query.positions.findMany({
-		where: eq(schema.positions.closed, false),
+		where: and(eq(schema.positions.createdBy, userId), eq(schema.positions.closed, false)),
 		orderBy: [desc(schema.positions.openedAt)]
 	});
 };
 
-export const getClosedPositions = async (startDate: Date, endDate: Date) => {
+export const getClosedPositions = async ({
+	userId,
+	startDate,
+	endDate
+}: {
+	userId: string;
+	startDate: Date;
+	endDate: Date;
+}) => {
 	return await db.query.positions.findMany({
 		where: and(
 			eq(schema.positions.closed, true),
 			gte(schema.positions.closedAt, startDate),
-			lte(schema.positions.closedAt, endDate)
+			lte(schema.positions.closedAt, endDate),
+			eq(schema.positions.createdBy, userId)
 		)
 	});
 };
 
-export const getPositionPerformance = async (positionId: number) => {
+export const getPositionPerformance = async ({ positionId }: { positionId: number }) => {
 	const position = await db.query.positions.findFirst({
 		where: eq(schema.positions.id, positionId)
 	});
@@ -465,6 +475,8 @@ export const updateArticle = async (article: InsertArticle, publish: boolean = f
 	if (!article.articleId) throw new Error('Article ID is required');
 	if (publish) {
 		article.publishedAt = new Date();
+	} else {
+		article.publishedAt = null;
 	}
 	return await db
 		.update(schema.articles)
@@ -472,6 +484,14 @@ export const updateArticle = async (article: InsertArticle, publish: boolean = f
 		.where(eq(schema.articles.articleId, article.articleId));
 };
 
-export const deleteArticle = async (articleId: number) => {
-	return await db.delete(schema.articles).where(eq(schema.articles.articleId, articleId));
+export const deleteArticle = async ({
+	userId,
+	articleId
+}: {
+	userId: string;
+	articleId: number;
+}) => {
+	return await db
+		.delete(schema.articles)
+		.where(and(eq(schema.articles.articleId, articleId), eq(schema.articles.createdBy, userId)));
 };

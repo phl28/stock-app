@@ -1,0 +1,1 @@
+ALTER TABLE "tradeup_articles" ALTER COLUMN "createdBy" SET NOT NULL;

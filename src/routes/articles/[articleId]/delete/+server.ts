@@ -2,9 +2,12 @@ import { deleteArticle } from '@/server/db/database';
 import type { RequestHandler } from './$types';
 import { del } from '@vercel/blob';
 import type { OutputData } from '@editorjs/editorjs';
+import { assertHasSession } from '@/lib/types/utils';
 
-export const DELETE: RequestHandler = async ({ params, request }) => {
+export const DELETE: RequestHandler = async ({ params, request, locals }) => {
 	try {
+		assertHasSession(locals);
+		const userId = locals.session.userId;
 		const articleId = params.articleId;
 		if (isNaN(Number(articleId))) {
 			throw new Error('Invalid article ID');
@@ -17,7 +20,7 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 				await del(imageUrl);
 			}
 		}
-		await deleteArticle(Number(articleId));
+		await deleteArticle({ userId, articleId: Number(articleId) });
 		return new Response(
 			JSON.stringify({
 				success: 1
