@@ -6,7 +6,8 @@
 	export let data: PageData;
 
 	let title: string = data.article.title;
-	let publish: boolean = false;
+	let publish: boolean = data.article.publishedAt ? true : false;
+	const originallyPublished: boolean = data.article.publishedAt ? true : false;
 
 	const handleSaveArticle = async (outputData: any) => {
 		try {
@@ -25,6 +26,11 @@
 				throw new Error('Failed to save article');
 			}
 			dispatchToast({ type: 'success', message: 'Article saved successfully!' });
+			if (publish && !originallyPublished) {
+				dispatchToast({ type: 'success', message: 'Article published successfully!' });
+			} else if (!publish && originallyPublished) {
+				dispatchToast({ type: 'success', message: 'Article unpublished successfully!' });
+			}
 		} catch (error) {
 			console.error('Error saving article:', error);
 			dispatchToast({ type: 'error', message: 'Failed to save article' });
