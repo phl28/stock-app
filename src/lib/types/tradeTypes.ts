@@ -60,4 +60,5 @@ export type Position = {
 	notes: string | null;
 	closed: boolean;
 	closedAt: Date | null;
+	createdBy: string;
 };
