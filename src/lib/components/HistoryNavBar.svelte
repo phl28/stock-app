@@ -8,6 +8,7 @@
 	import { invalidateAll } from '$app/navigation';
 
 	export let selectedTrades: Map<number, Trade> = new Map();
+	export let numOfTrades: number = 0;
 
 	$: isFormValid = ticker && region && currency && price && volume && platform && side;
 
@@ -175,7 +176,7 @@
 </script>
 
 <div class="m-2 flex flex-row items-center justify-between">
-	<h5>Trade History</h5>
+	<h5>Trades ({numOfTrades})</h5>
 	<div class="flex justify-end space-x-2">
 		{#if selectedTrades.size > 0}
 			<form

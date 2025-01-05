@@ -59,6 +59,7 @@ export type Position = {
 	totalFees: string;
 	isShort: boolean;
 	platform: Platform;
+	numOfTrades: number;
 	notes: string | null;
 	openedAt: Date;
 	closedAt: Date | null;

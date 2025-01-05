@@ -27,7 +27,7 @@
 </script>
 
 <div class="w-full">
-	<HistoryNavBar {selectedTrades} />
+	<HistoryNavBar {selectedTrades} numOfTrades={trades.length} />
 	<div class="overflow-x-auto">
 		<table class="table table-pin-rows table-pin-cols table-xs">
 			<thead>

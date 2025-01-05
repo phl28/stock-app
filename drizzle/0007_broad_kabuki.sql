@@ -1,0 +1,1 @@
+ALTER TABLE "tradeup_positions" ADD COLUMN "num_trades" integer NOT NULL;

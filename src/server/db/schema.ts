@@ -44,6 +44,7 @@ export const positions = pgTable(
 		stopLossPrice: decimal('stop_loss_price', { precision: 20, scale: 8 }),
 		grossProfitLoss: decimal('gross_profit_loss', { precision: 20, scale: 8 }),
 		totalFees: decimal('total_fees', { precision: 20, scale: 8 }).notNull(),
+		numOfTrades: integer('num_trades').notNull(),
 		isShort: boolean('is_short').notNull(),
 		platform: platform('platform').notNull().default('FUTU'),
 		notes: text('notes'),
