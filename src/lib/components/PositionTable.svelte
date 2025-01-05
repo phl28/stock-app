@@ -7,7 +7,7 @@
 </script>
 
 <div class="w-full">
-	<PositionNavBar />
+	<PositionNavBar numOfPositions={positions.length} />
 	<div class="overflow-x-auto">
 		<table class="table table-pin-rows table-pin-cols table-xs">
 			<thead>
