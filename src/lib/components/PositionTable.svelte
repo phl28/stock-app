@@ -30,8 +30,7 @@
 					<td>Region</td>
 					<td>Quantity</td>
 					<td>Average Price</td>
-					<td>Total Cost</td>
-					<td>Realized Profit/Loss</td>
+					<td>Gross Profit/Loss</td>
 					<td>Opened At</td>
 					<td>Notes</td>
 				</tr>
@@ -41,20 +40,22 @@
 					<tr>
 						<td>
 							<label>
-								<input type="checkbox" class="checkbox" checked={!position.closed} disabled />
+								<input type="checkbox" class="checkbox" checked={!position.closedAt} disabled />
 							</label>
 						</td>
 						<td>{position.ticker}</td>
 						<td>{position.platform}</td>
 						<td>{position.region}</td>
-						<td>{position.volume}</td>
-						<td
-							>{formatCurrency(position.averagePrice, position.region === 'US' ? 'USD' : 'HKD')}</td
-						>
-						<td>{formatCurrency(position.totalCost, position.region === 'US' ? 'USD' : 'HKD')}</td>
+						<td>{position.totalVolume}</td>
 						<td
 							>{formatCurrency(
-								position.realizedProfitLoss,
+								position.averageEntryPrice,
+								position.region === 'US' ? 'USD' : 'HKD'
+							)}</td
+						>
+						<td
+							>{formatCurrency(
+								position.grossProfitLoss,
 								position.region === 'US' ? 'USD' : 'HKD'
 							)}</td
 						>

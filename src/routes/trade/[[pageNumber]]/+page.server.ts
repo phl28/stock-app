@@ -150,7 +150,7 @@ export const actions = {
 		for (let id of updatedPositions.keys()) {
 			positionsList.push({ id: id, notes: updatedPositions.get(id) ?? '' });
 		}
-		await updatePositionNotes({ userId: locals.session.userId, positions: positionsList });
+		await updatePositionNotes({ userId: locals.session.userId, position: positionsList[0] });
 		return;
 	},
 	deleteTrade: async ({ request, locals }) => {

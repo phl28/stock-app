@@ -24,28 +24,10 @@
 			: (selectedTrades = new Map(trades.map((trade) => [trade.id, trade])));
 		selectedAll = !selectedAll;
 	};
-
-	let editedNotes: { [key: number]: string } = {};
-	const handleNoteChange = (trade: Trade, newNote: string) => {
-		if (newNote !== trades.find((t) => t.id === trade.id)?.notes) {
-			editedNotes[trade.id] = newNote;
-			selectedTrades.set(trade.id, { ...trade, notes: newNote });
-			selectedTrades = selectedTrades;
-		} else {
-			delete editedNotes[trade.id];
-			if (selectedTrades.has(trade.id)) {
-				selectedTrades.delete(trade.id);
-				selectedTrades = selectedTrades;
-			}
-		}
-		editedNotes = editedNotes;
-	};
-
-	$: hasEditedNotes = Object.keys(editedNotes).length > 0;
 </script>
 
 <div class="w-full">
-	<HistoryNavBar {selectedTrades} {hasEditedNotes} />
+	<HistoryNavBar {selectedTrades} />
 	<div class="overflow-x-auto">
 		<table class="table table-pin-rows table-pin-cols table-xs">
 			<thead>
@@ -65,10 +47,8 @@
 					<td>Quantity</td>
 					<td>Price</td>
 					<td>Platform</td>
-					<td>Total Amount</td>
 					<td>Side</td>
 					<td>Executed At</td>
-					<td>Notes</td>
 				</tr>
 			</thead>
 			<tbody>
@@ -89,17 +69,8 @@
 						<td>{trade.volume}</td>
 						<td>{formatCurrency(trade.price, trade.region === 'US' ? 'USD' : 'HKD')}</td>
 						<td>{trade.platform}</td>
-						<td>{formatCurrency(trade.totalCost, trade.region === 'US' ? 'USD' : 'HKD')}</td>
 						<td>{trade.tradeSide}</td>
 						<td>{new Date(trade.executedAt).toLocaleDateString()}</td>
-						<td>
-							<textarea
-								placeholder="Notes"
-								class="textarea textarea-bordered textarea-xs w-full max-w-xs"
-								value={editedNotes[trade.id] !== undefined ? editedNotes[trade.id] : trade.notes}
-								on:input={(e) => handleNoteChange(trade, e.currentTarget.value)}
-							></textarea>
-						</td>
 					</tr>
 				{/each}
 			</tbody>

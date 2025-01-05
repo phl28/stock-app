@@ -8,7 +8,6 @@
 	import { invalidateAll } from '$app/navigation';
 
 	export let selectedTrades: Map<number, Trade> = new Map();
-	export let hasEditedNotes: boolean;
 
 	$: isFormValid = ticker && region && currency && price && volume && platform && side;
 
@@ -200,27 +199,6 @@
 				{/each}
 				<button class="btn btn-neutral" type="submit">Delete</button>
 			</form>
-			{#if hasEditedNotes}
-				<form
-					action="?/updateTradeBatch"
-					method="POST"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							if (result.type === 'success') {
-								selectedTrades.clear();
-								selectedTrades = selectedTrades;
-								dispatchToast({ type: 'success', message: 'Trade updated successfully!' });
-								await update();
-							} else if (result.type === 'error') {
-								dispatchToast({ type: 'error', message: result.error.message });
-							}
-						};
-					}}
-				>
-					<input type="hidden" name="trades" value={JSON.stringify(selectedTrades, replacer)} />
-					<button class="btn btn-primary" type="submit">Save</button>
-				</form>
-			{/if}
 		{/if}
 		<button class="btn btn-neutral" on:click={openAddModal}>Add</button>
 		<button class="btn btn-neutral" on:click={openImportModal}>Bulk Import</button>
