@@ -9,6 +9,8 @@
 
 	injectSpeedInsights();
 	inject({ mode: dev ? 'development' : 'production' });
+
+	const currentYear = new Date().getFullYear();
 </script>
 
 <div data-theme={$theme ? 'dark' : 'light'} class="min-h-screen">
@@ -20,7 +22,7 @@
 
 	<footer class="footer footer-center bg-base-200 p-8 text-base-content">
 		<div class="flex flex-col items-center gap-4">
-			<p class="text-sm opacity-75">© 2024 Trade Up. All rights reserved.</p>
+			<p class="text-sm opacity-75">© {currentYear} Trade Up. All rights reserved.</p>
 			<a
 				href="https://github.com/phl28/stock-app"
 				class="btn btn-ghost btn-sm gap-2"
