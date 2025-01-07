@@ -143,6 +143,26 @@ export const deleteTradeHistoryBatch = async ({
 };
 
 // Positions
+export const createNewPosition = async ({
+	userId,
+	position
+}: {
+	userId: string;
+	position: InsertPosition;
+}) => {
+	return await db.transaction(async (tx) => {
+		const [insertedPosition] = await tx
+			.insert(schema.positions)
+			.values({
+				...position,
+				createdBy: userId,
+				lastUpdatedAt: new Date()
+			})
+			.returning();
+		return insertedPosition;
+	});
+};
+
 export const getActivePositions = async ({ userId }: { userId: string }) => {
 	return await db.query.positions.findMany({
 		where: and(eq(schema.positions.createdBy, userId), isNull(schema.positions.closedAt)), 

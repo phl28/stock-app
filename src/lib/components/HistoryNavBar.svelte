@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { TradeSide, Platform, Region, Currency } from '$lib/types/tradeTypes';
-	import type { Trade } from '$lib/types/tradeTypes';
+	import type { Trade, Position } from '$lib/types/tradeTypes';
 	import { replacer } from '$lib/helpers/JsonHelpers';
 	import { dispatchToast } from '@/routes/stores';
 	import Papa from 'papaparse';
@@ -9,6 +9,7 @@
 
 	export let selectedTrades: Map<number, Trade> = new Map();
 	export let numOfTrades: number = 0;
+	export let positions: Position[] = [];
 
 	$: isFormValid = ticker && region && currency && price && volume && platform && side;
 
@@ -24,6 +25,9 @@
 
 	let addAnother: boolean = true;
 
+	let direction: 'LONG' | 'SHORT' = 'LONG';
+	let positionId: number | 'newPosition';
+
 	const openAddModal = () => {
 		const modal = document.getElementById('add-trade-modal') as HTMLDialogElement;
 		modal.showModal();
@@ -32,6 +36,53 @@
 	const closeAddModal = () => {
 		const modal = document.getElementById('add-trade-modal') as HTMLDialogElement;
 		modal.close();
+	};
+
+	const openAssignPositionModal = () => {
+		const modal = document.getElementById('assign-position-modal') as HTMLDialogElement;
+		modal.showModal();
+	};
+
+	const getSelectedTradesMetrics = () => {
+		const calculatedMetrics = selectedTrades.values().reduce(
+			(acc, trade) => {
+				return {
+					totalVolume: acc.totalVolume + trade.volume,
+					outstandingVolume:
+						trade.tradeSide === 'BUY'
+							? acc.outstandingVolume + trade.volume
+							: acc.outstandingVolume - trade.volume,
+					boughtShares:
+						trade.tradeSide === 'BUY' ? acc.boughtShares + trade.volume : acc.boughtShares,
+					soldShares: trade.tradeSide === 'SELL' ? acc.soldShares + trade.volume : acc.soldShares,
+					totalEntryCost:
+						trade.tradeSide === 'BUY'
+							? acc.totalEntryCost + Number(trade.price) * trade.volume
+							: acc.totalEntryCost,
+					totalExitCost:
+						trade.tradeSide === 'SELL'
+							? acc.totalExitCost + Number(trade.price) * trade.volume
+							: acc.totalExitCost,
+					totalFees: acc.totalFees + Number(trade.fees)
+				};
+			},
+			{
+				totalVolume: 0,
+				outstandingVolume: 0,
+				boughtShares: 0,
+				soldShares: 0,
+				totalEntryCost: 0,
+				totalExitCost: 0,
+				totalFees: 0
+			}
+		);
+		return {
+			averageEntryPrice: calculatedMetrics.totalEntryCost / calculatedMetrics.boughtShares,
+			averageExitPrice: calculatedMetrics.totalExitCost / calculatedMetrics.soldShares,
+			totalVolume: calculatedMetrics.totalVolume,
+			oustandingVolume: calculatedMetrics.outstandingVolume,
+			totalFees: calculatedMetrics.totalFees
+		};
 	};
 
 	const expectedHeaders = [
@@ -200,12 +251,182 @@
 				{/each}
 				<button class="btn btn-neutral" type="submit">Delete</button>
 			</form>
+			{#if new Set(selectedTrades.values().map((trade) => trade.ticker)).size === 1}
+				<button class="btn btn-neutral" on:click={openAssignPositionModal}
+					>Assign To Position</button
+				>
+			{/if}
 		{/if}
 		<button class="btn btn-neutral" on:click={openAddModal}>Add</button>
 		<button class="btn btn-neutral" on:click={openImportModal}>Bulk Import</button>
 		<form method="POST" action="?/syncTrades">
 			<button class="btn btn-neutral" type="submit">Sync</button>
 		</form>
+
+		<dialog id="assign-position-modal" class="modal">
+			<div class="modal-box">
+				<h3 class="mb-2 text-lg font-bold">Assign the selected trades to a position</h3>
+				<form
+					method="POST"
+					action="?/assignTradesToPosition"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							if (result.type === 'success') {
+								dispatchToast({
+									type: 'success',
+									message: 'Trades assigned to position successfully!'
+								});
+								await update();
+							} else if (result.type === 'error') {
+								dispatchToast({ type: 'error', message: result.error.message });
+							}
+						};
+					}}
+				>
+					<select
+						class="select select-bordered select-sm w-full"
+						bind:value={positionId}
+						name="positionId"
+					>
+						<option disabled selected>Select the position to assign these trades to?</option>
+						<option value="newPosition">Assign to new position</option>
+						{#each positions as position}
+							<option value={position.id}
+								>({position.isShort ? 'Short' : 'Long'}) {position.ticker} Opened At: {position.openedAt}</option
+							>
+						{/each}
+					</select>
+					<div class="form-control w-full">
+						{#if positionId === 'newPosition'}
+							<div class="label">
+								<span class="label-text">Ticker</span>
+							</div>
+							<input
+								type="text"
+								class="input w-full"
+								value={selectedTrades.values().next().value?.ticker ?? ''}
+								name="ticker"
+								disabled
+							/>
+							<div class="label">
+								<span class="label-text">Region</span>
+							</div>
+							<input
+								type="text"
+								class="input w-full"
+								value={selectedTrades.values().next().value?.region ?? ''}
+								name="region"
+								disabled
+							/>
+							<div class="label">
+								<span class="label-text">Currency</span>
+							</div>
+							<input
+								type="text"
+								class="input w-full"
+								value={selectedTrades.values().next().value?.currency ?? ''}
+								name="currency"
+								disabled
+							/>
+							<div class="label">
+								<span class="label-text">Number of Trades</span>
+							</div>
+							<input
+								type="number"
+								class="input w-full"
+								value={selectedTrades.size}
+								name="numOfTrades"
+								disabled
+							/>
+							<div class="label">
+								<span class="label-text">Average Entry Price</span>
+							</div>
+							<input
+								type="number"
+								class="input w-full"
+								value={getSelectedTradesMetrics().averageEntryPrice}
+								name="price"
+								disabled
+							/>
+							<div class="label">
+								<span class="label-text">Average Exit Price</span>
+							</div>
+							<input
+								type="number"
+								class="input w-full"
+								value={getSelectedTradesMetrics().averageExitPrice}
+								name="price"
+								disabled
+							/>
+							<div class="label">
+								<span class="label-text">Total Fees</span>
+							</div>
+							<input
+								type="number"
+								class="input w-full"
+								value={getSelectedTradesMetrics().totalFees}
+								name="fees"
+								disabled
+							/>
+							<div class="label">
+								<span class="label-text">Total Volume</span>
+							</div>
+							<input
+								type="number"
+								class="input w-full"
+								value={getSelectedTradesMetrics().totalVolume}
+								name="volume"
+								disabled
+							/>
+							<div class="label">
+								<span class="label-text">Platform</span>
+							</div>
+							<input
+								type="text"
+								class="input w-full"
+								value={selectedTrades.values().next().value?.platform ?? ''}
+								name="platform"
+								disabled
+							/>
+							<div class="label">
+								<span class="label-text">Direction</span>
+							</div>
+							<select
+								class="select select-bordered w-full"
+								bind:value={direction}
+								name="side"
+								required
+							>
+								<option value="LONG">Long</option>
+								<option value="SHORT">Short</option>
+							</select>
+							<div class="label">
+								<span class="label-text">Opened At</span>
+							</div>
+							<input
+								type="date"
+								class="input w-full"
+								value={new Date(
+									Math.min(
+										...[...selectedTrades.values()].map((trade) => trade.executedAt.getTime())
+									)
+								)
+									.toISOString()
+									.split('T')[0]}
+								name="executedAt"
+								disabled
+							/>
+						{/if}
+					</div>
+					<div class="modal-action">
+						<form method="dialog">
+							<button class="btn">Close</button>
+						</form>
+						<button class="btn btn-primary" type="submit" disabled={!isFormValid}>Add</button>
+					</div>
+				</form>
+			</div>
+		</dialog>
 
 		<dialog id="import-trade-modal" class="modal">
 			<div class="modal-box">

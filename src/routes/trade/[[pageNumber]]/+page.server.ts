@@ -111,8 +111,6 @@ export const actions = {
 			platform: formData.get('platform') as Platform,
 			tradeSide: formData.get('side') as TradeSide,
 			executedAt: new Date(formData.get('executedAt') as string),
-			profitLoss: formData.get('profitLoss') as string,
-			totalCost: '',
 			createdBy: locals.session.userId
 		};
 		const isTickerValid = await checkTickerValid(newTrade.ticker);
@@ -122,10 +120,6 @@ export const actions = {
 		if (newTrade.price === '') {
 			return error(400, { message: 'Price cannot be empty' });
 		}
-		newTrade.totalCost = (
-			parseFloat(newTrade.price) * newTrade.volume +
-			parseFloat(newTrade.fees)
-		).toString();
 		await insertTradeHistory(newTrade);
 		return;
 	},
@@ -139,18 +133,6 @@ export const actions = {
 			tradeList.push({ ...trade, createdBy: locals.session.userId });
 		}
 		await updateTradeHistoryBatch(tradeList);
-		return;
-	},
-	updatePositionBatch: async ({ request, locals }) => {
-		assertHasSession(locals);
-		const formData = await request.formData();
-		const positions = formData.get('positions') as string;
-		const updatedPositions = JSON.parse(positions, reviver) as Map<number, string>;
-		const positionsList: { id: number; notes: string }[] = [];
-		for (let id of updatedPositions.keys()) {
-			positionsList.push({ id: id, notes: updatedPositions.get(id) ?? '' });
-		}
-		await updatePositionNotes({ userId: locals.session.userId, position: positionsList[0] });
 		return;
 	},
 	deleteTrade: async ({ request, locals }) => {
@@ -167,5 +149,16 @@ export const actions = {
 		const ids = stringIds.map((id) => parseInt(id));
 		await deleteTradeHistoryBatch({ userId: locals.session.userId, ids });
 		return;
+	},
+	assignTradesToPosition: async ({ request, locals }) => {
+		assertHasSession(locals);
+		const formData = await request.formData();
+		const positionId = formData.get('positionId') as string;
+		if (positionId === 'newPosition') {
+			const ticker = (formData.get('ticker') as string).toUpperCase();
+			const region = formData.get('region') as Region;
+			const currency = formData.get('currency') as Currency;
+			const platform = formData.get('platform') as Platform;
+		}	
 	}
 };
