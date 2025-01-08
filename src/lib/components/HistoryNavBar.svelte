@@ -26,7 +26,9 @@
 	let addAnother: boolean = true;
 
 	let direction: 'LONG' | 'SHORT' = 'LONG';
-	let positionId: number | 'newPosition';
+	let positionId: number | 'newPosition' | undefined = undefined;
+
+	const selectedTickers = Array.from(new Set(selectedTrades.values().map((trade) => trade.ticker)));
 
 	const openAddModal = () => {
 		const modal = document.getElementById('add-trade-modal') as HTMLDialogElement;
@@ -38,31 +40,35 @@
 		modal.close();
 	};
 
+	const possiblePositions = positions.filter((position) => position.ticker === selectedTickers[0]);
+
 	const openAssignPositionModal = () => {
 		const modal = document.getElementById('assign-position-modal') as HTMLDialogElement;
 		modal.showModal();
 	};
 
+	const closeAssignPositionModal = () => {
+		const modal = document.getElementById('assign-position-modal') as HTMLDialogElement;
+		modal.close();
+	};
+
 	const getSelectedTradesMetrics = () => {
 		const calculatedMetrics = selectedTrades.values().reduce(
 			(acc, trade) => {
+				const isBuy = trade.tradeSide === 'BUY';
 				return {
 					totalVolume: acc.totalVolume + trade.volume,
-					outstandingVolume:
-						trade.tradeSide === 'BUY'
-							? acc.outstandingVolume + trade.volume
-							: acc.outstandingVolume - trade.volume,
-					boughtShares:
-						trade.tradeSide === 'BUY' ? acc.boughtShares + trade.volume : acc.boughtShares,
-					soldShares: trade.tradeSide === 'SELL' ? acc.soldShares + trade.volume : acc.soldShares,
-					totalEntryCost:
-						trade.tradeSide === 'BUY'
-							? acc.totalEntryCost + Number(trade.price) * trade.volume
-							: acc.totalEntryCost,
-					totalExitCost:
-						trade.tradeSide === 'SELL'
-							? acc.totalExitCost + Number(trade.price) * trade.volume
-							: acc.totalExitCost,
+					outstandingVolume: isBuy
+						? acc.outstandingVolume + trade.volume
+						: acc.outstandingVolume - trade.volume,
+					boughtShares: isBuy ? acc.boughtShares + trade.volume : acc.boughtShares,
+					soldShares: !isBuy ? acc.soldShares + trade.volume : acc.soldShares,
+					totalEntryCost: isBuy
+						? acc.totalEntryCost + Number(trade.price) * trade.volume
+						: acc.totalEntryCost,
+					totalExitCost: !isBuy
+						? acc.totalExitCost + Number(trade.price) * trade.volume
+						: acc.totalExitCost,
 					totalFees: acc.totalFees + Number(trade.fees)
 				};
 			},
@@ -80,8 +86,10 @@
 			averageEntryPrice: calculatedMetrics.totalEntryCost / calculatedMetrics.boughtShares,
 			averageExitPrice: calculatedMetrics.totalExitCost / calculatedMetrics.soldShares,
 			totalVolume: calculatedMetrics.totalVolume,
-			oustandingVolume: calculatedMetrics.outstandingVolume,
-			totalFees: calculatedMetrics.totalFees
+			outstandingVolume: calculatedMetrics.outstandingVolume,
+			totalFees: calculatedMetrics.totalFees,
+			totalEntryCost: calculatedMetrics.totalEntryCost,
+			totalExitCost: calculatedMetrics.totalExitCost
 		};
 	};
 
@@ -251,7 +259,7 @@
 				{/each}
 				<button class="btn btn-neutral" type="submit">Delete</button>
 			</form>
-			{#if new Set(selectedTrades.values().map((trade) => trade.ticker)).size === 1}
+			{#if selectedTickers.length === 1}
 				<button class="btn btn-neutral" on:click={openAssignPositionModal}
 					>Assign To Position</button
 				>
@@ -280,6 +288,7 @@
 							} else if (result.type === 'error') {
 								dispatchToast({ type: 'error', message: result.error.message });
 							}
+							closeAssignPositionModal();
 						};
 					}}
 				>
@@ -288,111 +297,152 @@
 						bind:value={positionId}
 						name="positionId"
 					>
-						<option disabled selected>Select the position to assign these trades to?</option>
-						<option value="newPosition">Assign to new position</option>
+						<option disabled selected value={undefined}
+							>Select the position to assign these trades to?</option
+						>
 						{#each positions as position}
 							<option value={position.id}
 								>({position.isShort ? 'Short' : 'Long'}) {position.ticker} Opened At: {position.openedAt}</option
 							>
 						{/each}
+						<option value="newPosition">Assign to new position</option>
 					</select>
 					<div class="form-control w-full">
+						<input
+							type="hidden"
+							name="tradeIds"
+							value={JSON.stringify(Array.from(selectedTrades.keys()))}
+						/>
 						{#if positionId === 'newPosition'}
 							<div class="label">
 								<span class="label-text">Ticker</span>
 							</div>
 							<input
 								type="text"
-								class="input w-full"
+								class="input pointer-events-none w-full px-1 py-0"
 								value={selectedTrades.values().next().value?.ticker ?? ''}
 								name="ticker"
-								disabled
+								tabIndex="-1"
+								readonly
 							/>
 							<div class="label">
 								<span class="label-text">Region</span>
 							</div>
 							<input
 								type="text"
-								class="input w-full"
+								class="input pointer-events-none w-full px-1 py-0"
 								value={selectedTrades.values().next().value?.region ?? ''}
 								name="region"
-								disabled
+								tabIndex="-1"
+								readonly
 							/>
 							<div class="label">
 								<span class="label-text">Currency</span>
 							</div>
 							<input
 								type="text"
-								class="input w-full"
+								class="input pointer-events-none w-full px-1 py-0"
 								value={selectedTrades.values().next().value?.currency ?? ''}
 								name="currency"
-								disabled
+								tabIndex="-1"
+								readonly
 							/>
 							<div class="label">
 								<span class="label-text">Number of Trades</span>
 							</div>
 							<input
 								type="number"
-								class="input w-full"
+								class="input pointer-events-none w-full px-1 py-0"
 								value={selectedTrades.size}
 								name="numOfTrades"
-								disabled
+								tabIndex="-1"
+								readonly
 							/>
 							<div class="label">
 								<span class="label-text">Average Entry Price</span>
 							</div>
 							<input
 								type="number"
-								class="input w-full"
+								class="input pointer-events-none w-full px-1 py-0"
 								value={getSelectedTradesMetrics().averageEntryPrice}
-								name="price"
-								disabled
+								name="averageEntryPrice"
+								tabIndex="-1"
+								readonly
 							/>
 							<div class="label">
 								<span class="label-text">Average Exit Price</span>
 							</div>
 							<input
 								type="number"
-								class="input w-full"
+								class="input pointer-events-none w-full px-1 py-0"
 								value={getSelectedTradesMetrics().averageExitPrice}
-								name="price"
-								disabled
+								name="averageExitPrice"
+								tabIndex="-1"
+								readonly
 							/>
 							<div class="label">
 								<span class="label-text">Total Fees</span>
 							</div>
 							<input
 								type="number"
-								class="input w-full"
+								class="input pointer-events-none w-full px-1 py-0"
 								value={getSelectedTradesMetrics().totalFees}
 								name="fees"
-								disabled
+								tabIndex="-1"
+								readonly
 							/>
 							<div class="label">
 								<span class="label-text">Total Volume</span>
 							</div>
 							<input
 								type="number"
-								class="input w-full"
+								class="input pointer-events-none w-full px-1 py-0"
 								value={getSelectedTradesMetrics().totalVolume}
-								name="volume"
-								disabled
+								name="totalVolume"
+								tabIndex="-1"
+								readonly
+							/>
+							<div class="label">
+								<span class="label-text">Outstanding Volume</span>
+							</div>
+							<input
+								type="number"
+								class="input pointer-events-none w-full px-1 py-0"
+								value={getSelectedTradesMetrics().outstandingVolume}
+								name="outstandingVolume"
+								tabIndex="-1"
+								readonly
+							/>
+							<div class="label">
+								<span class="label-text">Gross P/L</span>
+							</div>
+							<input
+								type="number"
+								class="input pointer-events-none w-full px-1 py-0"
+								value={getSelectedTradesMetrics().outstandingVolume === 0
+									? getSelectedTradesMetrics().totalExitCost -
+										getSelectedTradesMetrics().totalEntryCost
+									: null}
+								name="grossProfitLoss"
+								tabIndex="-1"
+								readonly
 							/>
 							<div class="label">
 								<span class="label-text">Platform</span>
 							</div>
 							<input
 								type="text"
-								class="input w-full"
+								class="input pointer-events-none w-full px-1 py-0"
 								value={selectedTrades.values().next().value?.platform ?? ''}
 								name="platform"
-								disabled
+								tabIndex="-1"
+								readonly
 							/>
 							<div class="label">
 								<span class="label-text">Direction</span>
 							</div>
 							<select
-								class="select select-bordered w-full"
+								class="select select-bordered w-full px-1 py-0"
 								bind:value={direction}
 								name="side"
 								required
@@ -405,7 +455,7 @@
 							</div>
 							<input
 								type="date"
-								class="input w-full"
+								class="input pointer-events-none w-full px-1 py-0"
 								value={new Date(
 									Math.min(
 										...[...selectedTrades.values()].map((trade) => trade.executedAt.getTime())
@@ -413,8 +463,28 @@
 								)
 									.toISOString()
 									.split('T')[0]}
-								name="executedAt"
-								disabled
+								name="openedAt"
+								tabIndex="-1"
+								readonly
+							/>
+							<div class="label">
+								<span class="label-text">Closed At</span>
+							</div>
+							<input
+								type="date"
+								class="input pointer-events-none w-full px-1 py-0"
+								value={getSelectedTradesMetrics().outstandingVolume === 0
+									? new Date(
+											Math.max(
+												...[...selectedTrades.values()].map((trade) => trade.executedAt.getTime())
+											)
+										)
+											.toISOString()
+											.split('T')[0]
+									: null}
+								name="closedAt"
+								tabIndex="-1"
+								readonly
 							/>
 						{/if}
 					</div>
@@ -422,7 +492,9 @@
 						<form method="dialog">
 							<button class="btn">Close</button>
 						</form>
-						<button class="btn btn-primary" type="submit" disabled={!isFormValid}>Add</button>
+						<button class="btn btn-primary" type="submit" disabled={positionId === undefined}
+							>Add</button
+						>
 					</div>
 				</form>
 			</div>

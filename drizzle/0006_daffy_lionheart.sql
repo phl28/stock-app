@@ -18,6 +18,7 @@ ALTER TABLE "tradeup_positions" ADD COLUMN "outstanding_volume" integer NOT NULL
 ALTER TABLE "tradeup_positions" ADD COLUMN "average_exit_price" numeric(20, 8);--> statement-breakpoint
 ALTER TABLE "tradeup_positions" ADD COLUMN "profit_target_price" numeric(20, 8);--> statement-breakpoint
 ALTER TABLE "tradeup_positions" ADD COLUMN "stop_loss_price" numeric(20, 8);--> statement-breakpoint
+ALTER TABLE "tradeup_positions" ADD COLUMN "num_trades" integer NOT NULL;--> statement-breakpoint
 ALTER TABLE "tradeup_positions" ADD COLUMN "reviewed_at" timestamp;--> statement-breakpoint
 ALTER TABLE "tradeup_positions" ADD COLUMN "journal" jsonb;--> statement-breakpoint
 ALTER TABLE "tradeup_tradeHistory" ADD COLUMN "position_id" integer;--> statement-breakpoint

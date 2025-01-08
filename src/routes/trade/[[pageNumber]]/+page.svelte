@@ -50,7 +50,7 @@
 		</div>
 
 		{#if view === 'trades'}
-			<TradeHistoryTable {trades} />
+			<TradeHistoryTable {trades} {positions} />
 		{:else if view === 'positions'}
 			<PositionsTable {positions} />
 		{/if}

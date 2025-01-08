@@ -1,9 +1,10 @@
 <script lang="ts">
 	import HistoryNavBar from '$lib/components/HistoryNavBar.svelte';
 	import { formatCurrency } from '$lib/helpers/CurrencyHelpers';
-	import type { Trade } from '$lib/types/tradeTypes';
+	import type { Trade, Position } from '$lib/types/tradeTypes';
 
 	export let trades: Trade[];
+	export let positions: Position[];
 
 	let selectedTrades: Map<number, Trade> = new Map();
 	const toggleSelection = (trade: Trade) => {
@@ -37,7 +38,7 @@
 </script>
 
 <div class="w-full">
-	<HistoryNavBar {selectedTrades} numOfTrades={trades.length} />
+	<HistoryNavBar {selectedTrades} numOfTrades={trades.length} {positions} />
 	<div class="my-2 overflow-x-auto">
 		<h5 class="mt-6 text-center">Unassigned Trades ({unassignedTrades.length})</h5>
 		<table class="table table-pin-rows table-pin-cols table-xs">

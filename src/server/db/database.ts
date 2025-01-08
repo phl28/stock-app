@@ -143,6 +143,31 @@ export const deleteTradeHistoryBatch = async ({
 };
 
 // Positions
+export const assignTradesToPosition = async ({
+	positionId,
+	position,
+	tradeIds
+}: {
+	positionId?: number;
+	position?: InsertPosition;
+	tradeIds: number[];
+}) => {
+	await db.transaction(async (tx) => {
+		let id = positionId;
+		if (position) {
+			const ids = await tx.insert(schema.positions).values({
+				...position,
+				lastUpdatedAt: new Date()
+			}).returning({ id: schema.positions.id})
+			id = ids[0].id;
+		}
+		await tx.update(schema.tradeHistory).set({
+			positionId: id,
+			updatedAt: new Date()
+		}).where(inArray(schema.tradeHistory.id, tradeIds))
+	})
+}
+
 export const createNewPosition = async ({
 	userId,
 	position

@@ -1,5 +1,5 @@
 {
-  "id": "e1320431-c782-4be2-8768-31af6691e443",
+  "id": "dad07536-a072-41e9-9a3d-f47108b3398f",
   "prevId": "cc4243aa-08e9-4822-a68f-a1b85b451bfe",
   "version": "7",
   "dialect": "postgresql",
@@ -165,6 +165,12 @@
         "total_fees": {
           "name": "total_fees",
           "type": "numeric(20, 8)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "num_trades": {
+          "name": "num_trades",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },

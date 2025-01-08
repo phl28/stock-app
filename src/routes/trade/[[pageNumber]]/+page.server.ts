@@ -7,7 +7,7 @@ import {
 	insertTradeHistory,
 	updateTradeHistoryBatch,
 	getPaginatedTradeHistory,
-	updatePositionNotes
+	assignTradesToPosition
 } from '@/server/db/database';
 import { reviver } from '@/lib/helpers/JsonHelpers.js';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
@@ -154,11 +154,49 @@ export const actions = {
 		assertHasSession(locals);
 		const formData = await request.formData();
 		const positionId = formData.get('positionId') as string;
+		const tradeIds = JSON.parse(formData.get('tradeIds') as string);
 		if (positionId === 'newPosition') {
 			const ticker = (formData.get('ticker') as string).toUpperCase();
 			const region = formData.get('region') as Region;
 			const currency = formData.get('currency') as Currency;
 			const platform = formData.get('platform') as Platform;
-		}	
+			const numOfTrades = Number(formData.get('numOfTrades') as string);
+			const averageEntryPrice = formData.get('averageEntryPrice') as string;
+			const averageExitPrice = formData.get('averageExitPrice') as string;
+			const totalFees = formData.get('fees') as string;
+			const totalVolume = Number(formData.get('totalVolume') as string);
+			const outstandingVolume = Number(formData.get('outstandingVolume') as string);
+			const grossProfitLoss = formData.get('grossProfitLoss') as string === '' ? null : formData.get('grossProfitLoss') as string;
+			const side = formData.get('side') as string;
+			const openedAt = new Date(formData.get('openedAt') as string);
+			const closedAt = formData.get('closedAt') as string === '' ? null : new Date(formData.get('closedAt') as string);
+			const insertPosition = {
+				ticker,
+				region,
+				currency,
+				totalVolume,
+				outstandingVolume,
+				averageEntryPrice,
+				averageExitPrice,
+				profitTargetPrice: null,
+				stopLossPrice: null,
+				grossProfitLoss,
+				totalFees,
+				isShort: side === 'SHORT',
+				platform,
+				numOfTrades,
+				notes: '',
+				openedAt,
+				closedAt,
+				reviewedAt: null,
+				lastUpdatedAt: new Date(),
+				createdBy: locals.session.userId,
+				journal: null
+			};
+			await assignTradesToPosition({position: insertPosition, tradeIds})
+		} else {
+			await assignTradesToPosition({positionId: Number(positionId), tradeIds});
+		}
+		return;
 	}
 };
