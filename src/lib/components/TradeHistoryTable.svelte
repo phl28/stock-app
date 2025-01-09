@@ -7,32 +7,61 @@
 	export let positions: Position[];
 
 	let selectedTrades: Map<number, Trade> = new Map();
-	const toggleSelection = (trade: Trade) => {
+	let selectedAllAssigned: boolean = false;
+	let selectedAllUnassigned: boolean = false;
+
+	const toggleSelection = (trade: Trade, type: 'assigned' | 'unassigned') => {
 		if (selectedTrades.has(trade.id)) {
 			selectedTrades.delete(trade.id);
-			if (selectedAll) {
-				selectedAll = false;
+			if (type === 'assigned' && selectedAllAssigned) {
+				selectedAllAssigned = false;
+			} else if (type === 'unassigned' && selectedAllUnassigned) {
+				selectedAllUnassigned = false;
 			}
 		} else {
 			selectedTrades.set(trade.id, trade);
 		}
 		selectedTrades = selectedTrades;
 	};
-	let selectedAll: boolean = false;
-	const toggleSelectAll = () => {
-		selectedAll
-			? selectedTrades.clear()
-			: (selectedTrades = new Map(trades.map((trade) => [trade.id, trade])));
-		selectedAll = !selectedAll;
+
+	const toggleSelectionUnassigned = (trade: Trade) => {
+		toggleSelection(trade, 'unassigned');
+	};
+
+	const toggleSelectionAssigned = (trade: Trade) => {
+		toggleSelection(trade, 'assigned');
 	};
 
 	let assignedTrades: Trade[] = [];
 	let unassignedTrades: Trade[] = [];
-	$: for (const trade of trades) {
-		if (trade.positionId) {
-			assignedTrades = [...assignedTrades, trade];
+
+	const toggleSelectAllAssigned = () => {
+		if (selectedAllAssigned) {
+			selectedTrades = new Map();
 		} else {
-			unassignedTrades = [...unassignedTrades, trade];
+			selectedTrades = new Map(assignedTrades.map((trade) => [trade.id, trade]));
+		}
+		selectedAllAssigned = !selectedAllAssigned;
+	};
+
+	const toggleSelectAllUnassigned = () => {
+		if (selectedAllUnassigned) {
+			selectedTrades = new Map();
+		} else {
+			selectedTrades = new Map(unassignedTrades.map((trade) => [trade.id, trade]));
+		}
+		selectedAllUnassigned = !selectedAllUnassigned;
+	};
+
+	$: {
+		assignedTrades = [];
+		unassignedTrades = [];
+		for (const trade of trades) {
+			if (trade.positionId) {
+				assignedTrades = [...assignedTrades, trade];
+			} else {
+				unassignedTrades = [...unassignedTrades, trade];
+			}
 		}
 	}
 </script>
@@ -49,8 +78,11 @@
 							<input
 								type="checkbox"
 								class="checkbox"
-								on:change={toggleSelectAll}
-								checked={selectedAll}
+								on:change={toggleSelectAllUnassigned}
+								checked={selectedAllUnassigned}
+								disabled={Array.from(selectedTrades.keys()).some((id) =>
+									assignedTrades.some((assignedTrade) => assignedTrade.id === id)
+								)}
 							/>
 						</label></td
 					>
@@ -71,8 +103,11 @@
 								<input
 									type="checkbox"
 									class="checkbox"
-									on:change={() => toggleSelection(trade)}
+									on:change={() => toggleSelectionUnassigned(trade)}
 									checked={selectedTrades.has(trade.id)}
+									disabled={Array.from(selectedTrades.keys()).some((id) =>
+										assignedTrades.some((assignedTrade) => assignedTrade.id === id)
+									)}
 								/>
 							</label>
 						</td>
@@ -98,8 +133,11 @@
 							<input
 								type="checkbox"
 								class="checkbox"
-								on:change={toggleSelectAll}
-								checked={selectedAll}
+								on:change={toggleSelectAllAssigned}
+								checked={selectedAllAssigned}
+								disabled={Array.from(selectedTrades.keys()).some((id) =>
+									unassignedTrades.some((unassignedTrade) => unassignedTrade.id === id)
+								)}
 							/>
 						</label></td
 					>
@@ -120,8 +158,11 @@
 								<input
 									type="checkbox"
 									class="checkbox"
-									on:change={() => toggleSelection(trade)}
+									on:change={() => toggleSelectionAssigned(trade)}
 									checked={selectedTrades.has(trade.id)}
+									disabled={Array.from(selectedTrades.keys()).some((id) =>
+										unassignedTrades.some((unassignedTrade) => unassignedTrade.id === id)
+									)}
 								/>
 							</label>
 						</td>

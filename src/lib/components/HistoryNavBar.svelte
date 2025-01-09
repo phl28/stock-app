@@ -28,7 +28,8 @@
 	let direction: 'LONG' | 'SHORT' = 'LONG';
 	let positionId: number | 'newPosition' | undefined = undefined;
 
-	const selectedTickers = Array.from(new Set(selectedTrades.values().map((trade) => trade.ticker)));
+	let selectedTickers: string[] = [];
+	$: selectedTickers = Array.from(new Set(selectedTrades.values().map((trade) => trade.ticker)));
 
 	const openAddModal = () => {
 		const modal = document.getElementById('add-trade-modal') as HTMLDialogElement;
@@ -257,10 +258,10 @@
 				{#each selectedTrades.entries() as [id, _]}
 					<input type="hidden" name="id" value={id} />
 				{/each}
-				<button class="btn btn-neutral" type="submit">Delete</button>
+				<button class="btn btn-error" type="submit">Delete</button>
 			</form>
 			{#if selectedTickers.length === 1}
-				<button class="btn btn-neutral" on:click={openAssignPositionModal}
+				<button class="btn btn-primary" on:click={openAssignPositionModal}
 					>Assign To Position</button
 				>
 			{/if}

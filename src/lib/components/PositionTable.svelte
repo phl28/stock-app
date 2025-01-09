@@ -17,7 +17,7 @@
 					<td>Ticker</td>
 					<td>Platform</td>
 					<td>Region</td>
-					<td>Trades</td>
+					<td>Number of Trades</td>
 					<td>Quantity</td>
 					<td>Average Price</td>
 					<td>Gross Profit/Loss</td>
