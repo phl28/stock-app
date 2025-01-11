@@ -43,6 +43,13 @@
       "when": 1736026506428,
       "tag": "0005_nasty_adam_warlock",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1736370990531,
+      "tag": "0006_daffy_lionheart",
+      "breakpoints": true
     }
   ]
 }

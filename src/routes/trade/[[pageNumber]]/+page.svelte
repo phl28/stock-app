@@ -7,7 +7,7 @@
 
 	export let data: PageData;
 	$: ({ positions = [], trades = [] } = data);
-	let view = 'trades';
+	let view = 'positions';
 
 	const handlePageIncrement = () => {
 		if (data.currentPage < data.totalPages) {
@@ -44,13 +44,13 @@
 	<div class="card bg-base-100 p-6 shadow-lg">
 		<div class="mb-6">
 			<select class="select select-bordered w-full max-w-xs" bind:value={view}>
-				<option value="trades">Trade History</option>
-				<option value="positions">Active Positions</option>
+				<option value="positions">Positions</option>
+				<option value="trades">Trades</option>
 			</select>
 		</div>
 
 		{#if view === 'trades'}
-			<TradeHistoryTable {trades} />
+			<TradeHistoryTable {trades} {positions} />
 		{:else if view === 'positions'}
 			<PositionsTable {positions} />
 		{/if}

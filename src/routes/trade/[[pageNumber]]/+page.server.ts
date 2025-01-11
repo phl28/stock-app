@@ -7,7 +7,7 @@ import {
 	insertTradeHistory,
 	updateTradeHistoryBatch,
 	getPaginatedTradeHistory,
-	updatePositionNotes
+	assignTradesToPosition
 } from '@/server/db/database';
 import { reviver } from '@/lib/helpers/JsonHelpers.js';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
@@ -111,8 +111,6 @@ export const actions = {
 			platform: formData.get('platform') as Platform,
 			tradeSide: formData.get('side') as TradeSide,
 			executedAt: new Date(formData.get('executedAt') as string),
-			profitLoss: formData.get('profitLoss') as string,
-			totalCost: '',
 			createdBy: locals.session.userId
 		};
 		const isTickerValid = await checkTickerValid(newTrade.ticker);
@@ -122,10 +120,6 @@ export const actions = {
 		if (newTrade.price === '') {
 			return error(400, { message: 'Price cannot be empty' });
 		}
-		newTrade.totalCost = (
-			parseFloat(newTrade.price) * newTrade.volume +
-			parseFloat(newTrade.fees)
-		).toString();
 		await insertTradeHistory(newTrade);
 		return;
 	},
@@ -141,18 +135,6 @@ export const actions = {
 		await updateTradeHistoryBatch(tradeList);
 		return;
 	},
-	updatePositionBatch: async ({ request, locals }) => {
-		assertHasSession(locals);
-		const formData = await request.formData();
-		const positions = formData.get('positions') as string;
-		const updatedPositions = JSON.parse(positions, reviver) as Map<number, string>;
-		const positionsList: { id: number; notes: string }[] = [];
-		for (let id of updatedPositions.keys()) {
-			positionsList.push({ id: id, notes: updatedPositions.get(id) ?? '' });
-		}
-		await updatePositionNotes({ userId: locals.session.userId, positions: positionsList });
-		return;
-	},
 	deleteTrade: async ({ request, locals }) => {
 		assertHasSession(locals);
 		const formData = await request.formData();
@@ -166,6 +148,55 @@ export const actions = {
 		const stringIds = formData.getAll('id') as string[];
 		const ids = stringIds.map((id) => parseInt(id));
 		await deleteTradeHistoryBatch({ userId: locals.session.userId, ids });
+		return;
+	},
+	assignTradesToPosition: async ({ request, locals }) => {
+		assertHasSession(locals);
+		const formData = await request.formData();
+		const positionId = formData.get('positionId') as string;
+		const tradeIds = JSON.parse(formData.get('tradeIds') as string);
+		if (positionId === 'newPosition') {
+			const ticker = (formData.get('ticker') as string).toUpperCase();
+			const region = formData.get('region') as Region;
+			const currency = formData.get('currency') as Currency;
+			const platform = formData.get('platform') as Platform;
+			const numOfTrades = Number(formData.get('numOfTrades') as string);
+			const averageEntryPrice = formData.get('averageEntryPrice') as string;
+			const averageExitPrice = formData.get('averageExitPrice') as string;
+			const totalFees = formData.get('fees') as string;
+			const totalVolume = Number(formData.get('totalVolume') as string);
+			const outstandingVolume = Number(formData.get('outstandingVolume') as string);
+			const grossProfitLoss = formData.get('grossProfitLoss') as string === '' ? null : formData.get('grossProfitLoss') as string;
+			const side = formData.get('side') as string;
+			const openedAt = new Date(formData.get('openedAt') as string);
+			const closedAt = formData.get('closedAt') as string === '' ? null : new Date(formData.get('closedAt') as string);
+			const insertPosition = {
+				ticker,
+				region,
+				currency,
+				totalVolume,
+				outstandingVolume,
+				averageEntryPrice,
+				averageExitPrice: averageExitPrice === '' ? null : averageExitPrice,
+				profitTargetPrice: null,
+				stopLossPrice: null,
+				grossProfitLoss,
+				totalFees,
+				isShort: side === 'SHORT',
+				platform,
+				numOfTrades,
+				notes: '',
+				openedAt,
+				closedAt,
+				reviewedAt: null,
+				lastUpdatedAt: new Date(),
+				createdBy: locals.session.userId,
+				journal: null
+			};
+			await assignTradesToPosition({position: insertPosition, tradeIds})
+		} else {
+			await assignTradesToPosition({positionId: Number(positionId), tradeIds});
+		}
 		return;
 	}
 };

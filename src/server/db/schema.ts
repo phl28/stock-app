@@ -35,20 +35,25 @@ export const positions = pgTable(
 		id: serial('id').primaryKey(),
 		ticker: varchar('ticker', { length: 15 }).notNull(),
 		region: region('region').notNull().default('US'),
-		volume: integer('volume').notNull(),
-		averagePrice: decimal('averagePrice', { precision: 20, scale: 8 }).notNull(),
-		totalCost: decimal('totalCost', { precision: 20, scale: 8 }).notNull(),
-		realizedProfitLoss: decimal('realizedProfitLoss', { precision: 20, scale: 8 })
-			.notNull()
-			.default('0'),
-		isShort: boolean('isShort').notNull().default(false),
-		openedAt: timestamp('openedAt').notNull(),
-		lastUpdatedAt: timestamp('lastUpdatedAt').notNull(),
+		currency: currency('currency').notNull().default('USD'),
+		totalVolume: integer('total_volume').notNull(),
+		outstandingVolume: integer('outstanding_volume').notNull(),
+		averageEntryPrice: decimal('average_entry_price', { precision: 20, scale: 8 }).notNull(),
+		averageExitPrice: decimal('average_exit_price', { precision: 20, scale: 8 }),
+		profitTargetPrice: decimal('profit_target_price', { precision: 20, scale: 8 }),
+		stopLossPrice: decimal('stop_loss_price', { precision: 20, scale: 8 }),
+		grossProfitLoss: decimal('gross_profit_loss', { precision: 20, scale: 8 }),
+		totalFees: decimal('total_fees', { precision: 20, scale: 8 }).notNull(),
+		numOfTrades: integer('num_trades').notNull(),
+		isShort: boolean('is_short').notNull(),
 		platform: platform('platform').notNull().default('FUTU'),
 		notes: text('notes'),
-		closed: boolean('closed').notNull().default(false),
-		closedAt: timestamp('closedAt'),
-		createdBy: text('createdBy').notNull()
+		createdBy: text('created_by').notNull(),
+		openedAt: timestamp('opened_at').notNull(),
+		closedAt: timestamp('closed_at'),
+		reviewedAt: timestamp('reviewed_at'),
+		lastUpdatedAt: timestamp('last_updated_at').notNull(),
+		journal: jsonb('journal')
 	},
 	(position) => ({
 		tickerIndex: index('position_ticker_idx').on(position.ticker)
@@ -59,22 +64,20 @@ export const tradeHistory = pgTable(
 	'tradeHistory',
 	{
 		id: serial('id').primaryKey(),
+		positionId: integer('position_id').references(() => positions.id, { onDelete: 'cascade' }),
 		ticker: varchar('ticker', { length: 15 }).notNull(),
 		region: region('region').notNull().default('US'),
 		currency: currency('currency').notNull().default('USD'),
 		price: decimal('price', { precision: 20, scale: 8 }).notNull(),
 		fees: decimal('fees', { precision: 20, scale: 8 }).default('0'),
-		totalCost: decimal('totalCost', { precision: 20, scale: 8 }).notNull(),
 		volume: integer('volume').notNull(),
 		platform: platform('platform').notNull().default('FUTU'),
-		tradeSide: tradeSide('tradeSide').notNull().default('BUY'),
-		executedAt: timestamp('executedAt').notNull(),
-		profitLoss: decimal('profitLoss', { precision: 20, scale: 8 }),
-		notes: text('notes'),
+		tradeSide: tradeSide('trade_side').notNull().default('BUY'),
+		updatedAt: timestamp('updatedAt'),
+		executedAt: timestamp('executed_at').notNull(),
 		createdAt: timestamp('created_at')
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		updatedAt: timestamp('updatedAt'),
 		createdBy: text('createdBy').notNull()
 	},
 	(trade) => ({

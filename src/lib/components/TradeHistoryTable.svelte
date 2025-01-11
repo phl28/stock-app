@@ -1,52 +1,75 @@
 <script lang="ts">
 	import HistoryNavBar from '$lib/components/HistoryNavBar.svelte';
 	import { formatCurrency } from '$lib/helpers/CurrencyHelpers';
-	import type { Trade } from '$lib/types/tradeTypes';
+	import type { Trade, Position } from '$lib/types/tradeTypes';
 
 	export let trades: Trade[];
+	export let positions: Position[];
 
 	let selectedTrades: Map<number, Trade> = new Map();
-	const toggleSelection = (trade: Trade) => {
+	let selectedAllAssigned: boolean = false;
+	let selectedAllUnassigned: boolean = false;
+
+	const toggleSelection = (trade: Trade, type: 'assigned' | 'unassigned') => {
 		if (selectedTrades.has(trade.id)) {
 			selectedTrades.delete(trade.id);
-			if (selectedAll) {
-				selectedAll = false;
+			if (type === 'assigned' && selectedAllAssigned) {
+				selectedAllAssigned = false;
+			} else if (type === 'unassigned' && selectedAllUnassigned) {
+				selectedAllUnassigned = false;
 			}
 		} else {
 			selectedTrades.set(trade.id, trade);
 		}
 		selectedTrades = selectedTrades;
 	};
-	let selectedAll: boolean = false;
-	const toggleSelectAll = () => {
-		selectedAll
-			? selectedTrades.clear()
-			: (selectedTrades = new Map(trades.map((trade) => [trade.id, trade])));
-		selectedAll = !selectedAll;
+
+	const toggleSelectionUnassigned = (trade: Trade) => {
+		toggleSelection(trade, 'unassigned');
 	};
 
-	let editedNotes: { [key: number]: string } = {};
-	const handleNoteChange = (trade: Trade, newNote: string) => {
-		if (newNote !== trades.find((t) => t.id === trade.id)?.notes) {
-			editedNotes[trade.id] = newNote;
-			selectedTrades.set(trade.id, { ...trade, notes: newNote });
-			selectedTrades = selectedTrades;
+	const toggleSelectionAssigned = (trade: Trade) => {
+		toggleSelection(trade, 'assigned');
+	};
+
+	let assignedTrades: Trade[] = [];
+	let unassignedTrades: Trade[] = [];
+
+	const toggleSelectAllAssigned = () => {
+		if (selectedAllAssigned) {
+			selectedTrades = new Map();
 		} else {
-			delete editedNotes[trade.id];
-			if (selectedTrades.has(trade.id)) {
-				selectedTrades.delete(trade.id);
-				selectedTrades = selectedTrades;
+			selectedTrades = new Map(assignedTrades.map((trade) => [trade.id, trade]));
+		}
+		selectedAllAssigned = !selectedAllAssigned;
+	};
+
+	const toggleSelectAllUnassigned = () => {
+		if (selectedAllUnassigned) {
+			selectedTrades = new Map();
+		} else {
+			selectedTrades = new Map(unassignedTrades.map((trade) => [trade.id, trade]));
+		}
+		selectedAllUnassigned = !selectedAllUnassigned;
+	};
+
+	$: {
+		assignedTrades = [];
+		unassignedTrades = [];
+		for (const trade of trades) {
+			if (trade.positionId) {
+				assignedTrades = [...assignedTrades, trade];
+			} else {
+				unassignedTrades = [...unassignedTrades, trade];
 			}
 		}
-		editedNotes = editedNotes;
-	};
-
-	$: hasEditedNotes = Object.keys(editedNotes).length > 0;
+	}
 </script>
 
 <div class="w-full">
-	<HistoryNavBar {selectedTrades} {hasEditedNotes} />
-	<div class="overflow-x-auto">
+	<HistoryNavBar bind:selectedTrades numOfTrades={trades.length} {positions} />
+	<div class="my-2 overflow-x-auto">
+		<h5 class="mt-6 text-center">Unassigned Trades ({unassignedTrades.length})</h5>
 		<table class="table table-pin-rows table-pin-cols table-xs">
 			<thead>
 				<tr>
@@ -55,8 +78,11 @@
 							<input
 								type="checkbox"
 								class="checkbox"
-								on:change={toggleSelectAll}
-								checked={selectedAll}
+								on:change={toggleSelectAllUnassigned}
+								checked={selectedAllUnassigned}
+								disabled={Array.from(selectedTrades.keys()).some((id) =>
+									assignedTrades.some((assignedTrade) => assignedTrade.id === id)
+								)}
 							/>
 						</label></td
 					>
@@ -65,22 +91,23 @@
 					<td>Quantity</td>
 					<td>Price</td>
 					<td>Platform</td>
-					<td>Total Amount</td>
 					<td>Side</td>
 					<td>Executed At</td>
-					<td>Notes</td>
 				</tr>
 			</thead>
 			<tbody>
-				{#each trades as trade}
+				{#each unassignedTrades as trade}
 					<tr>
 						<td>
 							<label>
 								<input
 									type="checkbox"
 									class="checkbox"
-									on:change={() => toggleSelection(trade)}
+									on:change={() => toggleSelectionUnassigned(trade)}
 									checked={selectedTrades.has(trade.id)}
+									disabled={Array.from(selectedTrades.keys()).some((id) =>
+										assignedTrades.some((assignedTrade) => assignedTrade.id === id)
+									)}
 								/>
 							</label>
 						</td>
@@ -89,17 +116,63 @@
 						<td>{trade.volume}</td>
 						<td>{formatCurrency(trade.price, trade.region === 'US' ? 'USD' : 'HKD')}</td>
 						<td>{trade.platform}</td>
-						<td>{formatCurrency(trade.totalCost, trade.region === 'US' ? 'USD' : 'HKD')}</td>
 						<td>{trade.tradeSide}</td>
 						<td>{new Date(trade.executedAt).toLocaleDateString()}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+	<div class="overflow-x-auto">
+		<h5 class="mt-6 text-center">Assigned Trades ({assignedTrades.length})</h5>
+		<table class="table table-pin-rows table-pin-cols table-xs">
+			<thead>
+				<tr>
+					<td
+						><label>
+							<input
+								type="checkbox"
+								class="checkbox"
+								on:change={toggleSelectAllAssigned}
+								checked={selectedAllAssigned}
+								disabled={Array.from(selectedTrades.keys()).some((id) =>
+									unassignedTrades.some((unassignedTrade) => unassignedTrade.id === id)
+								)}
+							/>
+						</label></td
+					>
+					<td>Ticker</td>
+					<td>Region</td>
+					<td>Quantity</td>
+					<td>Price</td>
+					<td>Platform</td>
+					<td>Side</td>
+					<td>Executed At</td>
+				</tr>
+			</thead>
+			<tbody>
+				{#each assignedTrades as trade}
+					<tr>
 						<td>
-							<textarea
-								placeholder="Notes"
-								class="textarea textarea-bordered textarea-xs w-full max-w-xs"
-								value={editedNotes[trade.id] !== undefined ? editedNotes[trade.id] : trade.notes}
-								on:input={(e) => handleNoteChange(trade, e.currentTarget.value)}
-							></textarea>
+							<label>
+								<input
+									type="checkbox"
+									class="checkbox"
+									on:change={() => toggleSelectionAssigned(trade)}
+									checked={selectedTrades.has(trade.id)}
+									disabled={Array.from(selectedTrades.keys()).some((id) =>
+										unassignedTrades.some((unassignedTrade) => unassignedTrade.id === id)
+									)}
+								/>
+							</label>
 						</td>
+						<td>{trade.ticker}</td>
+						<td>{trade.region}</td>
+						<td>{trade.volume}</td>
+						<td>{formatCurrency(trade.price, trade.region === 'US' ? 'USD' : 'HKD')}</td>
+						<td>{trade.platform}</td>
+						<td>{trade.tradeSide}</td>
+						<td>{new Date(trade.executedAt).toLocaleDateString()}</td>
 					</tr>
 				{/each}
 			</tbody>
