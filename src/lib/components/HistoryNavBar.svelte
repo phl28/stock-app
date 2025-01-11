@@ -224,9 +224,10 @@
 		{/if}
 		<button class="btn btn-neutral" on:click={openAddModal}>Add</button>
 		<button class="btn btn-neutral" on:click={openImportModal}>Bulk Import</button>
-		<form method="POST" action="?/syncTrades">
+		<!-- @TODO: Hiding the sync button for now as it is not a priority and is yet to be implemented properly -->
+		<!-- <form method="POST" action="?/syncTrades">
 			<button class="btn btn-neutral" type="submit">Sync</button>
-		</form>
+		</form> -->
 
 		<dialog id="import-trade-modal" class="modal">
 			<div class="modal-box">
