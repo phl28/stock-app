@@ -177,7 +177,7 @@ export const actions = {
 				totalVolume,
 				outstandingVolume,
 				averageEntryPrice,
-				averageExitPrice,
+				averageExitPrice: averageExitPrice === '' ? null : averageExitPrice,
 				profitTargetPrice: null,
 				stopLossPrice: null,
 				grossProfitLoss,
