@@ -41,7 +41,7 @@
 		modal.close();
 	};
 
-	const possiblePositions = positions.filter((position) => position.ticker === selectedTickers[0]);
+	$: possiblePositions = positions.filter((position) => position.ticker === selectedTickers[0]);
 
 	const openAssignPositionModal = () => {
 		const modal = document.getElementById('assign-position-modal') as HTMLDialogElement;
@@ -289,6 +289,7 @@
 							} else if (result.type === 'error') {
 								dispatchToast({ type: 'error', message: result.error.message });
 							}
+							selectedTrades = new Map();
 							closeAssignPositionModal();
 						};
 					}}
@@ -301,7 +302,7 @@
 						<option disabled selected value={undefined}
 							>Select the position to assign these trades to?</option
 						>
-						{#each positions as position}
+						{#each possiblePositions as position}
 							<option value={position.id}
 								>({position.isShort ? 'Short' : 'Long'}) {position.ticker} Opened At: {position.openedAt}</option
 							>

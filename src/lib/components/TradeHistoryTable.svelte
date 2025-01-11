@@ -67,7 +67,7 @@
 </script>
 
 <div class="w-full">
-	<HistoryNavBar {selectedTrades} numOfTrades={trades.length} {positions} />
+	<HistoryNavBar bind:selectedTrades numOfTrades={trades.length} {positions} />
 	<div class="my-2 overflow-x-auto">
 		<h5 class="mt-6 text-center">Unassigned Trades ({unassignedTrades.length})</h5>
 		<table class="table table-pin-rows table-pin-cols table-xs">
