@@ -6,12 +6,13 @@
 	import type { StockData, VolumeData } from '@/lib/types/chartTypes.ts';
 	import { convertUnixTimestampToDate } from '@/lib/helpers/DataHelpers.ts';
 	import { onMount, tick } from 'svelte';
-	import { CheckCheck } from 'lucide-svelte';
+	import { CheckCheck, EllipsisVertical } from 'lucide-svelte';
 
 	export let data: PageData;
 
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
+	//  only used when there are SMA data
 	let lineSeries: ISeriesApi<'Line'> | null = null;
 
 	let container: HTMLDivElement;
@@ -172,14 +173,26 @@
 	};
 </script>
 
-<main>
+<section>
 	<div class="mb-4 flex items-center justify-between">
 		<h1>{data.position[0].ticker}</h1>
-		<form method="POST" action="?/markPositionReviewed">
-			<button class="btn btn-primary" type="submit" disabled={data.position[0].reviewedAt !== null}
-				><CheckCheck /> Mark as reviewed</button
-			>
-		</form>
+		<div id="top-bar-right" class="flex items-center gap-2">
+			<div class="dropdown dropdown-end dropdown-bottom">
+				<div tabindex="0" role="button" class="btn m-1"><EllipsisVertical /></div>
+				<ul class="menu dropdown-content z-[1000] w-52 rounded-box bg-base-100 p-2 shadow">
+					<li class="p-2">Edit Position</li>
+					<hr class="my-1" />
+					<li class="p-2">Delete Position</li>
+				</ul>
+			</div>
+			<form method="POST" action="?/markPositionReviewed">
+				<button
+					class="btn btn-primary"
+					type="submit"
+					disabled={data.position[0].reviewedAt !== null}><CheckCheck /> Mark as reviewed</button
+				>
+			</form>
+		</div>
 	</div>
 	<div class="relative w-full px-2" bind:this={container}>
 		<Chart {...chartOptions} {watermark} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
@@ -202,4 +215,4 @@
 			<PriceScale id="volume" scaleMargins={{ top: 0.8, bottom: 0 }} />
 		</Chart>
 	</div>
-</main>
+</section>
