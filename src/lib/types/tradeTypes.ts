@@ -64,7 +64,7 @@ export type Position = {
 	openedAt: Date;
 	closedAt: Date | null;
 	reviewedAt: Date | null;
-	lastUpdatedAt: Date;
+	updatedAt: Date;
 	createdBy: string;
 	journal: unknown | null;
 };

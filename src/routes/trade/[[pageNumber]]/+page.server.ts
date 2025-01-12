@@ -189,7 +189,7 @@ export const actions = {
 				openedAt,
 				closedAt,
 				reviewedAt: null,
-				lastUpdatedAt: new Date(),
+				updatedAt: new Date(),
 				createdBy: locals.session.userId,
 				journal: null
 			};
