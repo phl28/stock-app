@@ -157,7 +157,7 @@ export const assignTradesToPosition = async ({
 		if (position) {
 			const ids = await tx.insert(schema.positions).values({
 				...position,
-				lastUpdatedAt: new Date()
+				updatedAt: new Date()
 			}).returning({ id: schema.positions.id})
 			id = ids[0].id;
 		}
@@ -181,7 +181,7 @@ export const createNewPosition = async ({
 			.values({
 				...position,
 				createdBy: userId,
-				lastUpdatedAt: new Date()
+				updatedAt: new Date()
 			})
 			.returning();
 		return insertedPosition;
@@ -235,7 +235,7 @@ export const getPosition = async ({ positionId, userId }: { positionId: number, 
 		openedAt: schema.positions.openedAt,
 		closedAt: schema.positions.closedAt,
 		reviewedAt: schema.positions.reviewedAt,
-		lastUpdatedAt: schema.positions.lastUpdatedAt,
+		lastUpdatedAt: schema.positions.updatedAt,
 		createdBy: schema.positions.createdBy,
 		journal: schema.positions.journal,
 		tradeId: schema.tradeHistory.id,
@@ -245,8 +245,20 @@ export const getPosition = async ({ positionId, userId }: { positionId: number, 
 		tradeVolume: schema.tradeHistory.volume,
 		tradeTradeSide: schema.tradeHistory.tradeSide,
 	}).from(schema.positions).where(and(eq(schema.positions.id, positionId), eq(schema.positions.createdBy, userId))).leftJoin(schema.tradeHistory, eq(schema.positions.id,schema.tradeHistory.positionId)).orderBy(asc(schema.tradeHistory.executedAt))
+}
 
-
+export const markPositionReviewed = async ({ positionId, userId }: { positionId: number, userId: string }) => {
+	return await db.transaction(async (tx) => {
+		const [updatedPosition] = await tx
+			.update(schema.positions)
+			.set({
+				reviewedAt: new Date(),
+				updatedAt: new Date()
+			})
+			.where(and(eq(schema.positions.id, positionId), eq(schema.positions.createdBy, userId)))
+			.returning();
+		return updatedPosition;
+	});
 }
 
 export const getPositionPerformance = async ({

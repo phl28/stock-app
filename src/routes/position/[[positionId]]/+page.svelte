@@ -6,6 +6,7 @@
 	import type { StockData, VolumeData } from '@/lib/types/chartTypes.ts';
 	import { convertUnixTimestampToDate } from '@/lib/helpers/DataHelpers.ts';
 	import { onMount, tick } from 'svelte';
+	import { CheckCheck } from 'lucide-svelte';
 
 	export let data: PageData;
 
@@ -172,7 +173,14 @@
 </script>
 
 <main>
-	<h1>{data.position[0].ticker}</h1>
+	<div class="mb-4 flex items-center justify-between">
+		<h1>{data.position[0].ticker}</h1>
+		<form method="POST" action="?/markPositionReviewed">
+			<button class="btn btn-primary" type="submit" disabled={data.position[0].reviewedAt !== null}
+				><CheckCheck /> Mark as reviewed</button
+			>
+		</form>
+	</div>
 	<div class="relative w-full px-2" bind:this={container}>
 		<Chart {...chartOptions} {watermark} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
 			<CandlestickSeries

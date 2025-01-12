@@ -1,6 +1,6 @@
 import { assertHasSession } from "@/lib/types/utils";
 import type { PageServerLoad } from "./$types";
-import { getPosition } from '@/server/db/database';
+import { getPosition, markPositionReviewed } from '@/server/db/database';
 import { error, isHttpError } from "@sveltejs/kit";
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL } from '$env/static/public';
@@ -41,4 +41,25 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 		throw error(500, 'An unexpected error occurred');
 	}
+}
+
+export const actions = {
+    markPositionReviewed: async ({ locals, params }) => {
+        assertHasSession(locals);
+        const positionId = Number(params.positionId);
+        if (isNaN(positionId) || positionId < 0) {
+            throw new Error('Invalid position ID');
+        }
+        try {
+            const position = await markPositionReviewed({ positionId, userId: locals.session.userId });
+            if (position) {
+                return;
+            }
+        } catch (err) {
+            if (isHttpError(err)) {
+                throw error(err.status, err.body.message);
+            }
+            throw error(500, 'An unexpected error occurred');
+        }
+    }
 }
