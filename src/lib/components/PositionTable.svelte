@@ -1,9 +1,14 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { formatCurrency } from '$lib/helpers/CurrencyHelpers';
 	import type { Position } from '$lib/types/tradeTypes';
 	import PositionNavBar from './PositionNavBar.svelte';
 
 	export let positions: Position[];
+
+	const handlePositionRowClick = (position: Position) => {
+		goto('/position/' + position.id);
+	};
 </script>
 
 <div class="w-full">
@@ -26,7 +31,7 @@
 			</thead>
 			<tbody>
 				{#each positions as position}
-					<tr>
+					<tr on:click={() => handlePositionRowClick(position)} style="cursor: pointer">
 						<td>
 							<label>
 								<input type="checkbox" class="checkbox" checked={!position.closedAt} disabled />
