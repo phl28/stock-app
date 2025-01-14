@@ -459,13 +459,15 @@
 							<input
 								type="date"
 								class="input pointer-events-none w-full px-1 py-0"
-								value={new Date(
-									Math.min(
-										...[...selectedTrades.values()].map((trade) => trade.executedAt.getTime())
-									)
-								)
-									.toISOString()
-									.split('T')[0]}
+								value={selectedTrades.size > 0
+									? new Date(
+											Math.min(
+												...[...selectedTrades.values()].map((trade) => trade.executedAt.getTime())
+											)
+										)
+											.toISOString()
+											.split('T')[0]
+									: null}
 								name="openedAt"
 								tabIndex="-1"
 								readonly
@@ -476,7 +478,7 @@
 							<input
 								type="date"
 								class="input pointer-events-none w-full px-1 py-0"
-								value={getSelectedTradesMetrics().outstandingVolume === 0
+								value={getSelectedTradesMetrics().outstandingVolume === 0 && selectedTrades.size > 0
 									? new Date(
 											Math.max(
 												...[...selectedTrades.values()].map((trade) => trade.executedAt.getTime())
