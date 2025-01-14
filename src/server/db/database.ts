@@ -247,6 +247,12 @@ export const getPosition = async ({ positionId, userId }: { positionId: number, 
 	}).from(schema.positions).where(and(eq(schema.positions.id, positionId), eq(schema.positions.createdBy, userId))).leftJoin(schema.tradeHistory, eq(schema.positions.id,schema.tradeHistory.positionId)).orderBy(asc(schema.tradeHistory.executedAt))
 }
 
+export const deletePosition = async ({ userId, positionId }: { userId: string, positionId: number }) => {
+	return await db.transaction(async (tx) => {
+		await tx.delete(schema.positions).where(and(eq(schema.positions.id, positionId), eq(schema.positions.createdBy, userId)))
+	})
+}
+
 export const markPositionReviewed = async ({ positionId, userId }: { positionId: number, userId: string }) => {
 	return await db.transaction(async (tx) => {
 		const [updatedPosition] = await tx

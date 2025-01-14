@@ -39,7 +39,7 @@
 	$: {
 		unassignedTrades = [];
 		for (const trade of trades) {
-			if (trade.positionId) {
+			if (!trade.positionId) {
 				unassignedTrades = [...unassignedTrades, trade];
 			}
 		}

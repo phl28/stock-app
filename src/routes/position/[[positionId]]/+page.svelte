@@ -7,6 +7,8 @@
 	import { convertUnixTimestampToDate } from '@/lib/helpers/DataHelpers.ts';
 	import { onMount, tick } from 'svelte';
 	import { CheckCheck, EllipsisVertical } from 'lucide-svelte';
+	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 
 	export let data: PageData;
 
@@ -182,7 +184,24 @@
 				<ul class="menu dropdown-content z-[1000] w-52 rounded-box bg-base-100 p-2 shadow">
 					<li class="p-2">Edit Position</li>
 					<hr class="my-1" />
-					<li class="p-2">Delete Position</li>
+					<li class="p-2">
+						<form
+							method="POST"
+							action="?/deletePosition"
+							use:enhance={() => {
+								return async ({ result, update }) => {
+									if (result.type === 'success') {
+										goto('/trade/1');
+										dispatchToast({ type: 'success', message: 'Position deleted successfully!' });
+									} else if (result.type === 'error') {
+										dispatchToast({ type: 'error', message: result.error.message });
+									}
+								};
+							}}
+						>
+							<button type="submit">Delete Position</button>
+						</form>
+					</li>
 				</ul>
 			</div>
 			<form method="POST" action="?/markPositionReviewed">
