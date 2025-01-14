@@ -173,6 +173,11 @@
 			textColor: '#333'
 		}
 	};
+
+	const handleEditPositionButtonClicked = () => {
+		const modal = document.getElementById('editPositionModal') as HTMLDialogElement;
+		modal.showModal();
+	};
 </script>
 
 <section>
@@ -182,9 +187,11 @@
 			<div class="dropdown dropdown-end dropdown-bottom">
 				<div tabindex="0" role="button" class="btn m-1"><EllipsisVertical /></div>
 				<ul class="menu dropdown-content z-[1000] w-52 rounded-box bg-base-100 p-2 shadow">
-					<li class="p-2">Edit Position</li>
-					<hr class="my-1" />
-					<li class="p-2">
+					<li>
+						<button on:click={handleEditPositionButtonClicked}>Edit Position</button>
+					</li>
+					<div class="divider m-0 p-0"></div>
+					<li>
 						<form
 							method="POST"
 							action="?/deletePosition"
@@ -234,4 +241,14 @@
 			<PriceScale id="volume" scaleMargins={{ top: 0.8, bottom: 0 }} />
 		</Chart>
 	</div>
+
+	<dialog id="editPositionModal" class="modal">
+		<div class="modal-box">
+			<h3 class="text-lg font-bold">Hello!</h3>
+			<p class="py-4">Press ESC key or click outside to close</p>
+		</div>
+		<form method="dialog" class="modal-backdrop">
+			<button>close</button>
+		</form>
+	</dialog>
 </section>

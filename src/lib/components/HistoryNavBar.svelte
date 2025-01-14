@@ -503,6 +503,9 @@
 					</div>
 				</form>
 			</div>
+			<form method="dialog" class="modal-backdrop">
+				<button>close</button>
+			</form>
 		</dialog>
 
 		<dialog id="import-trade-modal" class="modal">
@@ -557,6 +560,9 @@
 					</div>
 				{/if}
 			</div>
+			<form method="dialog" class="modal-backdrop">
+				<button>close</button>
+			</form>
 		</dialog>
 
 		<dialog id="add-trade-modal" class="modal">
@@ -704,6 +710,9 @@
 					</div>
 				</form>
 			</div>
+			<form method="dialog" class="modal-backdrop">
+				<button>close</button>
+			</form>
 		</dialog>
 	</div>
 </div>
