@@ -4,11 +4,12 @@
 	import type { PageData } from './$types';
 	import { dispatchToast, theme } from '../../stores.ts';
 	import type { StockData, VolumeData } from '@/lib/types/chartTypes.ts';
-	import { convertUnixTimestampToDate } from '@/lib/helpers/DataHelpers.ts';
+	import { convertUnixTimestampToDate, formatDuration } from '@/lib/helpers/DataHelpers.ts';
 	import { onMount, tick } from 'svelte';
 	import { CheckCheck, EllipsisVertical } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { formatCurrency } from '@/lib/helpers/CurrencyHelpers.ts';
 
 	export let data: PageData;
 
@@ -243,9 +244,95 @@
 	</div>
 
 	<dialog id="editPositionModal" class="modal">
-		<div class="modal-box">
-			<h3 class="text-lg font-bold">Hello!</h3>
-			<p class="py-4">Press ESC key or click outside to close</p>
+		<div class="modal-box max-w-5xl">
+			<h3 class="text-lg font-bold">Edit Position</h3>
+			<div class="flex justify-between">
+				<div class="flex flex-grow flex-col">
+					<div class="flex">
+						<label class="label flex cursor-pointer flex-col items-start gap-1">
+							<span class="label-text">Ticker</span>
+							<input
+								id="ticker"
+								type="text"
+								disabled
+								class="input input-bordered w-full"
+								value={data.position[0].ticker}
+							/>
+						</label>
+						<label class="label flex cursor-pointer flex-col items-start gap-1">
+							<span class="label-text">Platform</span>
+							<input
+								id="ticker"
+								type="text"
+								disabled
+								class="input input-bordered w-full"
+								value={data.position[0].platform}
+							/>
+						</label>
+					</div>
+					<div class="overflow-x-auto">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Date</th>
+									<th>Time</th>
+									<th>Direction</th>
+									<th>Quantity</th>
+									<th>Price</th>
+									<th>Fees</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each data.position as position}
+									<tr>
+										<td>{new Date(position.tradeExecutedAt ?? '').toLocaleDateString()}</td>
+										<td>{new Date(position.tradeExecutedAt ?? '').toLocaleTimeString()}</td>
+										<td>{position.tradeTradeSide}</td>
+										<td>{position.tradeVolume}</td>
+										<td
+											>{formatCurrency(
+												position.tradePrice,
+												position.region === 'US' ? 'USD' : 'HKD'
+											)}</td
+										>
+										<td
+											>{formatCurrency(
+												position.tradeFees,
+												position.region === 'US' ? 'USD' : 'HKD'
+											)}
+										</td></tr
+									>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="divider divider-horizontal"></div>
+				<div class="flex flex-col">
+					<h4>Position Details</h4>
+					<p>Direction: {data.position[0].isShort ? 'Short' : 'Long'}</p>
+					<p>Total Quantity: {data.position[0].totalVolume}</p>
+					<p>Outstanding Quantity: {data.position[0].outstandingVolume}</p>
+					<p>Gross P/L: {data.position[0].grossProfitLoss}</p>
+					<p>
+						Net P/L: {Number(data.position[0].grossProfitLoss) - Number(data.position[0].totalFees)}
+					</p>
+					<p>Average Entry Price: {data.position[0].averageEntryPrice}</p>
+					<p>Average Exit Price: {data.position[0].averageExitPrice}</p>
+					<p>
+						Duration: {formatDuration(
+							new Date(data.position[0].tradeExecutedAt ?? ''),
+							new Date(data.position.at(-1)?.tradeExecutedAt ?? '')
+						)}
+					</p>
+				</div>
+			</div>
+			<div class="modal-action">
+				<form method="dialog">
+					<button class="btn">Close</button>
+				</form>
+				<button class="btn btn-primary" type="submit">Add</button>
+			</div>
 		</div>
 		<form method="dialog" class="modal-backdrop">
 			<button>close</button>
