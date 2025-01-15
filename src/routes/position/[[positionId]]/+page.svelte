@@ -8,7 +8,7 @@
 	import { onMount, tick } from 'svelte';
 	import { CheckCheck, EllipsisVertical } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { formatCurrency } from '@/lib/helpers/CurrencyHelpers.ts';
 
 	export let data: PageData;
@@ -179,6 +179,53 @@
 		const modal = document.getElementById('editPositionModal') as HTMLDialogElement;
 		modal.showModal();
 	};
+
+	let editingCell: { rowIndex: number; column: string } | null = null;
+
+	$: editingState = (rowIndex: number, column: string) =>
+		editingCell?.rowIndex === rowIndex && editingCell?.column === column;
+	// Temporary storage for edited values
+	let editValue: string = '';
+
+	// Function to start editing a cell
+	const startEditing = async (rowIndex: number, column: string, value: string | number) => {
+		editingCell = { rowIndex, column };
+		editValue = value.toString();
+		await tick();
+	};
+
+	// Function to save edited value
+	const saveEdit = async (position: any) => {
+		// if (!editingCell) return;
+		// try {
+		// 	const response = await fetch('/api/position/update', {
+		// 		method: 'POST',
+		// 		headers: {
+		// 			'Content-Type': 'application/json'
+		// 		},
+		// 		body: JSON.stringify({
+		// 			tradeId: position.tradeId,
+		// 			[editingCell.column]: editValue
+		// 		})
+		// 	});
+		// 	if (!response.ok) throw new Error('Failed to update position');
+		// 	dispatchToast({ type: 'success', message: 'Position updated successfully!' });
+		// 	await invalidateAll();
+		// } catch (error) {
+		// 	dispatchToast({ type: 'error', message: 'Failed to update position' });
+		// }
+		// editingCell = null;
+	};
+
+	// Handle keyboard events for editing
+	const handleKeyDown = (event: KeyboardEvent, position: any) => {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			saveEdit(position);
+		} else if (event.key === 'Escape') {
+			editingCell = null;
+		}
+	};
 </script>
 
 <section>
@@ -283,25 +330,87 @@
 								</tr>
 							</thead>
 							<tbody>
-								{#each data.position as position}
+								{#each data.position as position, rowIndex}
 									<tr>
 										<td>{new Date(position.tradeExecutedAt ?? '').toLocaleDateString()}</td>
 										<td>{new Date(position.tradeExecutedAt ?? '').toLocaleTimeString()}</td>
-										<td>{position.tradeTradeSide}</td>
-										<td>{position.tradeVolume}</td>
 										<td
-											>{formatCurrency(
-												position.tradePrice,
-												position.region === 'US' ? 'USD' : 'HKD'
-											)}</td
+											on:dblclick={(e) => {
+												e.preventDefault();
+												startEditing(rowIndex, 'tradeTradeSide', position.tradeTradeSide ?? 'BUY');
+											}}
 										>
+											{#if editingState(rowIndex, 'tradeTradeSide')}
+												<select
+													class="select select-bordered select-sm w-full"
+													bind:value={editValue}
+													on:blur={() => saveEdit(position)}
+													on:keydown={(e) => handleKeyDown(e, position)}
+												>
+													<option value="BUY">BUY</option>
+													<option value="SELL">SELL</option>
+												</select>
+											{:else}
+												{position.tradeTradeSide}
+											{/if}
+										</td>
 										<td
-											>{formatCurrency(
-												position.tradeFees,
-												position.region === 'US' ? 'USD' : 'HKD'
-											)}
-										</td></tr
-									>
+											on:dblclick={() =>
+												startEditing(rowIndex, 'tradeVolume', position.tradeVolume ?? 0)}
+										>
+											{#if editingState(rowIndex, 'tradeVolume')}
+												<input
+													type="number"
+													class="input input-sm input-bordered w-full"
+													bind:value={editValue}
+													on:blur={() => saveEdit(position)}
+													on:keydown={(e) => handleKeyDown(e, position)}
+												/>
+											{:else}
+												{position.tradeVolume}
+											{/if}
+										</td>
+										<td
+											on:dblclick={() =>
+												startEditing(rowIndex, 'tradePrice', position.tradePrice ?? 0)}
+										>
+											{#if editingState(rowIndex, 'tradePrice')}
+												<input
+													type="number"
+													class="input input-sm input-bordered w-full"
+													bind:value={editValue}
+													step="0.01"
+													on:blur={() => saveEdit(position)}
+													on:keydown={(e) => handleKeyDown(e, position)}
+												/>
+											{:else}
+												{formatCurrency(
+													position.tradePrice,
+													position.region === 'US' ? 'USD' : 'HKD'
+												)}
+											{/if}
+										</td>
+										<td
+											on:dblclick={() =>
+												startEditing(rowIndex, 'tradeFees', position.tradeFees ?? 0)}
+										>
+											{#if editingState(rowIndex, 'tradeFees')}
+												<input
+													type="number"
+													class="input input-sm input-bordered w-full"
+													bind:value={editValue}
+													step="0.01"
+													on:blur={() => saveEdit(position)}
+													on:keydown={(e) => handleKeyDown(e, position)}
+												/>
+											{:else}
+												{formatCurrency(
+													position.tradeFees,
+													position.region === 'US' ? 'USD' : 'HKD'
+												)}
+											{/if}
+										</td>
+									</tr>
 								{/each}
 							</tbody>
 						</table>
