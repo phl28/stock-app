@@ -1,6 +1,13 @@
 <script lang="ts">
 	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
-	import { ColorType, CrosshairMode, type ISeriesApi } from 'lightweight-charts';
+	import {
+		ColorType,
+		CrosshairMode,
+		LineStyle,
+		type ISeriesApi,
+		type SeriesMarker,
+		type Time
+	} from 'lightweight-charts';
 	import type { PageData } from './$types';
 	import { dispatchToast, theme } from '../../stores.ts';
 	import type { StockData, VolumeData } from '@/lib/types/chartTypes.ts';
@@ -8,7 +15,7 @@
 	import { onMount, tick } from 'svelte';
 	import { CheckCheck, EllipsisVertical } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { formatCurrency } from '@/lib/helpers/CurrencyHelpers.ts';
 
 	export let data: PageData;
@@ -23,14 +30,31 @@
 	let containerHeight = 300;
 	let resizeObserver: ResizeObserver;
 
+	function debounce<T extends (...args: any[]) => any>(
+		func: T,
+		wait: number
+	): (...args: Parameters<T>) => void {
+		let timeout: NodeJS.Timeout;
+		return (...args: Parameters<T>) => {
+			clearTimeout(timeout);
+			timeout = setTimeout(() => func(...args), wait);
+		};
+	}
+
 	onMount(() => {
-		if (data && data.stockData) {
-			try {
-				fillChartData(data);
-			} catch (err) {
-				dispatchToast({ type: 'error', message: 'Error initializing chart' });
+		if (data) {
+			if (data.stockData) {
+				try {
+					fillChartData(data);
+				} catch (err) {
+					dispatchToast({ type: 'error', message: 'Error initializing chart' });
+				}
+			}
+			if (data.position) {
+				fillPositionData(data.position);
 			}
 		}
+
 		if (container) {
 			const parentWidth = container.parentElement?.clientWidth ?? 600;
 			containerWidth = Math.min(parentWidth, 600);
@@ -90,13 +114,69 @@
 		volumeSeries.setData(volumeData);
 	};
 
-	const updateDimensions = (entries: ResizeObserverEntry[]) => {
+	const fillPositionData = async (positions: any[]) => {
+		let markers: SeriesMarker<Time>[] = [];
+		for (const pos of positions) {
+			markers = [
+				...markers,
+				{
+					time: new Date(pos.tradeExecutedAt ?? '').toISOString().split('T')[0],
+					position: pos.tradeTradeSide === 'BUY' ? 'belowBar' : 'aboveBar',
+					text: `${pos.tradeVolume}`,
+					color: pos.tradeTradeSide === 'BUY' ? '#2563eb' : '#f97316',
+					shape: pos.tradeTradeSide === 'BUY' ? 'arrowUp' : 'arrowDown'
+				}
+			];
+		}
+		await tick();
+		chartSeries?.setMarkers(markers);
+		chartSeries?.createPriceLine({
+			price: Number(data.position[0].averageEntryPrice),
+			color: 'green',
+			lineWidth: 2,
+			lineStyle: LineStyle.Dotted,
+			axisLabelVisible: true,
+			title: 'Avg Entry'
+		});
+		if (data.position[0].averageExitPrice) {
+			chartSeries?.createPriceLine({
+				price: Number(data.position[0].averageExitPrice),
+				color: 'red',
+				lineWidth: 2,
+				lineStyle: LineStyle.Dotted,
+				axisLabelVisible: true,
+				title: 'Avg Exit'
+			});
+		}
+		if (data.position[0].profitTargetPrice) {
+			chartSeries?.createPriceLine({
+				price: Number(data.position[0].profitTargetPrice),
+				color: 'blue',
+				lineWidth: 2,
+				lineStyle: LineStyle.Dotted,
+				axisLabelVisible: true,
+				title: 'Target'
+			});
+		}
+		if (data.position[0].stopLossPrice) {
+			chartSeries?.createPriceLine({
+				price: Number(data.position[0].stopLossPrice),
+				color: 'orange',
+				lineWidth: 2,
+				lineStyle: LineStyle.Dotted,
+				axisLabelVisible: true,
+				title: 'Stop Loss'
+			});
+		}
+	};
+
+	const updateDimensions = debounce((entries: ResizeObserverEntry[]) => {
 		for (const entry of entries) {
 			const { width } = entry.contentRect;
 			containerWidth = Math.min(width, container.parentElement?.clientWidth ?? width);
 			containerHeight = Math.round(containerWidth * 0.5);
 		}
-	};
+	}, 100);
 
 	const handleCandlestickSeriesReference = (ref: ISeriesApi<'Candlestick'> | null) => {
 		chartSeries = ref;
@@ -272,8 +352,8 @@
 		<Chart {...chartOptions} {watermark} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
 			<CandlestickSeries
 				bind:data={stockData}
-				lastValueVisible={true}
 				title={data.position[0].ticker}
+				lastValueVisible={true}
 				priceLineVisible={true}
 				upColor="#10B981"
 				downColor="#EF4444"
