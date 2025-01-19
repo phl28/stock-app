@@ -13,10 +13,11 @@
 	import type { StockData, VolumeData } from '@/lib/types/chartTypes.ts';
 	import { convertUnixTimestampToDate, formatDuration } from '@/lib/helpers/DataHelpers.ts';
 	import { onMount, tick } from 'svelte';
-	import { CheckCheck, EllipsisVertical } from 'lucide-svelte';
+	import { ArrowDown, ArrowUp, CheckCheck, EllipsisVertical } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { formatCurrency } from '@/lib/helpers/CurrencyHelpers.ts';
+	import Editor from '@/lib/components/Editor.svelte';
 
 	export let data: PageData;
 
@@ -297,7 +298,6 @@
 		// editingCell = null;
 	};
 
-	// Handle keyboard events for editing
 	const handleKeyDown = (event: KeyboardEvent, position: any) => {
 		if (event.key === 'Enter') {
 			event.preventDefault();
@@ -306,11 +306,70 @@
 			editingCell = null;
 		}
 	};
+
+	const handleSaveJournal = async (outputData: any) => {
+		// try {
+		// 	const response = await fetch(`/articles/${data.article.articleId}/edit`, {
+		// 		method: 'POST',
+		// 		headers: {
+		// 			'Content-Type': 'application/json'
+		// 		},
+		// 		body: JSON.stringify({
+		// 			title,
+		// 			content: outputData,
+		// 			publish
+		// 		})
+		// 	});
+		// 	if (!response.ok) {
+		// 		throw new Error('Failed to save article');
+		// 	}
+		// 	dispatchToast({ type: 'success', message: 'Article saved successfully!' });
+		// 	if (publish && !originallyPublished) {
+		// 		dispatchToast({ type: 'success', message: 'Article published successfully!' });
+		// 	} else if (!publish && originallyPublished) {
+		// 		dispatchToast({ type: 'success', message: 'Article unpublished successfully!' });
+		// 	}
+		// } catch (error) {
+		// 	console.error('Error saving article:', error);
+		// 	dispatchToast({ type: 'error', message: 'Failed to save article' });
+		// }
+	};
+
+	const handleRemoveImages = async (removedImagesUrl: string[]) => {
+		// try {
+		// 	const response = await fetch(`/articles/delete-image`, {
+		// 		method: 'DELETE',
+		// 		headers: {
+		// 			'Content-Type': 'application/json'
+		// 		},
+		// 		body: JSON.stringify({
+		// 			imageUrls: removedImagesUrl
+		// 		})
+		// 	});
+		// 	if (!response.ok) {
+		// 		throw new Error('Failed to delete images');
+		// 	}
+		// 	dispatchToast({ type: 'success', message: 'Images deleted successfully!' });
+		// } catch (error) {
+		// 	dispatchToast({ type: 'error', message: 'Failed to delete images' });
+		// }
+	};
 </script>
 
 <section>
 	<div class="mb-4 flex items-center justify-between">
-		<h1>{data.position[0].ticker}</h1>
+		<h1 class="flex items-center gap-2">
+			{data.position[0].ticker}
+			<div
+				class={`badge badge-lg text-sm font-normal ${data.position[0].isShort ? 'badge-error' : 'badge-success'}`}
+			>
+				{#if data.position[0].isShort}
+					<ArrowDown strokeWidth="1" size={20} />Short
+				{:else}
+					<ArrowUp strokeWidth="1" size={20} />Long
+				{/if}
+			</div>
+		</h1>
 		<div id="top-bar-right" class="flex items-center gap-2">
 			<div class="dropdown dropdown-end dropdown-bottom">
 				<div tabindex="0" role="button" class="btn m-1"><EllipsisVertical /></div>
@@ -348,26 +407,39 @@
 			</form>
 		</div>
 	</div>
-	<div class="relative w-full px-2" bind:this={container}>
-		<Chart {...chartOptions} {watermark} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
-			<CandlestickSeries
-				bind:data={stockData}
-				title={data.position[0].ticker}
-				lastValueVisible={true}
-				priceLineVisible={true}
-				upColor="#10B981"
-				downColor="#EF4444"
-				ref={handleCandlestickSeriesReference}
-			/>
-			<HistogramSeries
-				bind:data={volumeData}
-				priceScaleId="volume"
-				color="#10B981"
-				priceFormat={{ type: 'volume' }}
-				ref={handleVolumeSeriesReference}
-			/>
-			<PriceScale id="volume" scaleMargins={{ top: 0.8, bottom: 0 }} />
-		</Chart>
+	<div class="relative flex w-full gap-2 px-2">
+		<div class="relative flex w-3/5 flex-col px-2" bind:this={container}>
+			<Chart {...chartOptions} {watermark} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
+				<CandlestickSeries
+					bind:data={stockData}
+					title={data.position[0].ticker}
+					lastValueVisible={true}
+					priceLineVisible={true}
+					upColor="#10B981"
+					downColor="#EF4444"
+					ref={handleCandlestickSeriesReference}
+				/>
+				<HistogramSeries
+					bind:data={volumeData}
+					priceScaleId="volume"
+					color="#10B981"
+					priceFormat={{ type: 'volume' }}
+					ref={handleVolumeSeriesReference}
+				/>
+				<PriceScale id="volume" scaleMargins={{ top: 0.8, bottom: 0 }} />
+			</Chart>
+			<Editor
+				readOnly={false}
+				data={data.position[0].journal ?? {}}
+				onSave={handleSaveJournal}
+				removeImages={handleRemoveImages}
+				placeholder="What are your thoughts on this trade?"
+				autoSave={true}
+			></Editor>
+		</div>
+		<div class="relative w-2/5 px-2">
+			<p>Testing</p>
+		</div>
 	</div>
 
 	<dialog id="editPositionModal" class="modal">
@@ -520,7 +592,7 @@
 				<form method="dialog">
 					<button class="btn">Close</button>
 				</form>
-				<button class="btn btn-primary" type="submit">Add</button>
+				<button class="btn btn-primary" type="submit">Save</button>
 			</div>
 		</div>
 		<form method="dialog" class="modal-backdrop">

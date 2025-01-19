@@ -9,6 +9,9 @@
 	export let autofocus = true;
 	export let onSave = undefined;
 	export let removeImages = undefined;
+	export let autoSave = false;
+
+	let saveTimeout;
 
 	let editor;
 	const removedImagesUrl = [];
@@ -101,7 +104,12 @@
 				 */
 				autofocus: autofocus,
 				placeholder: placeholder,
-				readOnly: readOnly
+				readOnly: readOnly,
+				onChange: () => {
+					if (autoSave) {
+						debouncedSave();
+					}
+				}
 			});
 		}
 	});
@@ -126,6 +134,14 @@
 			.catch((error) => {
 				console.error('Saving failed: ', error);
 			});
+	};
+
+	const debouncedSave = () => {
+		if (saveTimeout) clearTimeout(saveTimeout);
+
+		saveTimeout = setTimeout(() => {
+			save();
+		}, 1000);
 	};
 </script>
 
