@@ -52,7 +52,7 @@
 				}
 			}
 			if (data.position) {
-				fillPositionData(data.position);
+				fillPositionData(data.position, data.trades ?? []);
 			}
 		}
 
@@ -115,33 +115,33 @@
 		volumeSeries.setData(volumeData);
 	};
 
-	const fillPositionData = async (positions: any[]) => {
+	const fillPositionData = async (position: any, trades: any[]) => {
 		let markers: SeriesMarker<Time>[] = [];
-		for (const pos of positions) {
+		for (const trade of trades) {
 			markers = [
 				...markers,
 				{
-					time: new Date(pos.tradeExecutedAt ?? '').toISOString().split('T')[0],
-					position: pos.tradeTradeSide === 'BUY' ? 'belowBar' : 'aboveBar',
-					text: `${pos.tradeVolume}`,
-					color: pos.tradeTradeSide === 'BUY' ? '#2563eb' : '#f97316',
-					shape: pos.tradeTradeSide === 'BUY' ? 'arrowUp' : 'arrowDown'
+					time: new Date(trade.executedAt ?? '').toISOString().split('T')[0],
+					position: trade.tradeSide === 'BUY' ? 'belowBar' : 'aboveBar',
+					text: `${trade.volume}`,
+					color: trade.tradeSide === 'BUY' ? '#2563eb' : '#f97316',
+					shape: trade.tradeSide === 'BUY' ? 'arrowUp' : 'arrowDown'
 				}
 			];
 		}
 		await tick();
 		chartSeries?.setMarkers(markers);
 		chartSeries?.createPriceLine({
-			price: Number(data.position[0].averageEntryPrice),
+			price: Number(position.averageEntryPrice),
 			color: 'green',
 			lineWidth: 2,
 			lineStyle: LineStyle.Dotted,
 			axisLabelVisible: true,
 			title: 'Avg Entry'
 		});
-		if (data.position[0].averageExitPrice) {
+		if (position.averageExitPrice) {
 			chartSeries?.createPriceLine({
-				price: Number(data.position[0].averageExitPrice),
+				price: Number(position.averageExitPrice),
 				color: 'red',
 				lineWidth: 2,
 				lineStyle: LineStyle.Dotted,
@@ -149,9 +149,9 @@
 				title: 'Avg Exit'
 			});
 		}
-		if (data.position[0].profitTargetPrice) {
+		if (position.profitTargetPrice) {
 			chartSeries?.createPriceLine({
-				price: Number(data.position[0].profitTargetPrice),
+				price: Number(position.profitTargetPrice),
 				color: 'blue',
 				lineWidth: 2,
 				lineStyle: LineStyle.Dotted,
@@ -159,9 +159,9 @@
 				title: 'Target'
 			});
 		}
-		if (data.position[0].stopLossPrice) {
+		if (position.stopLossPrice) {
 			chartSeries?.createPriceLine({
-				price: Number(data.position[0].stopLossPrice),
+				price: Number(position.stopLossPrice),
 				color: 'orange',
 				lineWidth: 2,
 				lineStyle: LineStyle.Dotted,
@@ -226,7 +226,7 @@
 		}
 	};
 
-	let waterMarkText: string = `${data.position[0].ticker} 1D`;
+	let waterMarkText: string = `${data.position?.ticker} 1D`;
 	$: watermark = {
 		visible: true,
 		fontSize: 48,
@@ -359,11 +359,11 @@
 <section>
 	<div class="mb-4 flex items-center justify-between">
 		<h1 class="flex items-center gap-2">
-			{data.position[0].ticker}
+			{data.position?.ticker}
 			<div
-				class={`badge badge-lg text-sm font-normal ${data.position[0].isShort ? 'badge-error' : 'badge-success'}`}
+				class={`badge badge-lg text-sm font-normal ${data.position?.isShort ? 'badge-error' : 'badge-success'}`}
 			>
-				{#if data.position[0].isShort}
+				{#if data.position?.isShort}
 					<ArrowDown strokeWidth="1" size={20} />Short
 				{:else}
 					<ArrowUp strokeWidth="1" size={20} />Long
@@ -399,10 +399,8 @@
 				</ul>
 			</div>
 			<form method="POST" action="?/markPositionReviewed">
-				<button
-					class="btn btn-primary"
-					type="submit"
-					disabled={data.position[0].reviewedAt !== null}><CheckCheck /> Mark as reviewed</button
+				<button class="btn btn-primary" type="submit" disabled={data.position?.reviewedAt !== null}
+					><CheckCheck /> Mark as reviewed</button
 				>
 			</form>
 		</div>
@@ -412,7 +410,7 @@
 			<Chart {...chartOptions} {watermark} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
 				<CandlestickSeries
 					bind:data={stockData}
-					title={data.position[0].ticker}
+					title={data.position?.ticker}
 					lastValueVisible={true}
 					priceLineVisible={true}
 					upColor="#10B981"
@@ -430,7 +428,7 @@
 			</Chart>
 			<Editor
 				readOnly={false}
-				data={data.position[0].journal ?? {}}
+				data={data.position?.journal ?? {}}
 				onSave={handleSaveJournal}
 				removeImages={handleRemoveImages}
 				placeholder="What are your thoughts on this trade?"
@@ -455,7 +453,7 @@
 								type="text"
 								disabled
 								class="input input-bordered w-full"
-								value={data.position[0].ticker}
+								value={data.position?.ticker}
 							/>
 						</label>
 						<label class="label flex cursor-pointer flex-col items-start gap-1">
@@ -465,7 +463,7 @@
 								type="text"
 								disabled
 								class="input input-bordered w-full"
-								value={data.position[0].platform}
+								value={data.position?.platform}
 							/>
 						</label>
 					</div>
@@ -482,88 +480,85 @@
 								</tr>
 							</thead>
 							<tbody>
-								{#each data.position as position, rowIndex}
-									<tr>
-										<td>{new Date(position.tradeExecutedAt ?? '').toLocaleDateString()}</td>
-										<td>{new Date(position.tradeExecutedAt ?? '').toLocaleTimeString()}</td>
-										<td
-											on:dblclick={(e) => {
-												e.preventDefault();
-												startEditing(rowIndex, 'tradeTradeSide', position.tradeTradeSide ?? 'BUY');
-											}}
-										>
-											{#if editingState(rowIndex, 'tradeTradeSide')}
-												<select
-													class="select select-bordered select-sm w-full"
-													bind:value={editValue}
-													on:blur={() => saveEdit(position)}
-													on:keydown={(e) => handleKeyDown(e, position)}
-												>
-													<option value="BUY">BUY</option>
-													<option value="SELL">SELL</option>
-												</select>
-											{:else}
-												{position.tradeTradeSide}
-											{/if}
-										</td>
-										<td
-											on:dblclick={() =>
-												startEditing(rowIndex, 'tradeVolume', position.tradeVolume ?? 0)}
-										>
-											{#if editingState(rowIndex, 'tradeVolume')}
-												<input
-													type="number"
-													class="input input-sm input-bordered w-full"
-													bind:value={editValue}
-													on:blur={() => saveEdit(position)}
-													on:keydown={(e) => handleKeyDown(e, position)}
-												/>
-											{:else}
-												{position.tradeVolume}
-											{/if}
-										</td>
-										<td
-											on:dblclick={() =>
-												startEditing(rowIndex, 'tradePrice', position.tradePrice ?? 0)}
-										>
-											{#if editingState(rowIndex, 'tradePrice')}
-												<input
-													type="number"
-													class="input input-sm input-bordered w-full"
-													bind:value={editValue}
-													step="0.01"
-													on:blur={() => saveEdit(position)}
-													on:keydown={(e) => handleKeyDown(e, position)}
-												/>
-											{:else}
-												{formatCurrency(
-													position.tradePrice,
-													position.region === 'US' ? 'USD' : 'HKD'
-												)}
-											{/if}
-										</td>
-										<td
-											on:dblclick={() =>
-												startEditing(rowIndex, 'tradeFees', position.tradeFees ?? 0)}
-										>
-											{#if editingState(rowIndex, 'tradeFees')}
-												<input
-													type="number"
-													class="input input-sm input-bordered w-full"
-													bind:value={editValue}
-													step="0.01"
-													on:blur={() => saveEdit(position)}
-													on:keydown={(e) => handleKeyDown(e, position)}
-												/>
-											{:else}
-												{formatCurrency(
-													position.tradeFees,
-													position.region === 'US' ? 'USD' : 'HKD'
-												)}
-											{/if}
-										</td>
-									</tr>
-								{/each}
+								{#if data.trades}
+									{#each data.trades as trade, rowIndex}
+										<tr>
+											<td>{new Date(trade.executedAt ?? '').toLocaleDateString()}</td>
+											<td>{new Date(trade.executedAt ?? '').toLocaleTimeString()}</td>
+											<td
+												on:dblclick={(e) => {
+													e.preventDefault();
+													startEditing(rowIndex, 'tradeTradeSide', trade.tradeSide ?? 'BUY');
+												}}
+											>
+												{#if editingState(rowIndex, 'tradeTradeSide')}
+													<select
+														class="select select-bordered select-sm w-full"
+														bind:value={editValue}
+														on:blur={() => saveEdit(trade)}
+														on:keydown={(e) => handleKeyDown(e, trade)}
+													>
+														<option value="BUY">BUY</option>
+														<option value="SELL">SELL</option>
+													</select>
+												{:else}
+													{trade.tradeSide}
+												{/if}
+											</td>
+											<td
+												on:dblclick={() => startEditing(rowIndex, 'tradeVolume', trade.volume ?? 0)}
+											>
+												{#if editingState(rowIndex, 'tradeVolume')}
+													<input
+														type="number"
+														class="input input-sm input-bordered w-full"
+														bind:value={editValue}
+														on:blur={() => saveEdit(trade)}
+														on:keydown={(e) => handleKeyDown(e, trade)}
+													/>
+												{:else}
+													{trade.volume}
+												{/if}
+											</td>
+											<td
+												on:dblclick={() => startEditing(rowIndex, 'tradePrice', trade.price ?? 0)}
+											>
+												{#if editingState(rowIndex, 'tradePrice')}
+													<input
+														type="number"
+														class="input input-sm input-bordered w-full"
+														bind:value={editValue}
+														step="0.01"
+														on:blur={() => saveEdit(trade)}
+														on:keydown={(e) => handleKeyDown(e, trade)}
+													/>
+												{:else}
+													{formatCurrency(
+														trade.price,
+														data.position?.region === 'US' ? 'USD' : 'HKD'
+													)}
+												{/if}
+											</td>
+											<td on:dblclick={() => startEditing(rowIndex, 'tradeFees', trade.fees ?? 0)}>
+												{#if editingState(rowIndex, 'tradeFees')}
+													<input
+														type="number"
+														class="input input-sm input-bordered w-full"
+														bind:value={editValue}
+														step="0.01"
+														on:blur={() => saveEdit(trade)}
+														on:keydown={(e) => handleKeyDown(e, trade)}
+													/>
+												{:else}
+													{formatCurrency(
+														trade.fees,
+														data.position?.region === 'US' ? 'USD' : 'HKD'
+													)}
+												{/if}
+											</td>
+										</tr>
+									{/each}
+								{/if}
 							</tbody>
 						</table>
 					</div>
@@ -571,19 +566,19 @@
 				<div class="divider divider-horizontal"></div>
 				<div class="flex flex-col">
 					<h4>Position Details</h4>
-					<p>Direction: {data.position[0].isShort ? 'Short' : 'Long'}</p>
-					<p>Total Quantity: {data.position[0].totalVolume}</p>
-					<p>Outstanding Quantity: {data.position[0].outstandingVolume}</p>
-					<p>Gross P/L: {data.position[0].grossProfitLoss}</p>
+					<p>Direction: {data.position?.isShort ? 'Short' : 'Long'}</p>
+					<p>Total Quantity: {data.position?.totalVolume}</p>
+					<p>Outstanding Quantity: {data.position?.outstandingVolume}</p>
+					<p>Gross P/L: {data.position?.grossProfitLoss}</p>
 					<p>
-						Net P/L: {Number(data.position[0].grossProfitLoss) - Number(data.position[0].totalFees)}
+						Net P/L: {Number(data.position?.grossProfitLoss) - Number(data.position?.totalFees)}
 					</p>
-					<p>Average Entry Price: {data.position[0].averageEntryPrice}</p>
-					<p>Average Exit Price: {data.position[0].averageExitPrice}</p>
+					<p>Average Entry Price: {data.position?.averageEntryPrice}</p>
+					<p>Average Exit Price: {data.position?.averageExitPrice}</p>
 					<p>
 						Duration: {formatDuration(
-							new Date(data.position[0].tradeExecutedAt ?? ''),
-							new Date(data.position.at(-1)?.tradeExecutedAt ?? '')
+							new Date(data.trades?.at(0)?.executedAt ?? ''),
+							new Date(data.trades?.at(-1)?.executedAt ?? '')
 						)}
 					</p>
 				</div>

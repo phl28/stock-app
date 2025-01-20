@@ -14,20 +14,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         throw new Error('Invalid position ID');
     }
     try {
-        const position = await getPosition({ positionId, userId: locals.session.userId });
-        if (position[0].ticker) {
-            const lastExecutedDate = position.at(-1)?.tradeExecutedAt ?? new Date();
+        const data = await getPosition({ positionId, userId: locals.session.userId });
+        const { position, trades } = data ?? {};
+        if (position && position.ticker && trades) {
+            const lastExecutedDate = trades.at(-1)?.executedAt ?? new Date();
             let twoYearsAgo = new Date(lastExecutedDate.getFullYear() - 2, lastExecutedDate.getMonth(), lastExecutedDate.getDate());
 
             const formattedToday = `${lastExecutedDate.getFullYear()}-${String(lastExecutedDate.getMonth() + 1).padStart(2, '0')}-${String(lastExecutedDate.getDate()).padStart(2, '0')}`;
             const formattedTwoYearsAgo = `${twoYearsAgo.getFullYear()}-${String(twoYearsAgo.getMonth() + 1).padStart(2, '0')}-${String(twoYearsAgo.getDate()).padStart(2, '0')}`;
             const res = await fetch(
-                `${PUBLIC_POLYGON_IO_URL}/v2/aggs/ticker/${position[0].ticker}/range/1/day/${formattedTwoYearsAgo}/${formattedToday}?adjusted=true&sort=asc&apiKey=${API_KEY}`
+                `${PUBLIC_POLYGON_IO_URL}/v2/aggs/ticker/${position.ticker}/range/1/day/${formattedTwoYearsAgo}/${formattedToday}?adjusted=true&sort=asc&apiKey=${API_KEY}`
             );
             if (res.ok && res.status === 200) {
                 const stockData = await res.json();
                 return {
                     position,
+                    trades,
                     stockData
                 }
             }

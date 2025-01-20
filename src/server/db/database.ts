@@ -215,36 +215,22 @@ export const getClosedPositions = async ({
 };
 
 export const getPosition = async ({ positionId, userId }: { positionId: number, userId: string }) => {
-	return await db.select({
-		id: schema.positions.id,
-		ticker: schema.positions.ticker,
-		region: schema.positions.region,
-		currency: schema.positions.currency,
-		totalVolume: schema.positions.totalVolume,
-		outstandingVolume: schema.positions.outstandingVolume,
-		averageEntryPrice: schema.positions.averageEntryPrice,
-		averageExitPrice: schema.positions.averageExitPrice,
-		profitTargetPrice: schema.positions.profitTargetPrice,
-		stopLossPrice: schema.positions.stopLossPrice,
-		grossProfitLoss: schema.positions.grossProfitLoss,
-		totalFees: schema.positions.totalFees,
-		isShort: schema.positions.isShort,
-		platform: schema.positions.platform,
-		numOfTrades: schema.positions.numOfTrades,
-		notes: schema.positions.notes,
-		openedAt: schema.positions.openedAt,
-		closedAt: schema.positions.closedAt,
-		reviewedAt: schema.positions.reviewedAt,
-		lastUpdatedAt: schema.positions.updatedAt,
-		createdBy: schema.positions.createdBy,
-		journal: schema.positions.journal,
-		tradeId: schema.tradeHistory.id,
-		tradeExecutedAt: schema.tradeHistory.executedAt,
-		tradePrice: schema.tradeHistory.price,
-		tradeFees: schema.tradeHistory.fees,
-		tradeVolume: schema.tradeHistory.volume,
-		tradeTradeSide: schema.tradeHistory.tradeSide,
-	}).from(schema.positions).where(and(eq(schema.positions.id, positionId), eq(schema.positions.createdBy, userId))).leftJoin(schema.tradeHistory, eq(schema.positions.id,schema.tradeHistory.positionId)).orderBy(asc(schema.tradeHistory.executedAt))
+	const position =  await db.select().from(schema.positions).where(and(eq(schema.positions.id, positionId), eq(schema.positions.createdBy, userId)));
+	if (position.length === 1) {
+		const trades = await db.select({
+			id: schema.tradeHistory.id,
+			executedAt: schema.tradeHistory.executedAt,
+			price: schema.tradeHistory.price,
+			fees: schema.tradeHistory.fees,
+			volume: schema.tradeHistory.volume,
+			tradeSide: schema.tradeHistory.tradeSide,
+		}).from(schema.tradeHistory).where(eq(schema.tradeHistory.positionId, positionId));
+		return {
+			position: position[0],
+			trades
+		}
+	}
+
 }
 
 export const deletePosition = async ({ userId, positionId }: { userId: string, positionId: number }) => {
