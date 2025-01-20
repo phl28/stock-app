@@ -308,51 +308,43 @@
 	};
 
 	const handleSaveJournal = async (outputData: any) => {
-		// try {
-		// 	const response = await fetch(`/articles/${data.article.articleId}/edit`, {
-		// 		method: 'POST',
-		// 		headers: {
-		// 			'Content-Type': 'application/json'
-		// 		},
-		// 		body: JSON.stringify({
-		// 			title,
-		// 			content: outputData,
-		// 			publish
-		// 		})
-		// 	});
-		// 	if (!response.ok) {
-		// 		throw new Error('Failed to save article');
-		// 	}
-		// 	dispatchToast({ type: 'success', message: 'Article saved successfully!' });
-		// 	if (publish && !originallyPublished) {
-		// 		dispatchToast({ type: 'success', message: 'Article published successfully!' });
-		// 	} else if (!publish && originallyPublished) {
-		// 		dispatchToast({ type: 'success', message: 'Article unpublished successfully!' });
-		// 	}
-		// } catch (error) {
-		// 	console.error('Error saving article:', error);
-		// 	dispatchToast({ type: 'error', message: 'Failed to save article' });
-		// }
+		if (!data.position) return;
+		try {
+			const response = await fetch(`/position/${data.position.id}/journal/update`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					journal: outputData
+				})
+			});
+			if (!response.ok) {
+				throw new Error('Failed to save journal');
+			}
+		} catch (error) {
+			console.error('Error saving article:', error);
+			dispatchToast({ type: 'error', message: 'Failed to save article' });
+		}
 	};
 
 	const handleRemoveImages = async (removedImagesUrl: string[]) => {
-		// try {
-		// 	const response = await fetch(`/articles/delete-image`, {
-		// 		method: 'DELETE',
-		// 		headers: {
-		// 			'Content-Type': 'application/json'
-		// 		},
-		// 		body: JSON.stringify({
-		// 			imageUrls: removedImagesUrl
-		// 		})
-		// 	});
-		// 	if (!response.ok) {
-		// 		throw new Error('Failed to delete images');
-		// 	}
-		// 	dispatchToast({ type: 'success', message: 'Images deleted successfully!' });
-		// } catch (error) {
-		// 	dispatchToast({ type: 'error', message: 'Failed to delete images' });
-		// }
+		try {
+			const response = await fetch(`/images/delete`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					imageUrls: removedImagesUrl
+				})
+			});
+			if (!response.ok) {
+				throw new Error('Failed to delete images');
+			}
+		} catch (error) {
+			dispatchToast({ type: 'error', message: 'Failed to delete images' });
+		}
 	};
 </script>
 

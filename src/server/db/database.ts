@@ -304,6 +304,25 @@ export const updatePositionNotes = async ({
 	return await db.execute(query);
 };
 
+export const updatePositionJournal = async ({
+	userId,
+	position
+}: {
+	userId: string;
+	position: Pick<SelectPosition, 'id' | 'journal'>;
+}) => {
+	return await db.transaction(async (tx) => {
+		const [updatedPosition] = await tx
+			.update(schema.positions)
+			.set({
+				journal: position.journal
+			})
+			.where(and(eq(schema.positions.id, position.id), eq(schema.positions.createdBy, userId)))
+			.returning();
+		return updatedPosition;
+	});
+}
+
 // Articles
 export const getPaginatedArticles = async (
 	pageSize: number,
