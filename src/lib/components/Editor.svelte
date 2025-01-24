@@ -149,7 +149,7 @@
 	id="article-editor"
 	class={`article-editor w-full flex-grow p-4 ${!readOnly ? 'border-spacing-5 rounded-md border-2' : ''} `}
 ></div>
-{#if !readOnly}
+{#if !readOnly && !autoSave}
 	<div class="flex items-center justify-end gap-2">
 		<slot></slot>
 		<button class="btn btn-neutral" on:click={save}>Save</button>

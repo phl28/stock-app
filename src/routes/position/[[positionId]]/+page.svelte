@@ -492,7 +492,7 @@
 			></Editor>
 		</div>
 		<div class="relative w-2/5 px-2">
-			<div class="card w-full bg-base-100 shadow-xl">
+			<div class="card mb-4 w-full bg-base-100 shadow-xl">
 				<div class="card-body">
 					<h6>Trades</h6>
 					<Grid
@@ -501,6 +501,110 @@
 						isDarkMode={$darkTheme}
 						on:gridReady={handleGridReady}
 					/>
+				</div>
+			</div>
+
+			<div class="card w-full bg-base-100 shadow-xl">
+				<div class="card-body">
+					<h6>Details</h6>
+					<div class="flex flex-col gap-2">
+						<div class="flex justify-between">
+							<span class="text-sm opacity-75">Gross Profit / Loss</span>
+							<span
+								class={Number(data.position?.grossProfitLoss) >= 0 ? 'text-success' : 'text-error'}
+							>
+								{formatCurrency(
+									data.position?.grossProfitLoss ?? '0',
+									data.position?.region === 'US' ? 'USD' : 'HKD'
+								)}
+							</span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-sm opacity-75">Net Profit / Loss</span>
+							<span
+								class={Number(data.position?.grossProfitLoss) - Number(data.position?.totalFees) >=
+								0
+									? 'text-success'
+									: 'text-error'}
+							>
+								{formatCurrency(
+									String(Number(data.position?.grossProfitLoss) - Number(data.position?.totalFees)),
+									data.position?.region === 'US' ? 'USD' : 'HKD'
+								)}
+							</span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-sm opacity-75">Total Fees</span>
+							<span
+								>{formatCurrency(
+									data.position?.totalFees ?? '0',
+									data.position?.region === 'US' ? 'USD' : 'HKD'
+								)}</span
+							>
+						</div>
+						<div class="divider my-0"></div>
+						<div class="flex justify-between">
+							<span class="text-sm opacity-75">Side</span>
+							<span class={`badge ${data.position?.isShort ? 'badge-error' : 'badge-success'}`}>
+								{data.position?.isShort ? 'SHORT' : 'LONG'}
+							</span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-sm opacity-75">Quantity</span>
+							<span>{data.position?.totalVolume}</span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-sm opacity-75">Executions</span>
+							<span>{data.trades?.length ?? 0}</span>
+						</div>
+						<div class="divider my-0"></div>
+						<div class="flex justify-between">
+							<span class="text-sm opacity-75">Entry Price</span>
+							<span
+								>{formatCurrency(
+									data.trades?.at(0)?.price ?? '',
+									data.position?.region === 'US' ? 'USD' : 'HKD'
+								)}</span
+							>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-sm opacity-75">Exit Price</span>
+							<span
+								>{formatCurrency(
+									data.trades?.at(-1)?.price ?? '',
+									data.position?.region === 'US' ? 'USD' : 'HKD'
+								)}</span
+							>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-sm opacity-75">Average Entry Price</span>
+							<span
+								>{formatCurrency(
+									data.position?.averageEntryPrice ?? '',
+									data.position?.region === 'US' ? 'USD' : 'HKD'
+								)}</span
+							>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-sm opacity-75">Average Exit Price</span>
+							<span
+								>{formatCurrency(
+									data.position?.averageExitPrice ?? '',
+									data.position?.region === 'US' ? 'USD' : 'HKD'
+								)}</span
+							>
+						</div>
+						<div class="divider my-0"></div>
+						<div class="flex justify-between">
+							<span class="text-sm opacity-75">Duration</span>
+							<span
+								>{formatDuration(
+									new Date(data.trades?.at(0)?.executedAt ?? ''),
+									new Date(data.trades?.at(-1)?.executedAt ?? '')
+								)}</span
+							>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>

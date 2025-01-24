@@ -316,7 +316,7 @@
 							name="tradeIds"
 							value={JSON.stringify(Array.from(selectedTrades.keys()))}
 						/>
-						{#if positionId === 'newPosition'}
+						<section class={`${positionId === 'newPosition' ? 'visible' : 'hidden'}`}>
 							<div class="label">
 								<span class="label-text">Ticker</span>
 							</div>
@@ -491,7 +491,7 @@
 								tabIndex="-1"
 								readonly
 							/>
-						{/if}
+						</section>
 					</div>
 					<div class="modal-action">
 						<form method="dialog">
