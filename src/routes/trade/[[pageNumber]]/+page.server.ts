@@ -166,10 +166,16 @@ export const actions = {
 			const totalFees = formData.get('fees') as string;
 			const totalVolume = Number(formData.get('totalVolume') as string);
 			const outstandingVolume = Number(formData.get('outstandingVolume') as string);
-			const grossProfitLoss = formData.get('grossProfitLoss') as string === '' ? null : formData.get('grossProfitLoss') as string;
+			const grossProfitLoss =
+				(formData.get('grossProfitLoss') as string) === ''
+					? null
+					: (formData.get('grossProfitLoss') as string);
 			const side = formData.get('side') as string;
 			const openedAt = new Date(formData.get('openedAt') as string);
-			const closedAt = formData.get('closedAt') as string === '' ? null : new Date(formData.get('closedAt') as string);
+			const closedAt =
+				(formData.get('closedAt') as string) === ''
+					? null
+					: new Date(formData.get('closedAt') as string);
 			const insertPosition = {
 				ticker,
 				region,
@@ -193,9 +199,9 @@ export const actions = {
 				createdBy: locals.session.userId,
 				journal: null
 			};
-			await assignTradesToPosition({position: insertPosition, tradeIds})
+			await assignTradesToPosition({ position: insertPosition, tradeIds });
 		} else {
-			await assignTradesToPosition({positionId: Number(positionId), tradeIds});
+			await assignTradesToPosition({ positionId: Number(positionId), tradeIds });
 		}
 		return;
 	}

@@ -2,7 +2,19 @@ import { drizzle } from 'drizzle-orm/vercel-postgres';
 import { sql } from '@vercel/postgres';
 
 import * as schema from './schema';
-import { eq, inArray, sql as dsql, and, gte, lte, desc, count, isNotNull, asc, isNull } from 'drizzle-orm';
+import {
+	eq,
+	inArray,
+	sql as dsql,
+	and,
+	gte,
+	lte,
+	desc,
+	count,
+	isNotNull,
+	asc,
+	isNull
+} from 'drizzle-orm';
 
 export const db = drizzle(sql, { schema });
 
@@ -85,7 +97,7 @@ export const insertTradeHistory = async (trade: InsertTrade) => {
 					updatedAt: new Date()
 				})
 				.returning();
-			
+
 			return insertedTrade;
 		});
 		return result;
@@ -96,9 +108,7 @@ export const insertTradeHistory = async (trade: InsertTrade) => {
 
 // @FIXME: The functionality for this changed, we need this to update the whole trade now and not the notes
 export const updateTradeHistoryBatch = async (trades: InsertTrade[]) => {
-	const values = trades.map(
-		(trade) => dsql`(${trade.id}, ${new Date().toISOString()}::TIMESTAMP)`
-	);
+	const values = trades.map((trade) => dsql`(${trade.id}, ${new Date().toISOString()}::TIMESTAMP)`);
 
 	const query = dsql`
     WITH updates(id, updatedAt) AS (
@@ -155,18 +165,24 @@ export const assignTradesToPosition = async ({
 	await db.transaction(async (tx) => {
 		let id = positionId;
 		if (position) {
-			const ids = await tx.insert(schema.positions).values({
-				...position,
-				updatedAt: new Date()
-			}).returning({ id: schema.positions.id})
+			const ids = await tx
+				.insert(schema.positions)
+				.values({
+					...position,
+					updatedAt: new Date()
+				})
+				.returning({ id: schema.positions.id });
 			id = ids[0].id;
 		}
-		await tx.update(schema.tradeHistory).set({
-			positionId: id,
-			updatedAt: new Date()
-		}).where(inArray(schema.tradeHistory.id, tradeIds))
-	})
-}
+		await tx
+			.update(schema.tradeHistory)
+			.set({
+				positionId: id,
+				updatedAt: new Date()
+			})
+			.where(inArray(schema.tradeHistory.id, tradeIds));
+	});
+};
 
 export const createNewPosition = async ({
 	userId,
@@ -190,7 +206,7 @@ export const createNewPosition = async ({
 
 export const getActivePositions = async ({ userId }: { userId: string }) => {
 	return await db.query.positions.findMany({
-		where: and(eq(schema.positions.createdBy, userId), isNull(schema.positions.closedAt)), 
+		where: and(eq(schema.positions.createdBy, userId), isNull(schema.positions.closedAt)),
 		orderBy: [desc(schema.positions.openedAt)]
 	});
 };
@@ -214,32 +230,57 @@ export const getClosedPositions = async ({
 	});
 };
 
-export const getPosition = async ({ positionId, userId }: { positionId: number, userId: string }) => {
-	const position =  await db.select().from(schema.positions).where(and(eq(schema.positions.id, positionId), eq(schema.positions.createdBy, userId)));
+export const getPosition = async ({
+	positionId,
+	userId
+}: {
+	positionId: number;
+	userId: string;
+}) => {
+	const position = await db
+		.select()
+		.from(schema.positions)
+		.where(and(eq(schema.positions.id, positionId), eq(schema.positions.createdBy, userId)));
 	if (position.length === 1) {
-		const trades = await db.select({
-			id: schema.tradeHistory.id,
-			executedAt: schema.tradeHistory.executedAt,
-			price: schema.tradeHistory.price,
-			fees: schema.tradeHistory.fees,
-			volume: schema.tradeHistory.volume,
-			tradeSide: schema.tradeHistory.tradeSide,
-		}).from(schema.tradeHistory).where(eq(schema.tradeHistory.positionId, positionId));
+		const trades = await db
+			.select({
+				id: schema.tradeHistory.id,
+				executedAt: schema.tradeHistory.executedAt,
+				price: schema.tradeHistory.price,
+				fees: schema.tradeHistory.fees,
+				volume: schema.tradeHistory.volume,
+				tradeSide: schema.tradeHistory.tradeSide
+			})
+			.from(schema.tradeHistory)
+			.where(eq(schema.tradeHistory.positionId, positionId));
 		return {
 			position: position[0],
 			trades
-		}
+		};
 	}
+};
 
-}
-
-export const deletePosition = async ({ userId, positionId }: { userId: string, positionId: number }) => {
+export const deletePosition = async ({
+	userId,
+	positionId
+}: {
+	userId: string;
+	positionId: number;
+}) => {
 	return await db.transaction(async (tx) => {
-		await tx.delete(schema.positions).where(and(eq(schema.positions.id, positionId), eq(schema.positions.createdBy, userId)))
-	})
-}
+		await tx
+			.delete(schema.positions)
+			.where(and(eq(schema.positions.id, positionId), eq(schema.positions.createdBy, userId)));
+	});
+};
 
-export const markPositionReviewed = async ({ positionId, userId }: { positionId: number, userId: string }) => {
+export const markPositionReviewed = async ({
+	positionId,
+	userId
+}: {
+	positionId: number;
+	userId: string;
+}) => {
 	return await db.transaction(async (tx) => {
 		const [updatedPosition] = await tx
 			.update(schema.positions)
@@ -251,7 +292,7 @@ export const markPositionReviewed = async ({ positionId, userId }: { positionId:
 			.returning();
 		return updatedPosition;
 	});
-}
+};
 
 export const getPositionPerformance = async ({
 	positionId,
@@ -268,7 +309,8 @@ export const getPositionPerformance = async ({
 		const duration = position.closedAt.getTime() - position.openedAt.getTime();
 		const durationDays = duration / (1000 * 60 * 60 * 24);
 		const profitLoss = Number(position.grossProfitLoss);
-		const roi = (profitLoss / Number(Number(position.averageEntryPrice) * position.totalVolume)) * 100;
+		const roi =
+			(profitLoss / Number(Number(position.averageEntryPrice) * position.totalVolume)) * 100;
 
 		return {
 			duration: durationDays,
@@ -287,7 +329,7 @@ export const updatePositionNotes = async ({
 	userId: string;
 	position: Pick<InsertPosition, 'id' | 'notes'>;
 }) => {
-	const values = dsql`(${position.id}, ${position.notes})`; 
+	const values = dsql`(${position.id}, ${position.notes})`;
 
 	const query = dsql`
 		WITH updates(id, notes) AS (
@@ -321,7 +363,7 @@ export const updatePositionJournal = async ({
 			.returning();
 		return updatedPosition;
 	});
-}
+};
 
 // Articles
 export const getPaginatedArticles = async (

@@ -446,7 +446,7 @@
 			></Editor>
 		</div>
 		<div class="relative w-2/5 px-2">
-			<Grid style="height: 100%" {gridOptions} />
+			<Grid {gridOptions} isDarkMode={$darkTheme} />
 		</div>
 	</div>
 
