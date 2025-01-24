@@ -1,5 +1,10 @@
 <script lang="ts">
 	import calculator from '$lib/calculator/calculator';
+	import type { GridApi, GridOptions, ICellRendererParams } from 'ag-grid-community';
+	import Grid from '$lib/components/Grid.svelte';
+	import { darkTheme } from '@/routes/stores';
+	import { RRCellRenderer } from './RRCellRenderer';
+
 	export let input = {
 		risk: 0.0003,
 		entry: 100,
@@ -36,59 +41,84 @@
 		});
 	};
 
-	let customRR: number;
-	let customReward: number;
-	let customProfit: number;
-	let customCoverPrice: number;
+	let gridApi: GridApi;
+	const handleGridReady = (event: CustomEvent) => {
+		const api = event.detail;
+		gridApi = api;
+	};
+
+	let customRR: number = 6;
+
+	$: customData = {
+		rr: customRR,
+		reward: calcRewardPerc(undefined, undefined, customRR, input.risk / 100),
+		profit: calcProfitPerc(undefined, undefined, input.stopLossPerc, customRR),
+		get coverPrice() {
+			return calcCoverPrice(input.entry, this.profit);
+		}
+	};
+
+	let gridOptions: GridOptions<TableData> = {
+		domLayout: 'autoHeight',
+		columnDefs: [
+			{
+				field: 'rr',
+				headerName: 'Risk/Reward',
+				valueFormatter: ({ value }) => `${value}:1`,
+				editable: ({ node }) => {
+					return node.rowIndex === 4;
+				},
+				cellEditor: 'agNumberCellEditor',
+				valueParser: (params) => {
+					return Number(params.newValue);
+				},
+				cellRendererSelector: (params: ICellRendererParams<TableData>) => {
+					if (params.node.rowIndex === 4) {
+						return {
+							component: RRCellRenderer
+						};
+					}
+				}
+			},
+			{
+				field: 'reward',
+				headerName: 'Account Growth',
+				valueFormatter: ({ value }) => `${(value * 100).toFixed(2)}%`
+			},
+			{
+				field: 'profit',
+				headerName: 'Trade Profit',
+				valueFormatter: ({ value }) => `${(value * 100).toFixed(2)}%`
+			},
+			{
+				field: 'coverPrice',
+				headerName: 'Target Price',
+				valueFormatter: ({ value }) => `$${value.toFixed(2)}`
+			}
+		]
+	};
 
 	$: {
-		customReward = calcRewardPerc(undefined, undefined, customRR, input.risk / 100);
-		customProfit = calcProfitPerc(undefined, undefined, input.stopLossPerc, customRR);
-		customCoverPrice = calcCoverPrice(input.entry, customProfit);
+		if (gridApi) {
+			gridApi.setGridOption('rowData', [...data, customData]);
+		} else {
+			gridOptions.rowData = [...data, customData];
+		}
+	}
+
+	function handleCellValueChanged(event: CustomEvent) {
+		const { rowIndex, newValue } = event.detail;
+		if (rowIndex === 4) {
+			customRR = Number(newValue);
+		}
 	}
 </script>
 
 <div class="overflow-auto rounded-lg border bg-base-100">
-	<table class="table table-sm h-full">
-		<thead>
-			<tr>
-				<th class="bg-base-200">Risk/Reward</th>
-				{#each data as row}
-					<th class="text-center">{row.rr}:1</th>
-				{/each}
-				<th class="text-center">
-					<input
-						type="number"
-						class="input input-xs input-bordered w-20"
-						step="0.5"
-						placeholder="Custom"
-						bind:value={customRR}
-					/>:1
-				</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<th class="bg-base-200">Account Growth</th>
-				{#each data as row}
-					<td class="text-center">{(row.reward * 100).toFixed(2)}%</td>
-				{/each}
-				<td class="text-center">{(customReward * 100).toFixed(2)}%</td>
-			</tr>
-			<tr>
-				<th class="bg-base-200">Trade Profit</th>
-				{#each data as row}
-					<td class="text-center">{(row.profit * 100).toFixed(2)}%</td>
-				{/each}
-				<td class="text-center">{(customProfit * 100).toFixed(2)}%</td>
-			</tr>
-			<tr>
-				<th class="bg-base-200">Target Price</th>
-				{#each data as row}
-					<td class="text-center">${row.coverPrice.toFixed(2)}</td>
-				{/each}
-				<td class="text-center">${customCoverPrice.toFixed(2)}</td>
-			</tr>
-		</tbody>
-	</table>
+	<Grid
+		{gridOptions}
+		isDarkMode={$darkTheme}
+		on:gridReady={handleGridReady}
+		on:cellValueChanged={handleCellValueChanged}
+	/>
 </div>

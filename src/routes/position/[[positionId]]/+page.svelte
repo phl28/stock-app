@@ -9,7 +9,7 @@
 		type Time
 	} from 'lightweight-charts';
 	import type { PageData } from './$types';
-	import { dispatchToast, theme } from '../../stores.ts';
+	import { dispatchToast, darkTheme } from '../../stores.ts';
 	import type { StockData, VolumeData } from '@/lib/types/chartTypes.ts';
 	import { convertUnixTimestampToDate, formatDuration } from '@/lib/helpers/DataHelpers.ts';
 	import { onMount, tick } from 'svelte';
@@ -18,6 +18,8 @@
 	import { goto } from '$app/navigation';
 	import { formatCurrency } from '@/lib/helpers/CurrencyHelpers.ts';
 	import Editor from '@/lib/components/Editor.svelte';
+	import Grid from '@/lib/components/Grid.svelte';
+	import type { GridOptions } from 'ag-grid-community';
 
 	export let data: PageData;
 
@@ -346,6 +348,22 @@
 			dispatchToast({ type: 'error', message: 'Failed to delete images' });
 		}
 	};
+
+	interface IRow {
+		make: string;
+		model: string;
+		price: number;
+		electric: boolean;
+	}
+
+	const gridOptions: GridOptions<IRow> = {
+		rowData: [
+			{ make: 'Tesla', model: 'Model Y', price: 64950, electric: true },
+			{ make: 'Ford', model: 'F-Series', price: 33850, electric: false },
+			{ make: 'Toyota', model: 'Corolla', price: 29600, electric: false }
+		],
+		columnDefs: [{ field: 'make' }, { field: 'model' }, { field: 'price' }, { field: 'electric' }]
+	};
 </script>
 
 <section>
@@ -399,7 +417,7 @@
 	</div>
 	<div class="relative flex w-full gap-2 px-2">
 		<div class="relative flex w-3/5 flex-col px-2" bind:this={container}>
-			<Chart {...chartOptions} {watermark} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
+			<Chart {...chartOptions} {watermark} {...THEMES[$darkTheme ? 'Dark' : 'Light'].chart}>
 				<CandlestickSeries
 					bind:data={stockData}
 					title={data.position?.ticker}
@@ -428,7 +446,7 @@
 			></Editor>
 		</div>
 		<div class="relative w-2/5 px-2">
-			<p>Testing</p>
+			<Grid style="height: 100%" {gridOptions} />
 		</div>
 	</div>
 

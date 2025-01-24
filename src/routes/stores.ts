@@ -11,7 +11,7 @@ const toggleDarkTheme = () => {
 	};
 };
 
-export const theme = toggleDarkTheme();
+export const darkTheme = toggleDarkTheme();
 
 export const toasts = writable<Toast[]>([]);
 

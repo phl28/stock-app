@@ -1,11 +1,11 @@
 <script lang="ts">
 	import SignIn from 'clerk-sveltekit/client/SignIn.svelte';
 	import { dark } from '@clerk/themes';
-	import { theme } from '@/routes/stores.ts';
+	import { darkTheme } from '@/routes/stores.ts';
 </script>
 
 <div class="my-auto flex h-[calc(100vh-var(--header-height))] items-center justify-center">
-	{#if $theme}
+	{#if $darkTheme}
 		<SignIn
 			redirectUrl="/trade/1"
 			appearance={{
