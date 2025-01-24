@@ -59,6 +59,10 @@
 	};
 
 	let gridOptions: GridOptions<TableData> = {
+		defaultColDef: {
+			resizable: false
+		},
+		suppressMovableColumns: true,
 		domLayout: 'autoHeight',
 		columnDefs: [
 			{

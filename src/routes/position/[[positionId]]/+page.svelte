@@ -19,7 +19,14 @@
 	import { formatCurrency } from '@/lib/helpers/CurrencyHelpers.ts';
 	import Editor from '@/lib/components/Editor.svelte';
 	import Grid from '@/lib/components/Grid.svelte';
-	import type { GridOptions } from 'ag-grid-community';
+	import {
+		colorSchemeDarkBlue,
+		themeQuartz,
+		type GridApi,
+		type GridOptions
+	} from 'ag-grid-community';
+	import type { Trade } from '@/lib/types/tradeTypes.ts';
+	import { TradeSideCellRenderer } from '@/lib/components/TradeSideCellRenderer.ts';
 
 	export let data: PageData;
 
@@ -349,21 +356,60 @@
 		}
 	};
 
-	interface IRow {
-		make: string;
-		model: string;
-		price: number;
-		electric: boolean;
-	}
-
-	const gridOptions: GridOptions<IRow> = {
-		rowData: [
-			{ make: 'Tesla', model: 'Model Y', price: 64950, electric: true },
-			{ make: 'Ford', model: 'F-Series', price: 33850, electric: false },
-			{ make: 'Toyota', model: 'Corolla', price: 29600, electric: false }
-		],
-		columnDefs: [{ field: 'make' }, { field: 'model' }, { field: 'price' }, { field: 'electric' }]
+	type TradeGrid = Pick<Trade, 'tradeSide' | 'executedAt' | 'price' | 'fees' | 'volume'>;
+	const gridOptions: GridOptions<TradeGrid> = {
+		suppressMovableColumns: true,
+		defaultColDef: {
+			cellStyle: { fontSize: '12px !important' },
+			resizable: false
+		},
+		autoSizeStrategy: {
+			type: 'fitGridWidth'
+		},
+		columnDefs: [
+			{
+				field: 'tradeSide',
+				headerName: '',
+				cellRenderer: TradeSideCellRenderer,
+				width: 100
+			},
+			{
+				field: 'executedAt',
+				headerName: 'Time',
+				valueFormatter: ({ value }) => new Date(value).toLocaleDateString(),
+				flex: 1
+			},
+			{
+				field: 'price',
+				headerName: 'Price',
+				valueFormatter: ({ value }) => `${Number(value).toFixed(2)}`,
+				width: 150
+			},
+			{
+				field: 'fees',
+				headerName: 'Fees',
+				valueFormatter: ({ value }) => `${Number(value).toFixed(2)}`,
+				width: 150
+			},
+			{
+				field: 'volume',
+				headerName: 'Volume',
+				width: 180
+			}
+		]
 	};
+	$: gridOptions.rowData = [...(data.trades ?? [])];
+	let gridApi: GridApi;
+	const handleGridReady = (event: CustomEvent) => {
+		const api = event.detail;
+		gridApi = api;
+	};
+	$: if (gridApi) {
+		gridApi.setGridOption(
+			'theme',
+			$darkTheme ? themeQuartz.withPart(colorSchemeDarkBlue) : themeQuartz
+		);
+	}
 </script>
 
 <section>
@@ -446,7 +492,17 @@
 			></Editor>
 		</div>
 		<div class="relative w-2/5 px-2">
-			<Grid {gridOptions} isDarkMode={$darkTheme} />
+			<div class="card w-full bg-base-100 shadow-xl">
+				<div class="card-body">
+					<h6>Trades</h6>
+					<Grid
+						style="height: 250px"
+						{gridOptions}
+						isDarkMode={$darkTheme}
+						on:gridReady={handleGridReady}
+					/>
+				</div>
+			</div>
 		</div>
 	</div>
 

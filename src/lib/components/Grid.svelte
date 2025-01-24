@@ -21,10 +21,17 @@
 	let gridApi: GridApi;
 	let gridElement: HTMLElement;
 
-	$: theme = isDarkMode ? themeQuartz.withPart(colorSchemeDarkBlue) : themeQuartz;
+	$: {
+		if (gridApi) {
+			gridApi.setGridOption(
+				'theme',
+				isDarkMode ? themeQuartz.withPart(colorSchemeDarkBlue) : themeQuartz
+			);
+		}
+	}
 
 	const defaultOptions: Partial<GridOptions> = {
-		theme: theme,
+		theme: isDarkMode ? themeQuartz.withPart(colorSchemeDarkBlue) : themeQuartz,
 		defaultColDef: {
 			cellStyle: {
 				display: 'flex',
@@ -51,8 +58,8 @@
 	};
 
 	const mergedGridOptions: GridOptions = {
-		...gridOptions,
-		...defaultOptions
+		...defaultOptions,
+		...gridOptions
 	};
 
 	onMount(() => {
