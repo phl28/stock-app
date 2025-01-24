@@ -53,8 +53,8 @@
 		modal.close();
 	};
 
-	const getSelectedTradesMetrics = () => {
-		const calculatedMetrics = selectedTrades.values().reduce(
+	const getSelectedTradesMetrics = (newPosition: boolean = true) => {
+		const metricsFromSelectedTrades = selectedTrades.values().reduce(
 			(acc, trade) => {
 				const isBuy = trade.tradeSide === 'BUY';
 				return {
@@ -84,13 +84,15 @@
 			}
 		);
 		return {
-			averageEntryPrice: calculatedMetrics.totalEntryCost / calculatedMetrics.boughtShares,
-			averageExitPrice: calculatedMetrics.totalExitCost / calculatedMetrics.soldShares,
-			totalVolume: calculatedMetrics.totalVolume,
-			outstandingVolume: calculatedMetrics.outstandingVolume,
-			totalFees: calculatedMetrics.totalFees,
-			totalEntryCost: calculatedMetrics.totalEntryCost,
-			totalExitCost: calculatedMetrics.totalExitCost
+			averageEntryPrice:
+				metricsFromSelectedTrades.totalEntryCost / metricsFromSelectedTrades.boughtShares,
+			averageExitPrice:
+				metricsFromSelectedTrades.totalExitCost / metricsFromSelectedTrades.soldShares,
+			totalVolume: metricsFromSelectedTrades.totalVolume,
+			outstandingVolume: metricsFromSelectedTrades.outstandingVolume,
+			totalFees: metricsFromSelectedTrades.totalFees,
+			totalEntryCost: metricsFromSelectedTrades.totalEntryCost,
+			totalExitCost: metricsFromSelectedTrades.totalExitCost
 		};
 	};
 
@@ -316,7 +318,7 @@
 							name="tradeIds"
 							value={JSON.stringify(Array.from(selectedTrades.keys()))}
 						/>
-						<section class={`${positionId === 'newPosition' ? 'visible' : 'hidden'}`}>
+						<div class={`${positionId === 'newPosition' ? '' : 'hidden'}`}>
 							<div class="label">
 								<span class="label-text">Ticker</span>
 							</div>
@@ -491,15 +493,15 @@
 								tabIndex="-1"
 								readonly
 							/>
-						</section>
-					</div>
-					<div class="modal-action">
-						<form method="dialog">
-							<button class="btn">Close</button>
-						</form>
-						<button class="btn btn-primary" type="submit" disabled={positionId === undefined}
-							>Add</button
-						>
+						</div>
+						<div class="modal-action">
+							<form method="dialog">
+								<button class="btn">Close</button>
+							</form>
+							<button class="btn btn-primary" type="submit" disabled={positionId === undefined}
+								>Add</button
+							>
+						</div>
 					</div>
 				</form>
 			</div>
