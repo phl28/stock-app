@@ -1,4 +1,10 @@
 {
 	"editor.defaultFormatter": "svelte.svelte-vscode",
-	"editor.formatOnSave": true
+	"editor.formatOnSave": true,
+	"[typescript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "vscode.json-language-features"
+	}
 }

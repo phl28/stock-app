@@ -3,7 +3,7 @@ import {
 	deleteTradeHistory,
 	deleteTradeHistoryBatch,
 	getLastTradeHistory,
-	getActivePositions,
+	getPositions,
 	insertTradeHistory,
 	updateTradeHistoryBatch,
 	getPaginatedTradeHistory,
@@ -56,7 +56,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			pageNumber,
 			userId: locals.session.userId
 		});
-		const positions = await getActivePositions({ userId: locals.session.userId });
+		const positions = await getPositions({ userId: locals.session.userId });
 		return {
 			trades,
 			positions,
@@ -169,7 +169,7 @@ export const actions = {
 			(formData.get('grossProfitLoss') as string) === ''
 				? null
 				: (formData.get('grossProfitLoss') as string);
-		const side = formData.get('side') as string;
+		const isShort = formData.get('isShort') as string;
 		const openedAt = new Date(formData.get('openedAt') as string);
 		const closedAt =
 			(formData.get('closedAt') as string) === ''
@@ -181,13 +181,13 @@ export const actions = {
 			currency,
 			totalVolume,
 			outstandingVolume,
-			averageEntryPrice,
+			averageEntryPrice: averageEntryPrice === '' ? '0' : averageEntryPrice,
 			averageExitPrice: averageExitPrice === '' ? null : averageExitPrice,
 			profitTargetPrice: null,
 			stopLossPrice: null,
 			grossProfitLoss,
 			totalFees,
-			isShort: side === 'SHORT',
+			isShort: isShort === 'on',
 			platform,
 			numOfTrades,
 			notes: '',

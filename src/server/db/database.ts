@@ -160,12 +160,12 @@ export const assignTradesToPosition = async ({
 	tradeIds
 }: {
 	positionId?: number;
-	position?: InsertPosition;
+	position: InsertPosition;
 	tradeIds: number[];
 }) => {
 	await db.transaction(async (tx) => {
 		let id = positionId;
-		if (position) {
+		if (!id) {
 			const ids = await tx
 				.insert(positionsTable)
 				.values({
@@ -174,10 +174,15 @@ export const assignTradesToPosition = async ({
 				})
 				.returning({ id: positionsTable.id });
 			id = ids[0].id;
+		} else {
+			await tx
+				.update(positionsTable)
+				.set({
+					...position,
+					updatedAt: new Date()
+				})
+				.where(eq(positionsTable.id, id));
 		}
-		// } else {
-
-		// }
 		await tx
 			.update(tradeHistoryTable)
 			.set({
@@ -208,9 +213,9 @@ export const createNewPosition = async ({
 	});
 };
 
-export const getActivePositions = async ({ userId }: { userId: string }) => {
+export const getPositions = async ({ userId }: { userId: string }) => {
 	return await db.query.positions.findMany({
-		where: and(eq(positionsTable.createdBy, userId), isNull(positionsTable.closedAt)),
+		where: and(eq(positionsTable.createdBy, userId)),
 		orderBy: [desc(positionsTable.openedAt)]
 	});
 };
@@ -256,7 +261,8 @@ export const getPosition = async ({
 				tradeSide: tradeHistoryTable.tradeSide
 			})
 			.from(tradeHistoryTable)
-			.where(eq(tradeHistoryTable.positionId, positionId));
+			.where(eq(tradeHistoryTable.positionId, positionId))
+			.orderBy(tradeHistoryTable.executedAt);
 		return {
 			position: position[0],
 			trades

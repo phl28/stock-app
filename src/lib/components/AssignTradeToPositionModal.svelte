@@ -8,17 +8,72 @@
 	export let possiblePositions: Position[] = [];
 	export let handleCloseModal: () => void;
 
-	let direction: 'LONG' | 'SHORT' = 'LONG';
+	let isShort: boolean = false;
+
+	type Metric = {
+		totalVolume: number;
+		outstandingVolume: number;
+		boughtShares: number;
+		soldShares: number;
+		totalEntryCost: number;
+		totalExitCost: number;
+		totalFees: number;
+		openedAt: Date;
+		latestExecution: Date | null;
+	};
 
 	const getSelectedTradesMetrics = (
 		selectedTrades: Map<number, Trade>,
 		positionId: number | 'newPosition' | undefined
 	) => {
-		const metricsFromSelectedTrades = selectedTrades.values().reduce(
+		if (!positionId) return {};
+		let position: Position | undefined;
+		let totalVolume = 0;
+		let outstandingVolume = 0;
+		let totalFees = 0;
+		let totalEntryCost = 0;
+		let totalExitCost = 0;
+		let boughtShares = 0;
+		let soldShares = 0;
+		let numOfTrades = selectedTrades.size;
+		let openedAt = new Date();
+		let positionClosedAt: Date | null = null;
+		if (positionId !== 'newPosition') {
+			position = possiblePositions.find((position) => position.id === positionId);
+			if (position) {
+				totalVolume = position.totalVolume;
+				outstandingVolume = position.outstandingVolume;
+				totalFees = Number(position.totalFees);
+				totalEntryCost = !position.isShort
+					? Number(position.averageEntryPrice) * position.totalVolume
+					: Number(position.averageEntryPrice) *
+						Math.abs(position.totalVolume - position.outstandingVolume);
+				totalExitCost = !position.isShort
+					? Number(position.averageExitPrice) * (position.totalVolume - position.outstandingVolume)
+					: Number(position.averageExitPrice) * Math.abs(totalVolume);
+				isShort = position.isShort;
+				boughtShares = !position.isShort
+					? position.totalVolume
+					: Math.abs(position.totalVolume - position.outstandingVolume);
+				soldShares = position.isShort
+					? position.totalVolume
+					: Math.abs(position.totalVolume - position.outstandingVolume);
+				numOfTrades += position.numOfTrades;
+				openedAt = position.openedAt < openedAt ? position.openedAt : openedAt;
+				positionClosedAt = position.closedAt;
+			}
+		}
+
+		const metricsFromSelectedTrades = selectedTrades.values().reduce<Metric>(
 			(acc, trade) => {
 				const isBuy = trade.tradeSide === 'BUY';
 				return {
-					totalVolume: acc.totalVolume + trade.volume,
+					totalVolume:
+						isBuy && !isShort
+							? acc.totalVolume + trade.volume
+							: isShort && !isBuy
+								? acc.totalVolume - trade.volume
+								: acc.totalVolume,
 					outstandingVolume: isBuy
 						? acc.outstandingVolume + trade.volume
 						: acc.outstandingVolume - trade.volume,
@@ -30,30 +85,53 @@
 					totalExitCost: !isBuy
 						? acc.totalExitCost + Number(trade.price) * trade.volume
 						: acc.totalExitCost,
-					totalFees: acc.totalFees + Number(trade.fees)
+					totalFees: acc.totalFees + Number(trade.fees),
+					openedAt: trade.executedAt < acc.openedAt ? trade.executedAt : acc.openedAt,
+					latestExecution:
+						!acc.latestExecution || (acc.latestExecution && trade.executedAt > acc.latestExecution)
+							? trade.executedAt
+							: acc.latestExecution
 				};
 			},
 			{
-				totalVolume: 0,
-				outstandingVolume: 0,
-				boughtShares: 0,
-				soldShares: 0,
-				totalEntryCost: 0,
-				totalExitCost: 0,
-				totalFees: 0
+				totalVolume,
+				outstandingVolume,
+				boughtShares,
+				soldShares,
+				totalEntryCost,
+				totalExitCost,
+				totalFees,
+				openedAt,
+				latestExecution: null
 			}
 		);
-		// if (!newPosition)
+
+		let averageEntryPrice =
+			metricsFromSelectedTrades.totalEntryCost / metricsFromSelectedTrades.boughtShares;
+		let averageExitPrice =
+			metricsFromSelectedTrades.totalExitCost / metricsFromSelectedTrades.soldShares;
+		totalVolume = metricsFromSelectedTrades.totalVolume;
+		outstandingVolume = metricsFromSelectedTrades.outstandingVolume;
+		totalFees = metricsFromSelectedTrades.totalFees;
+		totalEntryCost = metricsFromSelectedTrades.totalEntryCost;
+		totalExitCost = metricsFromSelectedTrades.totalExitCost;
+		const latestExecution =
+			metricsFromSelectedTrades.latestExecution &&
+			(!positionClosedAt || metricsFromSelectedTrades.latestExecution > positionClosedAt)
+				? metricsFromSelectedTrades.latestExecution
+				: positionClosedAt;
+
 		return {
-			averageEntryPrice:
-				metricsFromSelectedTrades.totalEntryCost / metricsFromSelectedTrades.boughtShares,
-			averageExitPrice:
-				metricsFromSelectedTrades.totalExitCost / metricsFromSelectedTrades.soldShares,
-			totalVolume: metricsFromSelectedTrades.totalVolume,
-			outstandingVolume: metricsFromSelectedTrades.outstandingVolume,
-			totalFees: metricsFromSelectedTrades.totalFees,
-			totalEntryCost: metricsFromSelectedTrades.totalEntryCost,
-			totalExitCost: metricsFromSelectedTrades.totalExitCost
+			averageEntryPrice,
+			averageExitPrice,
+			totalVolume,
+			outstandingVolume,
+			totalFees,
+			totalEntryCost,
+			totalExitCost,
+			numOfTrades,
+			openedAt,
+			closedAt: outstandingVolume === 0 ? latestExecution : null
 		};
 	};
 
@@ -103,7 +181,19 @@
 					name="tradeIds"
 					value={JSON.stringify(Array.from(selectedTrades.keys()))}
 				/>
-				<div class={`${positionId === 'newPosition' ? 'visible' : 'hidden'}`}>
+				<div class={positionId === 'newPosition' ? 'form-control' : 'hidden'}>
+					<label class="label cursor-pointer">
+						<span class="label-text">Short Position</span>
+						<input
+							type="checkbox"
+							class="toggle"
+							checked={isShort}
+							name="isShort"
+							on:change={() => (isShort = !isShort)}
+						/>
+					</label>
+				</div>
+				<div class="hidden">
 					<div class="label">
 						<span class="label-text">Ticker</span>
 					</div>
@@ -143,7 +233,7 @@
 					<input
 						type="number"
 						class="input pointer-events-none w-full px-1 py-0"
-						value={selectedTrades.size}
+						value={metrics.numOfTrades}
 						name="numOfTrades"
 						tabIndex="-1"
 						readonly
@@ -227,33 +317,14 @@
 						tabIndex="-1"
 						readonly
 					/>
-					<div class="label">
-						<span class="label-text">Direction</span>
-					</div>
-					<select
-						class="select select-bordered w-full px-1 py-0"
-						bind:value={direction}
-						name="side"
-						required
-					>
-						<option value="LONG">Long</option>
-						<option value="SHORT">Short</option>
-					</select>
+
 					<div class="label">
 						<span class="label-text">Opened At</span>
 					</div>
 					<input
 						type="date"
 						class="input pointer-events-none w-full px-1 py-0"
-						value={selectedTrades.size > 0
-							? new Date(
-									Math.min(
-										...[...selectedTrades.values()].map((trade) => trade.executedAt.getTime())
-									)
-								)
-									.toISOString()
-									.split('T')[0]
-							: null}
+						value={metrics.openedAt?.toISOString().split('T')[0] ?? null}
 						name="openedAt"
 						tabIndex="-1"
 						readonly
@@ -264,15 +335,7 @@
 					<input
 						type="date"
 						class="input pointer-events-none w-full px-1 py-0"
-						value={metrics.outstandingVolume === 0 && selectedTrades.size > 0
-							? new Date(
-									Math.max(
-										...[...selectedTrades.values()].map((trade) => trade.executedAt.getTime())
-									)
-								)
-									.toISOString()
-									.split('T')[0]
-							: null}
+						value={metrics.closedAt?.toISOString().split('T')[0] ?? null}
 						name="closedAt"
 						tabIndex="-1"
 						readonly
