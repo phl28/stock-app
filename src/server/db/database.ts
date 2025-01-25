@@ -1,5 +1,7 @@
-import { drizzle } from 'drizzle-orm/vercel-postgres';
+import { drizzle as VercelDrizzle, type VercelPgDatabase } from 'drizzle-orm/vercel-postgres';
+import { drizzle as LocalDrizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { sql } from '@vercel/postgres';
+import pkg from 'pg';
 
 import * as schema from './schema';
 import {
@@ -14,9 +16,19 @@ import {
 	isNotNull,
 	isNull
 } from 'drizzle-orm';
-import { numeric } from 'drizzle-orm/pg-core';
 
-export const db = drizzle(sql, { schema });
+let db: VercelPgDatabase<typeof schema> | NodePgDatabase<typeof schema>;
+if (process.env.NODE_ENV === 'development') {
+	const { Client } = pkg;
+	const localClient = new Client({
+		connectionString: process.env.POSTGRES_URL ?? ''
+	});
+	localClient.connect();
+	db = LocalDrizzle(localClient, { schema });
+} else {
+	db = VercelDrizzle(sql, { schema });
+}
+export { db };
 
 const tradeHistoryTable = schema.tradeHistory;
 const positionsTable = schema.positions;
@@ -55,21 +67,31 @@ export const getPaginatedTradeHistory = async ({
 	pageSize?: number;
 	userId: string;
 }) => {
-	const trades = await db
-		.select()
-		.from(tradeHistoryTable)
-		.where(eq(tradeHistoryTable.createdBy, userId))
-		.orderBy(desc(tradeHistoryTable.executedAt), desc(tradeHistoryTable.createdAt))
-		.limit(pageSize)
-		.offset((pageNumber - 1) * pageSize);
-	const counts = await getNumOfTradeHistory({ userId });
-	const tradeCount = counts[0].count;
-	return {
-		trades,
-		currentPage: pageNumber,
-		totalPages: Math.ceil(Number(tradeCount) / pageSize),
-		totalTrades: Number(tradeCount)
-	};
+	try {
+		const trades = await db
+			.select()
+			.from(tradeHistoryTable)
+			.where(eq(tradeHistoryTable.createdBy, userId))
+			.orderBy(desc(tradeHistoryTable.executedAt), desc(tradeHistoryTable.createdAt))
+			.limit(pageSize)
+			.offset((pageNumber - 1) * pageSize);
+		const counts = await getNumOfTradeHistory({ userId });
+		const tradeCount = counts[0].count;
+		return {
+			trades,
+			currentPage: pageNumber,
+			totalPages: Math.ceil(Number(tradeCount) / pageSize),
+			totalTrades: Number(tradeCount)
+		};
+	} catch (error) {
+		console.log(error);
+		return {
+			trades: [],
+			currentPage: 1,
+			totalPages: 1,
+			totalTrades: 0
+		};
+	}
 };
 
 export const getLastTradeHistory = async ({
@@ -246,26 +268,35 @@ export const getPosition = async ({
 	positionId: number;
 	userId: string;
 }) => {
-	const position = await db
-		.select()
-		.from(positionsTable)
-		.where(and(eq(positionsTable.id, positionId), eq(positionsTable.createdBy, userId)));
-	if (position.length === 1) {
-		const trades = await db
-			.select({
-				id: tradeHistoryTable.id,
-				executedAt: tradeHistoryTable.executedAt,
-				price: tradeHistoryTable.price,
-				fees: tradeHistoryTable.fees,
-				volume: tradeHistoryTable.volume,
-				tradeSide: tradeHistoryTable.tradeSide
-			})
-			.from(tradeHistoryTable)
-			.where(eq(tradeHistoryTable.positionId, positionId))
-			.orderBy(tradeHistoryTable.executedAt);
+	try {
+		const position = await db
+			.select()
+			.from(positionsTable)
+			.where(and(eq(positionsTable.id, positionId), eq(positionsTable.createdBy, userId)));
+		console.log('position', position);
+		if (position.length === 1) {
+			const trades = await db
+				.select({
+					id: tradeHistoryTable.id,
+					executedAt: tradeHistoryTable.executedAt,
+					price: tradeHistoryTable.price,
+					fees: tradeHistoryTable.fees,
+					volume: tradeHistoryTable.volume,
+					tradeSide: tradeHistoryTable.tradeSide
+				})
+				.from(tradeHistoryTable)
+				.where(eq(tradeHistoryTable.positionId, positionId))
+				.orderBy(tradeHistoryTable.executedAt);
+			return {
+				position: position[0],
+				trades
+			};
+		}
+	} catch (error) {
+		console.log(error);
 		return {
-			position: position[0],
-			trades
+			position: null,
+			trades: []
 		};
 	}
 };
