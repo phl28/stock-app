@@ -67,31 +67,21 @@ export const getPaginatedTradeHistory = async ({
 	pageSize?: number;
 	userId: string;
 }) => {
-	try {
-		const trades = await db
-			.select()
-			.from(tradeHistoryTable)
-			.where(eq(tradeHistoryTable.createdBy, userId))
-			.orderBy(desc(tradeHistoryTable.executedAt), desc(tradeHistoryTable.createdAt))
-			.limit(pageSize)
-			.offset((pageNumber - 1) * pageSize);
-		const counts = await getNumOfTradeHistory({ userId });
-		const tradeCount = counts[0].count;
-		return {
-			trades,
-			currentPage: pageNumber,
-			totalPages: Math.ceil(Number(tradeCount) / pageSize),
-			totalTrades: Number(tradeCount)
-		};
-	} catch (error) {
-		console.log(error);
-		return {
-			trades: [],
-			currentPage: 1,
-			totalPages: 1,
-			totalTrades: 0
-		};
-	}
+	const trades = await db
+		.select()
+		.from(tradeHistoryTable)
+		.where(and(eq(tradeHistoryTable.createdBy, userId), isNull(tradeHistoryTable.positionId)))
+		.orderBy(desc(tradeHistoryTable.executedAt), desc(tradeHistoryTable.createdAt))
+		.limit(pageSize)
+		.offset((pageNumber - 1) * pageSize);
+	const counts = await getNumOfTradeHistory({ userId });
+	const tradeCount = counts[0].count;
+	return {
+		trades,
+		currentPage: pageNumber,
+		totalPages: Math.ceil(Number(tradeCount) / pageSize),
+		totalTrades: Number(tradeCount)
+	};
 };
 
 export const getLastTradeHistory = async ({
@@ -268,35 +258,26 @@ export const getPosition = async ({
 	positionId: number;
 	userId: string;
 }) => {
-	try {
-		const position = await db
-			.select()
-			.from(positionsTable)
-			.where(and(eq(positionsTable.id, positionId), eq(positionsTable.createdBy, userId)));
-		console.log('position', position);
-		if (position.length === 1) {
-			const trades = await db
-				.select({
-					id: tradeHistoryTable.id,
-					executedAt: tradeHistoryTable.executedAt,
-					price: tradeHistoryTable.price,
-					fees: tradeHistoryTable.fees,
-					volume: tradeHistoryTable.volume,
-					tradeSide: tradeHistoryTable.tradeSide
-				})
-				.from(tradeHistoryTable)
-				.where(eq(tradeHistoryTable.positionId, positionId))
-				.orderBy(tradeHistoryTable.executedAt);
-			return {
-				position: position[0],
-				trades
-			};
-		}
-	} catch (error) {
-		console.log(error);
+	const position = await db
+		.select()
+		.from(positionsTable)
+		.where(and(eq(positionsTable.id, positionId), eq(positionsTable.createdBy, userId)));
+	if (position.length === 1) {
+		const trades = await db
+			.select({
+				id: tradeHistoryTable.id,
+				executedAt: tradeHistoryTable.executedAt,
+				price: tradeHistoryTable.price,
+				fees: tradeHistoryTable.fees,
+				volume: tradeHistoryTable.volume,
+				tradeSide: tradeHistoryTable.tradeSide
+			})
+			.from(tradeHistoryTable)
+			.where(eq(tradeHistoryTable.positionId, positionId))
+			.orderBy(tradeHistoryTable.executedAt);
 		return {
-			position: null,
-			trades: []
+			position: position[0],
+			trades
 		};
 	}
 };

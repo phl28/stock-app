@@ -155,7 +155,6 @@
 					} else if (result.type === 'error') {
 						dispatchToast({ type: 'error', message: result.error.message });
 					}
-					selectedTrades = new Map();
 					handleCloseModal();
 				};
 			}}

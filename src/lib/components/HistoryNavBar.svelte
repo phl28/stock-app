@@ -205,8 +205,6 @@
 				use:enhance={() => {
 					return async ({ result, update }) => {
 						if (result.type === 'success') {
-							selectedTrades.clear();
-							selectedTrades = selectedTrades;
 							dispatchToast({ type: 'success', message: 'Trades deleted successfully!' });
 							await update();
 						} else if (result.type === 'error') {
