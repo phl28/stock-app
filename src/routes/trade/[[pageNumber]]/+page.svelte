@@ -1,6 +1,6 @@
 <script lang="ts">
 	import TradeHistoryTable from '$lib/components/TradeHistoryTable.svelte';
-	import PositionsTable from '$lib/components/PositionTable.svelte';
+	import PositionTable from '$lib/components/PositionTable.svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import { generatePageNumbers } from '$lib/helpers/PageHelpers';
@@ -52,7 +52,7 @@
 		{#if view === 'trades'}
 			<TradeHistoryTable {trades} {positions} />
 		{:else if view === 'positions'}
-			<PositionsTable {positions} />
+			<PositionTable {positions} />
 		{/if}
 
 		{#if data.totalPages > 0 && view === 'trades'}

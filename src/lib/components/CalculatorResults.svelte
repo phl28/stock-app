@@ -58,7 +58,7 @@
 		}
 	};
 
-	let gridOptions: GridOptions<TableData> = {
+	const gridOptions: GridOptions<TableData> = {
 		defaultColDef: {
 			resizable: false
 		},

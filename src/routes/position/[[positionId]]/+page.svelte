@@ -359,6 +359,7 @@
 	type TradeGrid = Pick<Trade, 'tradeSide' | 'executedAt' | 'price' | 'fees' | 'volume'>;
 	const gridOptions: GridOptions<TradeGrid> = {
 		suppressMovableColumns: true,
+		suppressCellFocus: true,
 		defaultColDef: {
 			cellStyle: { fontSize: '12px !important' },
 			resizable: false
