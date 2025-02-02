@@ -17,6 +17,19 @@
 	let executedAt: string = new Date().toISOString().split('T')[0];
 
 	let addAnother: boolean = true;
+
+	const resetForm = () => {
+		ticker = '';
+		region = 'US';
+		currency = 'USD';
+		price = 0;
+		fees = 0;
+		volume = 0;
+		platform = 'FUTU';
+		side = 'BUY';
+		executedAt = new Date().toISOString().split('T')[0];
+		addAnother = true;
+	};
 </script>
 
 <dialog id="add-trade-modal" class="modal">
@@ -24,15 +37,18 @@
 		<h3 class="text-lg font-bold">Add new trade(s)</h3>
 		<p class="py-4">Enter the details of the new trade:</p>
 		<form
+			on:submit|preventDefault
 			method="POST"
 			action="?/addTrade"
 			use:enhance={() => {
 				return async ({ result, update }) => {
 					if (result.type === 'success') {
 						dispatchToast({ type: 'success', message: 'Trade added successfully!' });
-						await update();
+						await update({ reset: false });
 						if (!addAnother) {
 							handleCloseModal();
+						} else {
+							resetForm();
 						}
 					} else if (result.type === 'error') {
 						dispatchToast({ type: 'error', message: result.error.message });
@@ -145,7 +161,7 @@
 						<input
 							type="checkbox"
 							class="toggle"
-							checked={addAnother}
+							bind:checked={addAnother}
 							on:change={() => (addAnother = !addAnother)}
 						/>
 					</label>
