@@ -2,13 +2,41 @@
 	import { enhance } from '$app/forms';
 	import { dispatchToast } from '@/routes/stores';
 	import type { Position, Trade } from '../types/tradeTypes';
+	import { createEventDispatcher, onMount, tick } from 'svelte';
 
+	const dispatch = createEventDispatcher();
+
+	export let isModalOpen: boolean = false;
 	export let selectedTrades: Map<number, Trade> = new Map();
 	export let positionId: number | 'newPosition' | undefined = undefined;
 	export let possiblePositions: Position[] = [];
 	export let handleCloseModal: () => void;
 
+	let modal: HTMLDialogElement;
+
+	$: (async () => {
+		await tick();
+		if (modal) {
+			if (isModalOpen && !modal.open) {
+				modal.showModal();
+			} else if (!isModalOpen && modal.open) {
+				modal.close();
+			}
+		}
+	})();
+
+	const closeModal = () => {
+		handleCloseModal();
+	};
+
+	$: localSelectedTrades = new Map(selectedTrades);
+
 	let isShort: boolean = false;
+	$: tradeIds = JSON.stringify(Array.from(localSelectedTrades.keys()));
+	$: ticker = localSelectedTrades.values().next().value?.ticker ?? '';
+	$: region = localSelectedTrades.values().next().value?.region ?? '';
+	$: currency = localSelectedTrades.values().next().value?.currency ?? '';
+	$: platform = localSelectedTrades.values().next().value?.platform ?? '';
 
 	type Metric = {
 		totalVolume: number;
@@ -64,7 +92,7 @@
 			}
 		}
 
-		const metricsFromSelectedTrades = selectedTrades.values().reduce<Metric>(
+		const metricsFromSelectedTrades = localSelectedTrades.values().reduce<Metric>(
 			(acc, trade) => {
 				const isBuy = trade.tradeSide === 'BUY';
 				return {
@@ -135,10 +163,10 @@
 		};
 	};
 
-	$: metrics = getSelectedTradesMetrics(selectedTrades, positionId);
+	$: metrics = getSelectedTradesMetrics(localSelectedTrades, positionId);
 </script>
 
-<dialog id="assign-position-modal" class="modal">
+<dialog id="assign-position-modal" class="modal" bind:this={modal}>
 	<div class="modal-box">
 		<h3 class="mb-2 text-lg font-bold">Assign the selected trades to a position</h3>
 		<form
@@ -152,10 +180,11 @@
 							message: 'Trades assigned to position successfully!'
 						});
 						await update();
+						dispatch('assigned');
 					} else if (result.type === 'error') {
 						dispatchToast({ type: 'error', message: result.error.message });
 					}
-					handleCloseModal();
+					closeModal();
 				};
 			}}
 		>
@@ -175,11 +204,7 @@
 				<option value="newPosition">Assign to new position</option>
 			</select>
 			<div class="form-control w-full">
-				<input
-					type="hidden"
-					name="tradeIds"
-					value={JSON.stringify(Array.from(selectedTrades.keys()))}
-				/>
+				<input type="hidden" name="tradeIds" value={tradeIds} />
 				<div class={positionId === 'newPosition' ? 'form-control' : 'hidden'}>
 					<label class="label cursor-pointer">
 						<span class="label-text">Short Position</span>
@@ -199,7 +224,7 @@
 					<input
 						type="text"
 						class="input pointer-events-none w-full px-1 py-0"
-						value={selectedTrades.values().next().value?.ticker ?? ''}
+						value={ticker}
 						name="ticker"
 						tabIndex="-1"
 						readonly
@@ -210,7 +235,7 @@
 					<input
 						type="text"
 						class="input pointer-events-none w-full px-1 py-0"
-						value={selectedTrades.values().next().value?.region ?? ''}
+						value={region}
 						name="region"
 						tabIndex="-1"
 						readonly
@@ -221,7 +246,7 @@
 					<input
 						type="text"
 						class="input pointer-events-none w-full px-1 py-0"
-						value={selectedTrades.values().next().value?.currency ?? ''}
+						value={currency}
 						name="currency"
 						tabIndex="-1"
 						readonly
@@ -311,7 +336,7 @@
 					<input
 						type="text"
 						class="input pointer-events-none w-full px-1 py-0"
-						value={selectedTrades.values().next().value?.platform ?? ''}
+						value={platform}
 						name="platform"
 						tabIndex="-1"
 						readonly
@@ -341,9 +366,7 @@
 					/>
 				</div>
 				<div class="modal-action">
-					<form method="dialog">
-						<button class="btn">Close</button>
-					</form>
+					<button class="btn" on:click={closeModal}>Close</button>
 					<button class="btn btn-primary" type="submit" disabled={positionId === undefined}
 						>Add</button
 					>
@@ -351,7 +374,7 @@
 			</div>
 		</form>
 	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
+	<div class="modal-backdrop">
+		<button on:click={closeModal}>close</button>
+	</div>
 </dialog>

@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import type { Trade, Position } from '$lib/types/tradeTypes';
 	import { replacer } from '$lib/helpers/JsonHelpers';
-	import { dispatchToast } from '@/routes/stores';
+	import { dispatchToast, modalStore } from '@/routes/stores';
 	import AssignTradeToPositionModal from './AssignTradeToPositionModal.svelte';
 	import ImportTradesModal from './ImportTradesModal.svelte';
 	import AddTradeModal from './AddTradeModal.svelte';
@@ -16,36 +16,30 @@
 	let selectedTickers: string[] = [];
 	$: selectedTickers = Array.from(new Set(selectedTrades.values().map((trade) => trade.ticker)));
 
+	$: possiblePositions = positions.filter((position) => position.ticker === selectedTickers[0]);
+
 	const openAddModal = () => {
-		const modal = document.getElementById('add-trade-modal') as HTMLDialogElement;
-		modal.showModal();
+		modalStore.toggleAddTradeModal();
 	};
 
 	const closeAddModal = () => {
-		const modal = document.getElementById('add-trade-modal') as HTMLDialogElement;
-		modal.close();
+		modalStore.toggleAddTradeModal();
 	};
 
-	$: possiblePositions = positions.filter((position) => position.ticker === selectedTickers[0]);
-
 	const openAssignPositionModal = () => {
-		const modal = document.getElementById('assign-position-modal') as HTMLDialogElement;
-		modal.showModal();
+		modalStore.toggleAssignTradeModal();
 	};
 
 	const closeAssignPositionModal = () => {
-		const modal = document.getElementById('assign-position-modal') as HTMLDialogElement;
-		modal.close();
+		modalStore.toggleAssignTradeModal();
 	};
 
 	const openImportModal = () => {
-		const modal = document.getElementById('import-trade-modal') as HTMLDialogElement;
-		modal.showModal();
+		modalStore.toggleImportTradeModal();
 	};
 
 	const closeImportModal = () => {
-		const modal = document.getElementById('import-trade-modal') as HTMLDialogElement;
-		modal.close();
+		modalStore.toggleImportTradeModal();
 	};
 </script>
 
@@ -84,14 +78,23 @@
 		<!-- <form method="POST" action="?/syncTrades">
 			<button class="btn btn-neutral" type="submit">Sync</button>
 		</form> -->
-		<AssignTradeToPositionModal
-			bind:selectedTrades
-			bind:positionId
-			bind:possiblePositions
-			handleCloseModal={closeAssignPositionModal}
-		/>
-		<ImportTradesModal handleCloseModal={closeImportModal} />
-
-		<AddTradeModal handleCloseModal={closeAddModal} />
+		{#if $modalStore.assignTradeModal}
+			<AssignTradeToPositionModal
+				isModalOpen={$modalStore.assignTradeModal}
+				bind:selectedTrades
+				bind:positionId
+				bind:possiblePositions
+				handleCloseModal={closeAssignPositionModal}
+				on:assigned={() => {
+					selectedTrades = new Map();
+				}}
+			/>
+		{/if}
+		{#if $modalStore.importTradeModal}
+			<ImportTradesModal handleCloseModal={closeImportModal} />
+		{/if}
+		{#if $modalStore.addTradeModal}
+			<AddTradeModal handleCloseModal={closeAddModal} />
+		{/if}
 	</div>
 </div>

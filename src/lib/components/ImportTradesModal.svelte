@@ -2,7 +2,6 @@
 	import { dispatchToast } from '@/routes/stores';
 	import Papa from 'papaparse';
 	import { invalidateAll } from '$app/navigation';
-	import { onDestroy, onMount } from 'svelte';
 
 	export let handleCloseModal: () => void;
 
@@ -127,20 +126,9 @@
 			importState = 'rejected';
 		} finally {
 			handleCloseModal();
+			importState = 'idle';
 		}
 	};
-
-	onMount(() => {
-		importStep = 0;
-		file = null;
-		parsedData = [];
-		headers = [];
-		headerMapping = {};
-	});
-
-	onDestroy(() => {
-		importState = 'idle';
-	});
 </script>
 
 <dialog id="import-trade-modal" class="modal">
