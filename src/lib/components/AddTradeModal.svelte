@@ -2,8 +2,24 @@
 	import { enhance } from '$app/forms';
 	import { dispatchToast } from '@/routes/stores';
 	import { Currency, Platform, Region, TradeSide } from '../types';
+	import { tick } from 'svelte';
 
+	export let isModalOpen: boolean = false;
 	export let handleCloseModal: () => void;
+
+	let modal: HTMLDialogElement;
+
+	$: (async () => {
+		await tick();
+		if (modal) {
+			if (isModalOpen && !modal.open) {
+				modal.showModal();
+			} else if (!isModalOpen && modal.open) {
+				modal.close();
+			}
+		}
+	})();
+
 	$: isFormValid = ticker && region && currency && price && volume && platform && side;
 
 	let ticker: string;
@@ -32,7 +48,7 @@
 	};
 </script>
 
-<dialog id="add-trade-modal" class="modal">
+<dialog id="add-trade-modal" class="modal" bind:this={modal}>
 	<div class="modal-box">
 		<h3 class="text-lg font-bold">Add new trade(s)</h3>
 		<p class="py-4">Enter the details of the new trade:</p>
@@ -167,15 +183,13 @@
 					</label>
 				</div>
 				<div class="modal-action">
-					<form method="dialog">
-						<button class="btn">Close</button>
-					</form>
+					<button class="btn" type="button" on:click={handleCloseModal}>Close</button>
 					<button class="btn btn-primary" type="submit" disabled={!isFormValid}>Add</button>
 				</div>
 			</div>
 		</form>
 	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
+	<div class="modal-backdrop">
+		<button type="button" on:click={handleCloseModal}>close</button>
+	</div>
 </dialog>

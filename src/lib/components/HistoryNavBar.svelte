@@ -91,10 +91,13 @@
 			/>
 		{/if}
 		{#if $modalStore.importTradeModal}
-			<ImportTradesModal handleCloseModal={closeImportModal} />
+			<ImportTradesModal
+				isModalOpen={$modalStore.importTradeModal}
+				handleCloseModal={closeImportModal}
+			/>
 		{/if}
 		{#if $modalStore.addTradeModal}
-			<AddTradeModal handleCloseModal={closeAddModal} />
+			<AddTradeModal isModalOpen={$modalStore.addTradeModal} handleCloseModal={closeAddModal} />
 		{/if}
 	</div>
 </div>

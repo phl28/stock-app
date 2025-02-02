@@ -2,8 +2,23 @@
 	import { dispatchToast } from '@/routes/stores';
 	import Papa from 'papaparse';
 	import { invalidateAll } from '$app/navigation';
+	import { tick } from 'svelte';
 
+	export let isModalOpen: boolean = false;
 	export let handleCloseModal: () => void;
+
+	let modal: HTMLDialogElement;
+
+	$: (async () => {
+		await tick();
+		if (modal) {
+			if (isModalOpen && !modal.open) {
+				modal.showModal();
+			} else if (!isModalOpen && modal.open) {
+				modal.close();
+			}
+		}
+	})();
 
 	let headers: string[] = [];
 	let headerMapping: { [key: string]: string } = {};
@@ -131,7 +146,7 @@
 	};
 </script>
 
-<dialog id="import-trade-modal" class="modal">
+<dialog id="import-trade-modal" class="modal" bind:this={modal}>
 	<div class="modal-box">
 		<h3 class="mb-6 text-lg font-bold">Import trades</h3>
 		{#if importStep === 0}
@@ -179,7 +194,7 @@
 			</div>
 		{/if}
 	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
+	<div class="modal-backdrop">
+		<button on:click={handleCloseModal}>close</button>
+	</div>
 </dialog>

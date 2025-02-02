@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { dispatchToast } from '@/routes/stores';
 	import type { Position, Trade } from '../types/tradeTypes';
-	import { createEventDispatcher, onMount, tick } from 'svelte';
+	import { createEventDispatcher, tick } from 'svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -24,10 +24,6 @@
 			}
 		}
 	})();
-
-	const closeModal = () => {
-		handleCloseModal();
-	};
 
 	$: localSelectedTrades = new Map(selectedTrades);
 
@@ -184,7 +180,7 @@
 					} else if (result.type === 'error') {
 						dispatchToast({ type: 'error', message: result.error.message });
 					}
-					closeModal();
+					handleCloseModal();
 				};
 			}}
 		>
@@ -366,7 +362,7 @@
 					/>
 				</div>
 				<div class="modal-action">
-					<button class="btn" on:click={closeModal}>Close</button>
+					<button class="btn" type="button" on:click={handleCloseModal}>Close</button>
 					<button class="btn btn-primary" type="submit" disabled={positionId === undefined}
 						>Add</button
 					>
@@ -375,6 +371,6 @@
 		</form>
 	</div>
 	<div class="modal-backdrop">
-		<button on:click={closeModal}>close</button>
+		<button type="button" on:click={handleCloseModal}>close</button>
 	</div>
 </dialog>
