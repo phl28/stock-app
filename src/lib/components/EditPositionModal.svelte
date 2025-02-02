@@ -8,10 +8,27 @@
 	import type { GridApi, GridOptions } from 'ag-grid-community';
 	import { TradeSideCellRenderer } from './TradeSideCellRenderer';
 	import { DateTimeEditor } from './DateTimeEditor';
+	import { tick } from 'svelte';
 
 	type PartialTrade = Pick<Trade, 'id' | 'executedAt' | 'price' | 'fees' | 'volume' | 'tradeSide'>;
+
+	export let isModalOpen: boolean = false;
 	export let position: Position;
 	export let trades: PartialTrade[];
+	export let handleCloseModal: () => void;
+
+	let modal: HTMLDialogElement;
+
+	$: (async () => {
+		await tick();
+		if (modal) {
+			if (isModalOpen && !modal.open) {
+				modal.showModal();
+			} else if (!isModalOpen && modal.open) {
+				modal.close();
+			}
+		}
+	})();
 
 	let gridApi: GridApi;
 	const handleGridReady = (event: CustomEvent) => {
@@ -84,7 +101,7 @@
 	}
 </script>
 
-<dialog id="editPositionModal" class="modal">
+<dialog id="editPositionModal" class="modal" bind:this={modal}>
 	<div class="modal-box max-w-5xl">
 		<h3 class="text-lg font-bold">Edit Position</h3>
 		<div class="flex justify-between">
@@ -141,13 +158,11 @@
 			</div>
 		</div>
 		<div class="modal-action">
-			<form method="dialog">
-				<button class="btn">Close</button>
-			</form>
+			<button class="btn" type="button" on:click={handleCloseModal}>Close</button>
 			<button class="btn btn-primary" type="submit">Save</button>
 		</div>
 	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
+	<div class="modal-backdrop">
+		<button type="button" on:click={handleCloseModal}>close</button>
+	</div>
 </dialog>

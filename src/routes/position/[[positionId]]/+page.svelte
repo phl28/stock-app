@@ -9,7 +9,7 @@
 		type Time
 	} from 'lightweight-charts';
 	import type { PageData } from './$types';
-	import { dispatchToast, darkTheme } from '../../stores.ts';
+	import { dispatchToast, darkTheme, modalStore } from '@/routes/stores.ts';
 	import type { StockData, VolumeData } from '@/lib/types/chartTypes.ts';
 	import { convertUnixTimestampToDate, formatDuration } from '@/lib/helpers/DataHelpers.ts';
 	import { onMount, tick } from 'svelte';
@@ -266,9 +266,8 @@
 		}
 	};
 
-	const handleEditPositionButtonClicked = () => {
-		const modal = document.getElementById('editPositionModal') as HTMLDialogElement;
-		modal.showModal();
+	const toggleEditPositionModal = () => {
+		modalStore.toggleEditPositionModal();
 	};
 
 	let editingCell: { rowIndex: number; column: string } | null = null;
@@ -433,7 +432,7 @@
 				<div tabindex="0" role="button" class="btn m-1"><EllipsisVertical /></div>
 				<ul class="menu dropdown-content z-[1000] w-52 rounded-box bg-base-100 p-2 shadow">
 					<li>
-						<button on:click={handleEditPositionButtonClicked}>Edit Position</button>
+						<button on:click={toggleEditPositionModal}>Edit Position</button>
 					</li>
 					<div class="divider m-0 p-0"></div>
 					<li>
@@ -611,7 +610,12 @@
 			</div>
 		</div>
 	</div>
-	{#if data.position && data.trades}
-		<EditPositionModal trades={data.trades} position={data.position} />
+	{#if data.position && data.trades && $modalStore.editPositionModal}
+		<EditPositionModal
+			isModalOpen={$modalStore.editPositionModal}
+			trades={data.trades}
+			position={data.position}
+			handleCloseModal={toggleEditPositionModal}
+		/>
 	{/if}
 </section>

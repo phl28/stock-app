@@ -18,27 +18,15 @@
 
 	$: possiblePositions = positions.filter((position) => position.ticker === selectedTickers[0]);
 
-	const openAddModal = () => {
+	const toggleAddTradeModal = () => {
 		modalStore.toggleAddTradeModal();
 	};
 
-	const closeAddModal = () => {
-		modalStore.toggleAddTradeModal();
-	};
-
-	const openAssignPositionModal = () => {
+	const toggleAssignTradeModal = () => {
 		modalStore.toggleAssignTradeModal();
 	};
 
-	const closeAssignPositionModal = () => {
-		modalStore.toggleAssignTradeModal();
-	};
-
-	const openImportModal = () => {
-		modalStore.toggleImportTradeModal();
-	};
-
-	const closeImportModal = () => {
+	const toggleImportTradeModal = () => {
 		modalStore.toggleImportTradeModal();
 	};
 </script>
@@ -67,13 +55,12 @@
 				<button class="btn btn-error" type="submit">Delete</button>
 			</form>
 			{#if selectedTickers.length === 1}
-				<button class="btn btn-primary" on:click={openAssignPositionModal}
-					>Assign To Position</button
+				<button class="btn btn-primary" on:click={toggleAssignTradeModal}>Assign To Position</button
 				>
 			{/if}
 		{/if}
-		<button class="btn btn-neutral" on:click={openAddModal}>Add</button>
-		<button class="btn btn-neutral" on:click={openImportModal}>Bulk Import</button>
+		<button class="btn btn-neutral" on:click={toggleAddTradeModal}>Add</button>
+		<button class="btn btn-neutral" on:click={toggleImportTradeModal}>Bulk Import</button>
 		<!-- @TODO: Hiding the sync button for now as it is not a priority and is yet to be implemented properly -->
 		<!-- <form method="POST" action="?/syncTrades">
 			<button class="btn btn-neutral" type="submit">Sync</button>
@@ -84,7 +71,7 @@
 				bind:selectedTrades
 				bind:positionId
 				bind:possiblePositions
-				handleCloseModal={closeAssignPositionModal}
+				handleCloseModal={toggleAssignTradeModal}
 				on:assigned={() => {
 					selectedTrades = new Map();
 				}}
@@ -93,11 +80,14 @@
 		{#if $modalStore.importTradeModal}
 			<ImportTradesModal
 				isModalOpen={$modalStore.importTradeModal}
-				handleCloseModal={closeImportModal}
+				handleCloseModal={toggleImportTradeModal}
 			/>
 		{/if}
 		{#if $modalStore.addTradeModal}
-			<AddTradeModal isModalOpen={$modalStore.addTradeModal} handleCloseModal={closeAddModal} />
+			<AddTradeModal
+				isModalOpen={$modalStore.addTradeModal}
+				handleCloseModal={toggleAddTradeModal}
+			/>
 		{/if}
 	</div>
 </div>
