@@ -28,6 +28,7 @@
 	import type { Trade } from '@/lib/types/tradeTypes.ts';
 	import { TradeSideCellRenderer } from '@/lib/components/TradeSideCellRenderer.ts';
 	import EditPositionModal from '@/lib/components/EditPositionModal.svelte';
+	import calculator from '@/lib/calculator/calculator';
 
 	export let data: PageData;
 
@@ -411,6 +412,15 @@
 			$darkTheme ? themeQuartz.withPart(colorSchemeDarkBlue) : themeQuartz
 		);
 	}
+
+	const { calcRewardToRisk } = calculator;
+	let rR: number | undefined = undefined;
+	$: {
+		const risk = Number(data.position?.averageEntryPrice) - Number(data.position?.stopLossPrice);
+		const reward =
+			Number(data.position?.profitTargetPrice) - Number(data.position?.averageEntryPrice);
+		rR = calcRewardToRisk(risk, reward);
+	}
 </script>
 
 <section>
@@ -463,7 +473,7 @@
 		</div>
 	</div>
 	<div class="relative flex w-full gap-2 px-2">
-		<div class="relative flex w-3/5 flex-col px-2" bind:this={container}>
+		<div class="relative flex w-4/6 flex-col px-2" bind:this={container}>
 			<Chart {...chartOptions} {watermark} {...THEMES[$darkTheme ? 'Dark' : 'Light'].chart}>
 				<CandlestickSeries
 					bind:data={stockData}
@@ -492,7 +502,7 @@
 				autoSave={true}
 			></Editor>
 		</div>
-		<div class="relative w-2/5 px-2">
+		<div class="relative w-2/6 px-2">
 			<div class="card mb-4 w-full bg-base-100 shadow-xl">
 				<div class="card-body">
 					<h6>Trades</h6>
@@ -504,7 +514,29 @@
 					/>
 				</div>
 			</div>
-
+			<div class="card mb-4 w-full bg-base-100 shadow-xl">
+				<div class="card-body">
+					<h6>Risk / Reward</h6>
+					<label class="form-control w-full">
+						<div class="label">
+							<span class="label-text">Stop Loss</span>
+						</div>
+						<input type="number" value={data.position?.stopLossPrice} disabled />
+					</label>
+					<label class="form-control w-full">
+						<div class="label">
+							<span class="label-text">Profit Target</span>
+						</div>
+						<input type="number" value={data.position?.profitTargetPrice} disabled />
+					</label>
+					<label class="form-control w-full">
+						<div class="label">
+							<span class="label-text">R/R</span>
+						</div>
+						<input type="number" value={data.position?.profitTargetPrice} disabled />
+					</label>
+				</div>
+			</div>
 			<div class="card w-full bg-base-100 shadow-xl">
 				<div class="card-body">
 					<h6>Details</h6>
