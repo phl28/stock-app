@@ -52,7 +52,7 @@ export const positions = pgTable(
 		openedAt: timestamp('opened_at').notNull(),
 		closedAt: timestamp('closed_at'),
 		reviewedAt: timestamp('reviewed_at'),
-		lastUpdatedAt: timestamp('last_updated_at').notNull(),
+		updatedAt: timestamp('updated_at').notNull(),
 		journal: jsonb('journal')
 	},
 	(position) => ({

@@ -39,7 +39,7 @@
 
 	const handleRemoveImages = async (removedImagesUrl: string[]) => {
 		try {
-			const response = await fetch(`/articles/delete-image`, {
+			const response = await fetch(`/images/delete`, {
 				method: 'DELETE',
 				headers: {
 					'Content-Type': 'application/json'

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
 	import { ColorType, CrosshairMode, type ISeriesApi } from 'lightweight-charts';
-	import { dispatchToast, theme } from '../stores.ts';
+	import { dispatchToast, darkTheme } from '../stores.ts';
 	import { convertUnixTimestampToDate } from '$lib/helpers/DataHelpers';
 	import { enhance } from '$app/forms';
 	import type { StockData, VolumeData } from '$lib/types/chartTypes';
@@ -386,7 +386,7 @@
 			<CalculatorResults input={{ risk, entry, stop, target, stopLossPerc }} />
 			<div class="divider my-6"></div>
 			<div class="relative w-full px-2">
-				<Chart {...chartOptions} {watermark} {...THEMES[$theme ? 'Dark' : 'Light'].chart}>
+				<Chart {...chartOptions} {watermark} {...THEMES[$darkTheme ? 'Dark' : 'Light'].chart}>
 					<CandlestickSeries
 						bind:data={stockData}
 						lastValueVisible={true}
