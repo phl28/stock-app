@@ -10,7 +10,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const result = await updatePositionTradesBatch(requestBody.trades);
 		return new Response('success');
 	} catch (e) {
-		console.error(e);
 		if (e instanceof Error) {
 			throw error(400, e.message);
 		} else if (isHttpError(e)) {

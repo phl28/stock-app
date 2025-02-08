@@ -155,53 +155,10 @@ export const actions = {
 		const formData = await request.formData();
 		const positionId = formData.get('positionId') as string;
 		const tradeIds = JSON.parse(formData.get('tradeIds') as string);
-		const ticker = (formData.get('ticker') as string).toUpperCase();
-		const region = formData.get('region') as Region;
-		const currency = formData.get('currency') as Currency;
-		const platform = formData.get('platform') as Platform;
-		const numOfTrades = Number(formData.get('numOfTrades') as string);
-		const averageEntryPrice = formData.get('averageEntryPrice') as string;
-		const averageExitPrice = formData.get('averageExitPrice') as string;
-		const totalFees = formData.get('fees') as string;
-		const totalVolume = Number(formData.get('totalVolume') as string);
-		const outstandingVolume = Number(formData.get('outstandingVolume') as string);
-		const grossProfitLoss =
-			(formData.get('grossProfitLoss') as string) === ''
-				? null
-				: (formData.get('grossProfitLoss') as string);
-		const isShort = formData.get('isShort') as string;
-		const openedAt = new Date(formData.get('openedAt') as string);
-		const closedAt =
-			(formData.get('closedAt') as string) === ''
-				? null
-				: new Date(formData.get('closedAt') as string);
-		const position = {
-			ticker,
-			region,
-			currency,
-			totalVolume,
-			outstandingVolume,
-			averageEntryPrice: averageEntryPrice === '' ? '0' : averageEntryPrice,
-			averageExitPrice: averageExitPrice === '' ? null : averageExitPrice,
-			profitTargetPrice: null,
-			stopLossPrice: null,
-			grossProfitLoss,
-			totalFees,
-			isShort: isShort === 'on',
-			platform,
-			numOfTrades,
-			notes: '',
-			openedAt,
-			closedAt,
-			reviewedAt: null,
-			updatedAt: new Date(),
-			createdBy: locals.session.userId,
-			journal: null
-		};
 		if (positionId === 'newPosition') {
-			await assignTradesToPosition({ position, tradeIds });
+			await assignTradesToPosition({ tradeIds });
 		} else {
-			await assignTradesToPosition({ positionId: Number(positionId), position, tradeIds });
+			await assignTradesToPosition({ positionId: Number(positionId), tradeIds });
 		}
 		return;
 	}

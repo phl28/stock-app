@@ -17,6 +17,8 @@ import {
 	isNull
 } from 'drizzle-orm';
 
+import { getPositionInfoFromTrades } from './utils';
+
 let db: VercelPgDatabase<typeof schema> | NodePgDatabase<typeof schema>;
 if (process.env.NODE_ENV === 'development') {
 	const { Client } = pkg;
@@ -193,29 +195,40 @@ export const deleteTradeHistoryBatch = async ({
 // Positions
 export const assignTradesToPosition = async ({
 	positionId,
-	position,
-	tradeIds
+	tradeIds,
+	isShort
 }: {
 	positionId?: number;
-	position: InsertPosition;
 	tradeIds: number[];
+	isShort?: boolean;
 }) => {
 	await db.transaction(async (tx) => {
 		let id = positionId;
+		const trades = await tx
+			.select()
+			.from(tradeHistoryTable)
+			.where(inArray(tradeHistoryTable.id, tradeIds));
 		if (!id) {
+			const newPosition: InsertPosition = getPositionInfoFromTrades({ trades });
 			const ids = await tx
 				.insert(positionsTable)
 				.values({
-					...position,
+					...newPosition,
 					updatedAt: new Date()
 				})
 				.returning({ id: positionsTable.id });
 			id = ids[0].id;
 		} else {
+			const position = await tx.select().from(positionsTable).where(eq(positionsTable.id, id));
+			const updatedPosition: InsertPosition = getPositionInfoFromTrades({
+				trades,
+				position: position[0],
+				isShort
+			});
 			await tx
 				.update(positionsTable)
 				.set({
-					...position,
+					...updatedPosition,
 					updatedAt: new Date()
 				})
 				.where(eq(positionsTable.id, id));
