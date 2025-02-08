@@ -68,10 +68,10 @@ CREATE TABLE IF NOT EXISTS "tradeup_tradeHistory" (
 	"volume" integer NOT NULL,
 	"platform" "platform" DEFAULT 'FUTU' NOT NULL,
 	"trade_side" "tradeSide" DEFAULT 'BUY' NOT NULL,
-	"updatedAt" timestamp,
+	"updated_at" timestamp,
 	"executed_at" timestamp NOT NULL,
 	"created_at" timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	"createdBy" text NOT NULL
+	"created_by" text NOT NULL
 );
 --> statement-breakpoint
 DO $$ BEGIN

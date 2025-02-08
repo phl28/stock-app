@@ -400,8 +400,14 @@
 			}
 		]
 	};
-	$: gridOptions.rowData = [...(data.trades ?? [])];
+
 	let gridApi: GridApi;
+
+	$: {
+		if (gridApi) {
+			gridApi.setGridOption('rowData', [...(data.trades ?? [])]);
+		}
+	}
 	const handleGridReady = (event: CustomEvent) => {
 		const api = event.detail;
 		gridApi = api;

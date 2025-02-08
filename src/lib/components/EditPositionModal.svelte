@@ -9,6 +9,8 @@
 	import { TradeSideCellRenderer } from './TradeSideCellRenderer';
 	import { DateTimeEditor } from './DateTimeEditor';
 	import { tick } from 'svelte';
+	import { ArrowDown, ArrowUp } from 'lucide-svelte';
+	import { invalidate, invalidateAll } from '$app/navigation';
 
 	type PartialTrade = Pick<Trade, 'id' | 'executedAt' | 'price' | 'fees' | 'volume' | 'tradeSide'>;
 
@@ -30,7 +32,7 @@
 		}
 	})();
 
-	let gridApi: GridApi;
+	let gridApi: GridApi<PartialTrade>;
 	const handleGridReady = (event: CustomEvent) => {
 		const api = event.detail;
 		gridApi = api;
@@ -54,7 +56,9 @@
 					return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
 				},
 				minWidth: 170,
-				cellEditor: DateTimeEditor
+				cellEditor: DateTimeEditor,
+				cellEditorPopup: true,
+				cellEditorPopupPosition: 'under'
 			},
 			{
 				field: 'tradeSide',
@@ -77,7 +81,7 @@
 				field: 'price',
 				headerName: 'Price',
 				valueFormatter: ({ value }) => formatCurrency(value, 'USD'),
-				cellEditor: 'agNumberCellEditor',
+				cellEditor: 'agTextCellEditor',
 				cellEditorParams: {
 					min: 0
 				}
@@ -86,7 +90,7 @@
 				field: 'fees',
 				headerName: 'Fees',
 				valueFormatter: ({ value }) => formatCurrency(value, 'USD'),
-				cellEditor: 'agNumberCellEditor',
+				cellEditor: 'agTextCellEditor',
 				cellEditorParams: {
 					min: 0
 				}
@@ -99,13 +103,39 @@
 			gridApi.setGridOption('rowData', trades);
 		}
 	}
+
+	const handleUpdateTrades = async () => {
+		const allTrades: PartialTrade[] = [];
+		gridApi.forEachNode((node) => {
+			if (node.data) {
+				allTrades.push(node.data);
+			}
+		});
+
+		const response = await fetch(`/trade/bulk-update`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ trades: allTrades })
+		});
+
+		if (response.ok) {
+			dispatchToast({ type: 'success', message: 'Trades updated successfully!' });
+		} else {
+			dispatchToast({ type: 'error', message: 'Failed to update trades' });
+		}
+
+		await invalidateAll();
+		handleCloseModal();
+	};
 </script>
 
 <dialog id="editPositionModal" class="modal" bind:this={modal}>
 	<div class="modal-box max-w-5xl">
 		<h3 class="text-lg font-bold">Edit Position</h3>
 		<div class="flex justify-between">
-			<div class="flex flex-grow flex-col">
+			<div class="flex flex-grow-[3] flex-col">
 				<div class="flex">
 					<label class="label flex cursor-pointer flex-col items-start gap-1">
 						<span class="label-text">Ticker</span>
@@ -138,28 +168,59 @@
 				</div>
 			</div>
 			<div class="divider divider-horizontal"></div>
-			<div class="flex flex-col">
+			<div class="flex flex-grow flex-col gap-1">
 				<h4>Position Details</h4>
-				<p>Direction: {position?.isShort ? 'Short' : 'Long'}</p>
-				<p>Total Quantity: {position?.totalVolume}</p>
-				<p>Outstanding Quantity: {position?.outstandingVolume}</p>
-				<p>Gross P/L: {position?.grossProfitLoss}</p>
-				<p>
-					Net P/L: {Number(position?.grossProfitLoss) - Number(position?.totalFees)}
+				<p class="flex items-center gap-2">
+					Direction:
+					<span
+						class={`badge badge-md text-xs font-normal ${position?.isShort ? 'badge-error' : 'badge-success'}`}
+					>
+						{#if position?.isShort}
+							<ArrowDown strokeWidth="1" size={20} />Short
+						{:else}
+							<ArrowUp strokeWidth="1" size={20} />Long
+						{/if}
+					</span>
 				</p>
-				<p>Average Entry Price: {position?.averageEntryPrice}</p>
-				<p>Average Exit Price: {position?.averageExitPrice}</p>
-				<p>
-					Duration: {formatDuration(
-						new Date(trades?.at(0)?.executedAt ?? ''),
-						new Date(trades?.at(-1)?.executedAt ?? '')
-					)}
-				</p>
+				<div class="flex items-center justify-between">
+					<span class="text-sm opacity-75">Total Quantity</span>
+					<span>{position?.totalVolume}</span>
+				</div>
+				<div class="flex items-center justify-between">
+					<span class="text-sm opacity-75">Outstanding Quantity</span>
+					<span>{position?.outstandingVolume}</span>
+				</div>
+				<div class="flex items-center justify-between">
+					<span class="text-sm opacity-75">Gross P/L</span>
+					<span>{Number(position?.grossProfitLoss).toFixed(2)}</span>
+				</div>
+				<div class="flex items-center justify-between">
+					<span class="text-sm opacity-75">Net P/L</span>
+					<span>{(Number(position?.grossProfitLoss) - Number(position?.totalFees)).toFixed(2)}</span
+					>
+				</div>
+				<div class="flex items-center justify-between">
+					<span class="text-sm opacity-75">Average Entry Price</span>
+					<span>{Number(position?.averageEntryPrice).toFixed(2)}</span>
+				</div>
+				<div class="flex items-center justify-between">
+					<span class="text-sm opacity-75">Average Exit Price</span>
+					<span>{Number(position?.averageExitPrice).toFixed(2)}</span>
+				</div>
+				<div class="flex items-center justify-between">
+					<span class="text-sm opacity-75">Duration</span>
+					<span
+						>{formatDuration(
+							new Date(trades?.at(0)?.executedAt ?? ''),
+							position.closedAt ? new Date(trades?.at(-1)?.executedAt ?? '') : new Date()
+						)}</span
+					>
+				</div>
 			</div>
 		</div>
 		<div class="modal-action">
 			<button class="btn" type="button" on:click={handleCloseModal}>Close</button>
-			<button class="btn btn-primary" type="submit">Save</button>
+			<button class="btn btn-primary" on:click={handleUpdateTrades} type="submit">Save</button>
 		</div>
 	</div>
 	<div class="modal-backdrop">

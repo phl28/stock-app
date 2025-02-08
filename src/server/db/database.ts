@@ -119,22 +119,47 @@ export const insertTradeHistory = async (trade: InsertTrade) => {
 	}
 };
 
-// @FIXME: The functionality for this changed, we need this to update the whole trade now and not the notes
-export const updateTradeHistoryBatch = async (trades: InsertTrade[]) => {
-	const values = trades.map((trade) => dsql`(${trade.id}, ${new Date().toISOString()}::TIMESTAMP)`);
+export const updatePositionTradesBatch = async (
+	trades: Pick<InsertTrade, 'id' | 'executedAt' | 'price' | 'fees' | 'volume' | 'tradeSide'>[]
+) => {
+	const values = trades.map(
+		(trade) =>
+			dsql`(${trade.id}, ${trade.executedAt}::TIMESTAMP, ${trade.price}::decimal, ${trade.fees}::decimal, ${trade.volume}::integer, ${trade.tradeSide}::"tradeSide", now())`
+	);
 
 	const query = dsql`
-    WITH updates(id, updatedAt) AS (
-      VALUES ${dsql.join(values, ',')}
-    )
-    UPDATE ${tradeHistoryTable} AS th
-    SET
-      updated_at = u.updatedAt
-    FROM updates AS u
-    WHERE th.id = u.id::INTEGER
-  `;
-
+		WITH updates(id, executedAt, price, fees, volume, tradeSide, updatedAt) AS (
+		VALUES ${dsql.join(values, ',')}
+		)
+		UPDATE ${tradeHistoryTable} AS th
+		SET
+		executed_at = u.executedAt,
+		price = u.price,
+		fees = u.fees,
+		volume = u.volume,
+		trade_side = u.tradeSide,
+		updated_at = u.updatedAt
+		FROM updates AS u
+		WHERE th.id = u.id::INTEGER
+	`;
 	return await db.execute(query);
+};
+
+export const updateTradeHistoryBatch = async (trades: Partial<InsertTrade>[]) => {
+	const values = trades.map((trade) => dsql`(${trade.id}, ${new Date().toISOString()}::TIMESTAMP)`);
+
+	// 	const query = dsql`
+	//     WITH updates(id, updatedAt) AS (
+	//       VALUES ${dsql.join(values, ',')}
+	//     )
+	//     UPDATE ${tradeHistoryTable} AS th
+	//     SET
+	//       updated_at = u.updatedAt
+	//     FROM updates AS u
+	//     WHERE th.id = u.id::INTEGER
+	//   `;
+
+	// 	return await db.execute(query);
 };
 
 export const deleteTradeHistory = async ({ id, userId }: { id: number; userId: string }) => {

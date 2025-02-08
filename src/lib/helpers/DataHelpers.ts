@@ -11,22 +11,22 @@ export function formatDuration(startDate: Date, endDate: Date): string {
 	const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
 	if (diffDays < 30) {
-		return `${diffDays} day${diffDays !== 1 ? 's' : ''}`;
+		return `${diffDays} Day${diffDays !== 1 ? 's' : ''}`;
 	}
 
 	const diffMonths = Math.floor(diffDays / 30);
 	if (diffMonths < 12) {
-		return `${diffMonths} month${diffMonths !== 1 ? 's' : ''}`;
+		return `${diffMonths} Month${diffMonths !== 1 ? 's' : ''}`;
 	}
 
 	const diffYears = Math.floor(diffDays / 365);
 	const remainingMonths = Math.floor((diffDays % 365) / 30);
 
 	if (remainingMonths === 0) {
-		return `${diffYears} year${diffYears !== 1 ? 's' : ''}`;
+		return `${diffYears} Year${diffYears !== 1 ? 's' : ''}`;
 	}
 
-	return `${diffYears} year${diffYears !== 1 ? 's' : ''} and ${remainingMonths} month${remainingMonths !== 1 ? 's' : ''}`;
+	return `${diffYears} Year${diffYears !== 1 ? 's' : ''} and ${remainingMonths} Month${remainingMonths !== 1 ? 's' : ''}`;
 }
 
 /**

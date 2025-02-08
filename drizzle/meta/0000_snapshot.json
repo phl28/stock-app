@@ -1,5 +1,5 @@
 {
-  "id": "cf0d4191-5c79-4750-b09d-fab6390cd912",
+  "id": "f4976e85-085f-4595-a959-ff0a860850c6",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -325,8 +325,8 @@
           "notNull": true,
           "default": "'BUY'"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
@@ -344,8 +344,8 @@
           "notNull": true,
           "default": "CURRENT_TIMESTAMP"
         },
-        "createdBy": {
-          "name": "createdBy",
+        "created_by": {
+          "name": "created_by",
           "type": "text",
           "primaryKey": false,
           "notNull": true

@@ -73,12 +73,12 @@ export const tradeHistory = pgTable(
 		volume: integer('volume').notNull(),
 		platform: platform('platform').notNull().default('FUTU'),
 		tradeSide: tradeSide('trade_side').notNull().default('BUY'),
-		updatedAt: timestamp('updatedAt'),
+		updatedAt: timestamp('updated_at'),
 		executedAt: timestamp('executed_at').notNull(),
 		createdAt: timestamp('created_at')
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		createdBy: text('createdBy').notNull()
+		createdBy: text('created_by').notNull()
 	},
 	(trade) => ({
 		tickerIndex: index('trade_ticker_idx').on(trade.ticker),
