@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import Header from '$lib/components/Header.svelte';
-	import { theme } from './stores.ts';
+	import { darkTheme } from './stores.ts';
 	import Toasts from '$lib/components/Toasts.svelte';
 	import { dev } from '$app/environment';
 	import { inject } from '@vercel/analytics';
@@ -13,7 +13,7 @@
 	const currentYear = new Date().getFullYear();
 </script>
 
-<div data-theme={$theme ? 'dark' : 'light'} class="min-h-screen">
+<div data-theme={$darkTheme ? 'dark' : 'light'} class="min-h-screen">
 	<Toasts />
 	<Header />
 	<main class="container mx-auto">

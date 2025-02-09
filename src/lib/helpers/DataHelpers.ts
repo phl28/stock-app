@@ -6,6 +6,29 @@ export const convertUnixTimestampToDate = (unixTimestamp: number) => {
 	return `${year}-${month}-${day}`;
 };
 
+export function formatDuration(startDate: Date, endDate: Date): string {
+	const diffMs = endDate.getTime() - startDate.getTime();
+	const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+	if (diffDays < 30) {
+		return `${diffDays} Day${diffDays !== 1 ? 's' : ''}`;
+	}
+
+	const diffMonths = Math.floor(diffDays / 30);
+	if (diffMonths < 12) {
+		return `${diffMonths} Month${diffMonths !== 1 ? 's' : ''}`;
+	}
+
+	const diffYears = Math.floor(diffDays / 365);
+	const remainingMonths = Math.floor((diffDays % 365) / 30);
+
+	if (remainingMonths === 0) {
+		return `${diffYears} Year${diffYears !== 1 ? 's' : ''}`;
+	}
+
+	return `${diffYears} Year${diffYears !== 1 ? 's' : ''} and ${remainingMonths} Month${remainingMonths !== 1 ? 's' : ''}`;
+}
+
 /**
  * This function is used to check if a percentage is valid, a percentage is valid if it is between 0 and 1 when allowOverHundred is false
  * @param percentage

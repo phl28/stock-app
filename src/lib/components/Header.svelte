@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import logo from '$lib/images/logo-no-background.png';
-	import { theme } from '@/routes/stores.ts';
+	import { darkTheme } from '@/routes/stores.ts';
 	import UserButton from 'clerk-sveltekit/client/UserButton.svelte';
 	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
 	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte';
@@ -46,8 +46,8 @@
 		</div>
 
 		<div class="flex items-center gap-4">
-			<button class="btn btn-circle btn-ghost" on:click={() => theme.toggle()}>
-				{#if $theme}
+			<button class="btn btn-circle btn-ghost" on:click={() => darkTheme.toggle()}>
+				{#if $darkTheme}
 					<Sun class="h-5 w-5" />
 				{:else}
 					<Moon class="h-5 w-5" />
@@ -55,7 +55,7 @@
 			</button>
 
 			<SignedIn>
-				{#if $theme}
+				{#if $darkTheme}
 					<UserButton
 						appearance={{
 							baseTheme: dark

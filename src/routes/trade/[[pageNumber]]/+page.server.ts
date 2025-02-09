@@ -3,7 +3,7 @@ import {
 	deleteTradeHistory,
 	deleteTradeHistoryBatch,
 	getLastTradeHistory,
-	getActivePositions,
+	getPositions,
 	insertTradeHistory,
 	updateTradeHistoryBatch,
 	getPaginatedTradeHistory,
@@ -56,7 +56,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			pageNumber,
 			userId: locals.session.userId
 		});
-		const positions = await getActivePositions({ userId: locals.session.userId });
+		const positions = await getPositions({ userId: locals.session.userId });
 		return {
 			trades,
 			positions,
@@ -156,46 +156,13 @@ export const actions = {
 		const positionId = formData.get('positionId') as string;
 		const tradeIds = JSON.parse(formData.get('tradeIds') as string);
 		if (positionId === 'newPosition') {
-			const ticker = (formData.get('ticker') as string).toUpperCase();
-			const region = formData.get('region') as Region;
-			const currency = formData.get('currency') as Currency;
-			const platform = formData.get('platform') as Platform;
-			const numOfTrades = Number(formData.get('numOfTrades') as string);
-			const averageEntryPrice = formData.get('averageEntryPrice') as string;
-			const averageExitPrice = formData.get('averageExitPrice') as string;
-			const totalFees = formData.get('fees') as string;
-			const totalVolume = Number(formData.get('totalVolume') as string);
-			const outstandingVolume = Number(formData.get('outstandingVolume') as string);
-			const grossProfitLoss = formData.get('grossProfitLoss') as string === '' ? null : formData.get('grossProfitLoss') as string;
-			const side = formData.get('side') as string;
-			const openedAt = new Date(formData.get('openedAt') as string);
-			const closedAt = formData.get('closedAt') as string === '' ? null : new Date(formData.get('closedAt') as string);
-			const insertPosition = {
-				ticker,
-				region,
-				currency,
-				totalVolume,
-				outstandingVolume,
-				averageEntryPrice,
-				averageExitPrice: averageExitPrice === '' ? null : averageExitPrice,
-				profitTargetPrice: null,
-				stopLossPrice: null,
-				grossProfitLoss,
-				totalFees,
-				isShort: side === 'SHORT',
-				platform,
-				numOfTrades,
-				notes: '',
-				openedAt,
-				closedAt,
-				reviewedAt: null,
-				lastUpdatedAt: new Date(),
-				createdBy: locals.session.userId,
-				journal: null
-			};
-			await assignTradesToPosition({position: insertPosition, tradeIds})
+			await assignTradesToPosition({ tradeIds, userId: locals.session.userId });
 		} else {
-			await assignTradesToPosition({positionId: Number(positionId), tradeIds});
+			await assignTradesToPosition({
+				positionId: Number(positionId),
+				tradeIds,
+				userId: locals.session.userId
+			});
 		}
 		return;
 	}

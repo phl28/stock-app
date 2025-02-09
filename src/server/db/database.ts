@@ -1,23 +1,53 @@
-import { drizzle } from 'drizzle-orm/vercel-postgres';
+import { drizzle as VercelDrizzle, type VercelPgDatabase } from 'drizzle-orm/vercel-postgres';
+import { drizzle as LocalDrizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { sql } from '@vercel/postgres';
+import pkg from 'pg';
 
 import * as schema from './schema';
-import { eq, inArray, sql as dsql, and, gte, lte, desc, count, isNotNull, ne, isNull } from 'drizzle-orm';
+import {
+	eq,
+	inArray,
+	sql as dsql,
+	and,
+	gte,
+	lte,
+	desc,
+	count,
+	isNotNull,
+	isNull
+} from 'drizzle-orm';
 
-export const db = drizzle(sql, { schema });
+import { getPositionInfoFromTrades } from './utils';
 
-export type InsertTrade = typeof schema.tradeHistory.$inferInsert;
-export type SelectTrade = typeof schema.tradeHistory.$inferSelect;
-export type InsertPosition = typeof schema.positions.$inferInsert;
-export type SelectPosition = typeof schema.positions.$inferSelect;
-export type InsertArticle = typeof schema.articles.$inferInsert;
-export type SelectArticle = typeof schema.articles.$inferSelect;
+let db: VercelPgDatabase<typeof schema> | NodePgDatabase<typeof schema>;
+if (process.env.NODE_ENV === 'development') {
+	const { Client } = pkg;
+	const localClient = new Client({
+		connectionString: process.env.POSTGRES_URL ?? ''
+	});
+	localClient.connect();
+	db = LocalDrizzle(localClient, { schema });
+} else {
+	db = VercelDrizzle(sql, { schema });
+}
+export { db };
+
+const tradeHistoryTable = schema.tradeHistory;
+const positionsTable = schema.positions;
+const articlesTable = schema.articles;
+
+export type InsertTrade = typeof tradeHistoryTable.$inferInsert;
+export type SelectTrade = typeof tradeHistoryTable.$inferSelect;
+export type InsertPosition = typeof positionsTable.$inferInsert;
+export type SelectPosition = typeof positionsTable.$inferSelect;
+export type InsertArticle = typeof articlesTable.$inferInsert;
+export type SelectArticle = typeof articlesTable.$inferSelect;
 
 // Trade History
 export const getAllUnassignedTradeHistory = async ({ userId }: { userId: string }) => {
 	const tradeHistory = await db.query.tradeHistory.findMany({
-		where: and(eq(schema.tradeHistory.createdBy, userId), isNull(schema.tradeHistory.positionId)),
-		orderBy: [desc(schema.tradeHistory.executedAt), desc(schema.tradeHistory.createdAt)]
+		where: and(eq(tradeHistoryTable.createdBy, userId), isNull(tradeHistoryTable.positionId)),
+		orderBy: [desc(tradeHistoryTable.executedAt), desc(tradeHistoryTable.createdAt)]
 	});
 	return tradeHistory;
 };
@@ -25,8 +55,8 @@ export const getAllUnassignedTradeHistory = async ({ userId }: { userId: string 
 export const getNumOfTradeHistory = async ({ userId }: { userId: string }) => {
 	const counts = await db
 		.select({ count: count() })
-		.from(schema.tradeHistory)
-		.where(eq(schema.tradeHistory.createdBy, userId));
+		.from(tradeHistoryTable)
+		.where(eq(tradeHistoryTable.createdBy, userId));
 	return counts;
 };
 
@@ -41,9 +71,9 @@ export const getPaginatedTradeHistory = async ({
 }) => {
 	const trades = await db
 		.select()
-		.from(schema.tradeHistory)
-		.where(eq(schema.tradeHistory.createdBy, userId))
-		.orderBy(desc(schema.tradeHistory.executedAt), desc(schema.tradeHistory.createdAt))
+		.from(tradeHistoryTable)
+		.where(and(eq(tradeHistoryTable.createdBy, userId), isNull(tradeHistoryTable.positionId)))
+		.orderBy(desc(tradeHistoryTable.executedAt), desc(tradeHistoryTable.createdAt))
 		.limit(pageSize)
 		.offset((pageNumber - 1) * pageSize);
 	const counts = await getNumOfTradeHistory({ userId });
@@ -64,11 +94,8 @@ export const getLastTradeHistory = async ({
 	platform: 'FUTU' | 'IBKR';
 }) => {
 	const lastTrade = await db.query.tradeHistory.findFirst({
-		where: and(
-			eq(schema.tradeHistory.platform, platform),
-			eq(schema.tradeHistory.createdBy, userId)
-		),
-		orderBy: [desc(schema.tradeHistory.executedAt)]
+		where: and(eq(tradeHistoryTable.platform, platform), eq(tradeHistoryTable.createdBy, userId)),
+		orderBy: [desc(tradeHistoryTable.executedAt)]
 	});
 	return lastTrade;
 };
@@ -79,13 +106,13 @@ export const insertTradeHistory = async (trade: InsertTrade) => {
 	try {
 		const result = await db.transaction(async (tx) => {
 			const [insertedTrade] = await tx
-				.insert(schema.tradeHistory)
+				.insert(tradeHistoryTable)
 				.values({
 					...trade,
 					updatedAt: new Date()
 				})
 				.returning();
-			
+
 			return insertedTrade;
 		});
 		return result;
@@ -94,31 +121,68 @@ export const insertTradeHistory = async (trade: InsertTrade) => {
 	}
 };
 
-// @FIXME: The functionality for this changed, we need this to update the whole trade now and not the notes
-export const updateTradeHistoryBatch = async (trades: InsertTrade[]) => {
-	const values = trades.map(
-		(trade) => dsql`(${trade.id}, ${new Date().toISOString()}::TIMESTAMP)`
-	);
+export const updatePositionTradesBatch = async ({
+	positionId,
+	trades,
+	userId
+}: {
+	positionId: number;
+	trades: Pick<InsertTrade, 'id' | 'executedAt' | 'price' | 'fees' | 'volume' | 'tradeSide'>[];
+	userId: string;
+}) => {
+	await db.transaction(async (tx) => {
+		for (const trade of trades) {
+			if (!trade.id) throw new Error('Trade ID is required');
+			await tx
+				.update(tradeHistoryTable)
+				.set({
+					executedAt: new Date(trade.executedAt),
+					price: trade.price,
+					fees: trade.fees ?? '0',
+					volume: trade.volume,
+					tradeSide: trade.tradeSide,
+					updatedAt: new Date()
+				})
+				.where(eq(tradeHistoryTable.id, trade.id));
+		}
+		const tradeResult = await tx
+			.select()
+			.from(tradeHistoryTable)
+			.where(eq(tradeHistoryTable.positionId, positionId));
+		const positionResult = await tx
+			.select()
+			.from(positionsTable)
+			.where(eq(positionsTable.id, positionId));
+		const updatedPosition = getPositionInfoFromTrades({
+			trades: tradeResult
+		});
+		updatedPosition.createdBy = userId;
+		await tx.update(positionsTable).set(updatedPosition).where(eq(positionsTable.id, positionId));
+	});
+};
 
-	const query = dsql`
-    WITH updates(id, updatedAt) AS (
-      VALUES ${dsql.join(values, ',')}
-    )
-    UPDATE ${schema.tradeHistory} AS th
-    SET
-      updated_at = u.updatedAt
-    FROM updates AS u
-    WHERE th.id = u.id::INTEGER
-  `;
+export const updateTradeHistoryBatch = async (trades: Partial<InsertTrade>[]) => {
+	const values = trades.map((trade) => dsql`(${trade.id}, ${new Date().toISOString()}::TIMESTAMP)`);
 
-	return await db.execute(query);
+	// 	const query = dsql`
+	//     WITH updates(id, updatedAt) AS (
+	//       VALUES ${dsql.join(values, ',')}
+	//     )
+	//     UPDATE ${tradeHistoryTable} AS th
+	//     SET
+	//       updated_at = u.updatedAt
+	//     FROM updates AS u
+	//     WHERE th.id = u.id::INTEGER
+	//   `;
+
+	// 	return await db.execute(query);
 };
 
 export const deleteTradeHistory = async ({ id, userId }: { id: number; userId: string }) => {
 	return await db.transaction(async (tx) => {
 		const [deletedTrade] = await tx
-			.delete(schema.tradeHistory)
-			.where(and(eq(schema.tradeHistory.id, id), eq(schema.tradeHistory.createdBy, userId)))
+			.delete(tradeHistoryTable)
+			.where(and(eq(tradeHistoryTable.id, id), eq(tradeHistoryTable.createdBy, userId)))
 			.returning();
 
 		return deletedTrade;
@@ -134,8 +198,8 @@ export const deleteTradeHistoryBatch = async ({
 }) => {
 	return await db.transaction(async (tx) => {
 		const deletedTrades = await tx
-			.delete(schema.tradeHistory)
-			.where(and(inArray(schema.tradeHistory.id, ids), eq(schema.tradeHistory.createdBy, userId)))
+			.delete(tradeHistoryTable)
+			.where(and(inArray(tradeHistoryTable.id, ids), eq(tradeHistoryTable.createdBy, userId)))
 			.returning();
 
 		return deletedTrades;
@@ -145,28 +209,59 @@ export const deleteTradeHistoryBatch = async ({
 // Positions
 export const assignTradesToPosition = async ({
 	positionId,
-	position,
-	tradeIds
+	tradeIds,
+	isShort,
+	userId
 }: {
 	positionId?: number;
-	position?: InsertPosition;
 	tradeIds: number[];
+	isShort?: boolean;
+	userId: string;
 }) => {
 	await db.transaction(async (tx) => {
 		let id = positionId;
-		if (position) {
-			const ids = await tx.insert(schema.positions).values({
-				...position,
-				lastUpdatedAt: new Date()
-			}).returning({ id: schema.positions.id})
+		const trades = await tx
+			.select()
+			.from(tradeHistoryTable)
+			.where(and(inArray(tradeHistoryTable.id, tradeIds), eq(tradeHistoryTable.createdBy, userId)));
+		const filteredTradeIds = trades.map((trade) => trade.id);
+		if (!id) {
+			const newPosition: InsertPosition = getPositionInfoFromTrades({ trades, isShort });
+			newPosition.createdBy = userId;
+			const ids = await tx
+				.insert(positionsTable)
+				.values({
+					...newPosition,
+					updatedAt: new Date()
+				})
+				.returning({ id: positionsTable.id });
 			id = ids[0].id;
+		} else {
+			const position = await tx
+				.select()
+				.from(positionsTable)
+				.where(and(eq(positionsTable.id, id), eq(positionsTable.createdBy, userId)));
+			const updatedPosition: InsertPosition = getPositionInfoFromTrades({
+				trades,
+				position: position[0]
+			});
+			await tx
+				.update(positionsTable)
+				.set({
+					...updatedPosition,
+					updatedAt: new Date()
+				})
+				.where(eq(positionsTable.id, id));
 		}
-		await tx.update(schema.tradeHistory).set({
-			positionId: id,
-			updatedAt: new Date()
-		}).where(inArray(schema.tradeHistory.id, tradeIds))
-	})
-}
+		await tx
+			.update(tradeHistoryTable)
+			.set({
+				positionId: id,
+				updatedAt: new Date()
+			})
+			.where(inArray(tradeHistoryTable.id, filteredTradeIds));
+	});
+};
 
 export const createNewPosition = async ({
 	userId,
@@ -177,21 +272,21 @@ export const createNewPosition = async ({
 }) => {
 	return await db.transaction(async (tx) => {
 		const [insertedPosition] = await tx
-			.insert(schema.positions)
+			.insert(positionsTable)
 			.values({
 				...position,
 				createdBy: userId,
-				lastUpdatedAt: new Date()
+				updatedAt: new Date()
 			})
 			.returning();
 		return insertedPosition;
 	});
 };
 
-export const getActivePositions = async ({ userId }: { userId: string }) => {
+export const getPositions = async ({ userId }: { userId: string }) => {
 	return await db.query.positions.findMany({
-		where: and(eq(schema.positions.createdBy, userId), isNull(schema.positions.closedAt)), 
-		orderBy: [desc(schema.positions.openedAt)]
+		where: and(eq(positionsTable.createdBy, userId)),
+		orderBy: [desc(positionsTable.openedAt)]
 	});
 };
 
@@ -206,11 +301,76 @@ export const getClosedPositions = async ({
 }) => {
 	return await db.query.positions.findMany({
 		where: and(
-			isNotNull(schema.positions.closedAt),
-			gte(schema.positions.closedAt, startDate),
-			lte(schema.positions.closedAt, endDate),
-			eq(schema.positions.createdBy, userId)
+			isNotNull(positionsTable.closedAt),
+			gte(positionsTable.closedAt, startDate),
+			lte(positionsTable.closedAt, endDate),
+			eq(positionsTable.createdBy, userId)
 		)
+	});
+};
+
+export const getPosition = async ({
+	positionId,
+	userId
+}: {
+	positionId: number;
+	userId: string;
+}) => {
+	const position = await db
+		.select()
+		.from(positionsTable)
+		.where(and(eq(positionsTable.id, positionId), eq(positionsTable.createdBy, userId)));
+	if (position.length === 1) {
+		const trades = await db
+			.select({
+				id: tradeHistoryTable.id,
+				executedAt: tradeHistoryTable.executedAt,
+				price: tradeHistoryTable.price,
+				fees: tradeHistoryTable.fees,
+				volume: tradeHistoryTable.volume,
+				tradeSide: tradeHistoryTable.tradeSide
+			})
+			.from(tradeHistoryTable)
+			.where(eq(tradeHistoryTable.positionId, positionId))
+			.orderBy(tradeHistoryTable.executedAt);
+		return {
+			position: position[0],
+			trades
+		};
+	}
+};
+
+export const deletePosition = async ({
+	userId,
+	positionId
+}: {
+	userId: string;
+	positionId: number;
+}) => {
+	return await db.transaction(async (tx) => {
+		await tx
+			.delete(positionsTable)
+			.where(and(eq(positionsTable.id, positionId), eq(positionsTable.createdBy, userId)));
+	});
+};
+
+export const markPositionReviewed = async ({
+	positionId,
+	userId
+}: {
+	positionId: number;
+	userId: string;
+}) => {
+	return await db.transaction(async (tx) => {
+		const [updatedPosition] = await tx
+			.update(positionsTable)
+			.set({
+				reviewedAt: new Date(),
+				updatedAt: new Date()
+			})
+			.where(and(eq(positionsTable.id, positionId), eq(positionsTable.createdBy, userId)))
+			.returning();
+		return updatedPosition;
 	});
 };
 
@@ -222,14 +382,15 @@ export const getPositionPerformance = async ({
 	userId: string;
 }) => {
 	const position = await db.query.positions.findFirst({
-		where: and(eq(schema.positions.id, positionId), eq(schema.positions.createdBy, userId))
+		where: and(eq(positionsTable.id, positionId), eq(positionsTable.createdBy, userId))
 	});
 
 	if (position && position.closedAt) {
 		const duration = position.closedAt.getTime() - position.openedAt.getTime();
 		const durationDays = duration / (1000 * 60 * 60 * 24);
 		const profitLoss = Number(position.grossProfitLoss);
-		const roi = (profitLoss / Number(Number(position.averageEntryPrice) * position.totalVolume)) * 100;
+		const roi =
+			(profitLoss / Number(Number(position.averageEntryPrice) * position.totalVolume)) * 100;
 
 		return {
 			duration: durationDays,
@@ -248,13 +409,13 @@ export const updatePositionNotes = async ({
 	userId: string;
 	position: Pick<InsertPosition, 'id' | 'notes'>;
 }) => {
-	const values = dsql`(${position.id}, ${position.notes})`; 
+	const values = dsql`(${position.id}, ${position.notes})`;
 
 	const query = dsql`
 		WITH updates(id, notes) AS (
 		VALUES ${values}
 		)
-		UPDATE ${schema.positions} AS p
+		UPDATE ${positionsTable} AS p
 		SET
 		notes = u.notes
 		FROM updates AS u
@@ -265,22 +426,41 @@ export const updatePositionNotes = async ({
 	return await db.execute(query);
 };
 
+export const updatePositionJournal = async ({
+	userId,
+	position
+}: {
+	userId: string;
+	position: Pick<SelectPosition, 'id' | 'journal'>;
+}) => {
+	return await db.transaction(async (tx) => {
+		const [updatedPosition] = await tx
+			.update(positionsTable)
+			.set({
+				journal: position.journal
+			})
+			.where(and(eq(positionsTable.id, position.id), eq(positionsTable.createdBy, userId)))
+			.returning();
+		return updatedPosition;
+	});
+};
+
 // Articles
 export const getPaginatedArticles = async (
 	pageSize: number,
 	pageNumber: number = 1,
 	published: boolean = true
 ) => {
-	const condition = published ? isNotNull(schema.articles.publishedAt) : undefined;
+	const condition = published ? isNotNull(articlesTable.publishedAt) : undefined;
 
 	const articles = await db
 		.select()
-		.from(schema.articles)
+		.from(articlesTable)
 		.where(condition)
-		.orderBy(desc(schema.articles.articleId))
+		.orderBy(desc(articlesTable.articleId))
 		.limit(pageSize)
 		.offset((pageNumber - 1) * pageSize);
-	const counts = await db.select({ count: count() }).from(schema.articles);
+	const counts = await db.select({ count: count() }).from(articlesTable);
 	const articleCount = counts[0].count;
 	return {
 		articles,
@@ -291,13 +471,13 @@ export const getPaginatedArticles = async (
 };
 
 export const getArticle = async (articleId: number) => {
-	return await db.select().from(schema.articles).where(eq(schema.articles.articleId, articleId));
+	return await db.select().from(articlesTable).where(eq(articlesTable.articleId, articleId));
 };
 
 export const searchArticles = async (searchTerm: string) => {
 	const result = await db
 		.select()
-		.from(schema.articles)
+		.from(articlesTable)
 		.where(
 			dsql`to_tsvector('english', title) || to_tsvector('english', content) @@ plainto_tsquery('english', ${searchTerm})`
 		);
@@ -309,9 +489,9 @@ export const searchArticles = async (searchTerm: string) => {
 
 export const addArticle = async (article: InsertArticle) => {
 	const [articleId] = await db
-		.insert(schema.articles)
+		.insert(articlesTable)
 		.values(article)
-		.returning({ articleId: schema.articles.articleId });
+		.returning({ articleId: articlesTable.articleId });
 	return articleId;
 };
 
@@ -323,9 +503,9 @@ export const updateArticle = async (article: InsertArticle, publish: boolean = f
 		article.publishedAt = null;
 	}
 	return await db
-		.update(schema.articles)
+		.update(articlesTable)
 		.set(article)
-		.where(eq(schema.articles.articleId, article.articleId));
+		.where(eq(articlesTable.articleId, article.articleId));
 };
 
 export const deleteArticle = async ({
@@ -336,6 +516,6 @@ export const deleteArticle = async ({
 	articleId: number;
 }) => {
 	return await db
-		.delete(schema.articles)
-		.where(and(eq(schema.articles.articleId, articleId), eq(schema.articles.createdBy, userId)));
+		.delete(articlesTable)
+		.where(and(eq(articlesTable.articleId, articleId), eq(articlesTable.createdBy, userId)));
 };

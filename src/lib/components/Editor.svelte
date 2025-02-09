@@ -9,6 +9,9 @@
 	export let autofocus = true;
 	export let onSave = undefined;
 	export let removeImages = undefined;
+	export let autoSave = false;
+
+	let saveTimeout;
 
 	let editor;
 	const removedImagesUrl = [];
@@ -101,7 +104,12 @@
 				 */
 				autofocus: autofocus,
 				placeholder: placeholder,
-				readOnly: readOnly
+				readOnly: readOnly,
+				onChange: () => {
+					if (autoSave) {
+						debouncedSave();
+					}
+				}
 			});
 		}
 	});
@@ -127,13 +135,21 @@
 				console.error('Saving failed: ', error);
 			});
 	};
+
+	const debouncedSave = () => {
+		if (saveTimeout) clearTimeout(saveTimeout);
+
+		saveTimeout = setTimeout(() => {
+			save();
+		}, 1000);
+	};
 </script>
 
 <div
 	id="article-editor"
 	class={`article-editor w-full flex-grow p-4 ${!readOnly ? 'border-spacing-5 rounded-md border-2' : ''} `}
 ></div>
-{#if !readOnly}
+{#if !readOnly && !autoSave}
 	<div class="flex items-center justify-end gap-2">
 		<slot></slot>
 		<button class="btn btn-neutral" on:click={save}>Save</button>
