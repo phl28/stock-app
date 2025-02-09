@@ -83,6 +83,21 @@
 		};
 	});
 
+	$: {
+		if (data) {
+			if (data.stockData) {
+				try {
+					fillChartData(data);
+				} catch (err) {
+					dispatchToast({ type: 'error', message: 'Error initializing chart' });
+				}
+			}
+			if (data.position) {
+				fillPositionData(data.position, data.trades ?? []);
+			}
+		}
+	}
+
 	let stockData: StockData[];
 	let volumeData: VolumeData[];
 
