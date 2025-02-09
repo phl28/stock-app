@@ -12,6 +12,13 @@ type Metric = {
 	latestExecution: Date | null;
 };
 
+/**
+ *
+ * @param trades always required
+ * @param position require if isShort is undefined
+ * @param isShort require if position is undefined
+ * @returns position information
+ */
 export const getPositionInfoFromTrades = ({
 	trades,
 	position,

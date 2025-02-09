@@ -121,30 +121,44 @@ export const insertTradeHistory = async (trade: InsertTrade) => {
 	}
 };
 
-export const updatePositionTradesBatch = async (
-	trades: Pick<InsertTrade, 'id' | 'executedAt' | 'price' | 'fees' | 'volume' | 'tradeSide'>[]
-) => {
-	const values = trades.map(
-		(trade) =>
-			dsql`(${trade.id}, ${trade.executedAt}::TIMESTAMP, ${trade.price}::decimal, ${trade.fees}::decimal, ${trade.volume}::integer, ${trade.tradeSide}::"tradeSide", now())`
-	);
-
-	const query = dsql`
-		WITH updates(id, executedAt, price, fees, volume, tradeSide, updatedAt) AS (
-		VALUES ${dsql.join(values, ',')}
-		)
-		UPDATE ${tradeHistoryTable} AS th
-		SET
-		executed_at = u.executedAt,
-		price = u.price,
-		fees = u.fees,
-		volume = u.volume,
-		trade_side = u.tradeSide,
-		updated_at = u.updatedAt
-		FROM updates AS u
-		WHERE th.id = u.id::INTEGER
-	`;
-	return await db.execute(query);
+export const updatePositionTradesBatch = async ({
+	positionId,
+	trades,
+	userId
+}: {
+	positionId: number;
+	trades: Pick<InsertTrade, 'id' | 'executedAt' | 'price' | 'fees' | 'volume' | 'tradeSide'>[];
+	userId: string;
+}) => {
+	await db.transaction(async (tx) => {
+		for (const trade of trades) {
+			if (!trade.id) throw new Error('Trade ID is required');
+			await tx
+				.update(tradeHistoryTable)
+				.set({
+					executedAt: new Date(trade.executedAt),
+					price: trade.price,
+					fees: trade.fees ?? '0',
+					volume: trade.volume,
+					tradeSide: trade.tradeSide,
+					updatedAt: new Date()
+				})
+				.where(eq(tradeHistoryTable.id, trade.id));
+		}
+		const tradeResult = await tx
+			.select()
+			.from(tradeHistoryTable)
+			.where(eq(tradeHistoryTable.positionId, positionId));
+		const positionResult = await tx
+			.select()
+			.from(positionsTable)
+			.where(eq(positionsTable.id, positionId));
+		const updatedPosition = getPositionInfoFromTrades({
+			trades: tradeResult
+		});
+		updatedPosition.createdBy = userId;
+		await tx.update(positionsTable).set(updatedPosition).where(eq(positionsTable.id, positionId));
+	});
 };
 
 export const updateTradeHistoryBatch = async (trades: Partial<InsertTrade>[]) => {
@@ -196,20 +210,24 @@ export const deleteTradeHistoryBatch = async ({
 export const assignTradesToPosition = async ({
 	positionId,
 	tradeIds,
-	isShort
+	isShort,
+	userId
 }: {
 	positionId?: number;
 	tradeIds: number[];
 	isShort?: boolean;
+	userId: string;
 }) => {
 	await db.transaction(async (tx) => {
 		let id = positionId;
 		const trades = await tx
 			.select()
 			.from(tradeHistoryTable)
-			.where(inArray(tradeHistoryTable.id, tradeIds));
+			.where(and(inArray(tradeHistoryTable.id, tradeIds), eq(tradeHistoryTable.createdBy, userId)));
+		const filteredTradeIds = trades.map((trade) => trade.id);
 		if (!id) {
-			const newPosition: InsertPosition = getPositionInfoFromTrades({ trades });
+			const newPosition: InsertPosition = getPositionInfoFromTrades({ trades, isShort });
+			newPosition.createdBy = userId;
 			const ids = await tx
 				.insert(positionsTable)
 				.values({
@@ -219,11 +237,13 @@ export const assignTradesToPosition = async ({
 				.returning({ id: positionsTable.id });
 			id = ids[0].id;
 		} else {
-			const position = await tx.select().from(positionsTable).where(eq(positionsTable.id, id));
+			const position = await tx
+				.select()
+				.from(positionsTable)
+				.where(and(eq(positionsTable.id, id), eq(positionsTable.createdBy, userId)));
 			const updatedPosition: InsertPosition = getPositionInfoFromTrades({
 				trades,
-				position: position[0],
-				isShort
+				position: position[0]
 			});
 			await tx
 				.update(positionsTable)
@@ -239,7 +259,7 @@ export const assignTradesToPosition = async ({
 				positionId: id,
 				updatedAt: new Date()
 			})
-			.where(inArray(tradeHistoryTable.id, tradeIds));
+			.where(inArray(tradeHistoryTable.id, filteredTradeIds));
 	});
 };
 

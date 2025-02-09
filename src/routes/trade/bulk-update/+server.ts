@@ -7,7 +7,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	try {
 		assertHasSession(locals);
 		const requestBody = await request.json();
-		const result = await updatePositionTradesBatch(requestBody.trades);
+		await updatePositionTradesBatch({
+			positionId: Number(requestBody.positionId),
+			trades: requestBody.trades,
+			userId: locals.session.userId
+		});
 		return new Response('success');
 	} catch (e) {
 		if (e instanceof Error) {

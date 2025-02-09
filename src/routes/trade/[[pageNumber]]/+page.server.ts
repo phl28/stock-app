@@ -156,9 +156,13 @@ export const actions = {
 		const positionId = formData.get('positionId') as string;
 		const tradeIds = JSON.parse(formData.get('tradeIds') as string);
 		if (positionId === 'newPosition') {
-			await assignTradesToPosition({ tradeIds });
+			await assignTradesToPosition({ tradeIds, userId: locals.session.userId });
 		} else {
-			await assignTradesToPosition({ positionId: Number(positionId), tradeIds });
+			await assignTradesToPosition({
+				positionId: Number(positionId),
+				tradeIds,
+				userId: locals.session.userId
+			});
 		}
 		return;
 	}

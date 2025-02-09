@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { darkTheme, dispatchToast } from '@/routes/stores';
 	import type { Position, Trade } from '$lib/types/tradeTypes';
 	import Grid from './Grid.svelte';
@@ -10,7 +9,7 @@
 	import { DateTimeEditor } from './DateTimeEditor';
 	import { tick } from 'svelte';
 	import { ArrowDown, ArrowUp } from 'lucide-svelte';
-	import { invalidate, invalidateAll } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 
 	type PartialTrade = Pick<Trade, 'id' | 'executedAt' | 'price' | 'fees' | 'volume' | 'tradeSide'>;
 
@@ -117,7 +116,7 @@
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ trades: allTrades })
+			body: JSON.stringify({ trades: allTrades, positionId: position.id })
 		});
 
 		if (response.ok) {
