@@ -3,7 +3,6 @@
 	import { dark } from '@clerk/themes';
 	import { darkTheme } from '@/routes/stores.ts';
 	import type { PageData } from './$types';
-	import { redirect } from '@sveltejs/kit';
 
 	export let data: PageData;
 </script>
