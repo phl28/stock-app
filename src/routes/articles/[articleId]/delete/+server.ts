@@ -1,8 +1,10 @@
-import { deleteArticle } from '@/server/db/database';
 import type { RequestHandler } from './$types';
+
+import { deleteArticle } from '@/server/db/database';
+import { assertHasSession } from '@/lib/types/utils';
+
 import { del } from '@vercel/blob';
 import type { OutputData } from '@editorjs/editorjs';
-import { assertHasSession } from '@/lib/types/utils';
 
 export const DELETE: RequestHandler = async ({ params, request, locals }) => {
 	try {

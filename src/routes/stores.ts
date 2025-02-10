@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+
 import type { Toast } from '$lib/types';
 
 // Theme

@@ -1,4 +1,20 @@
 <script lang="ts">
+	import { onMount, tick } from 'svelte';
+	import { enhance } from '$app/forms';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { browser } from '$app/environment';
+	import type { PageData } from './$types';
+
+	import { dispatchToast, darkTheme, modalStore } from '@/routes/stores.ts';
+	import type { StockData, VolumeData } from '@/lib/types/chartTypes.ts';
+	import { convertUnixTimestampToDate, formatDuration } from '@/lib/helpers/DataHelpers.ts';
+	import { formatCurrency } from '@/lib/helpers/CurrencyHelpers.ts';
+	import Editor from '@/lib/components/Editor.svelte';
+	import Grid from '@/lib/components/Grid.svelte';
+	import type { Trade } from '@/lib/types/tradeTypes.ts';
+	import { TradeSideCellRenderer } from '@/lib/components/TradeSideCellRenderer.ts';
+	import EditPositionModal from '@/lib/components/EditPositionModal.svelte';
+
 	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
 	import {
 		ColorType,
@@ -9,26 +25,13 @@
 		type SeriesMarker,
 		type Time
 	} from 'lightweight-charts';
-	import type { PageData } from './$types';
-	import { dispatchToast, darkTheme, modalStore } from '@/routes/stores.ts';
-	import type { StockData, VolumeData } from '@/lib/types/chartTypes.ts';
-	import { convertUnixTimestampToDate, formatDuration } from '@/lib/helpers/DataHelpers.ts';
-	import { onMount, tick } from 'svelte';
 	import { ArrowDown, ArrowUp, CheckCheck, EllipsisVertical } from 'lucide-svelte';
-	import { enhance } from '$app/forms';
-	import { goto, invalidateAll } from '$app/navigation';
-	import { formatCurrency } from '@/lib/helpers/CurrencyHelpers.ts';
-	import Editor from '@/lib/components/Editor.svelte';
-	import Grid from '@/lib/components/Grid.svelte';
 	import {
 		colorSchemeDarkBlue,
 		themeQuartz,
 		type GridApi,
 		type GridOptions
 	} from 'ag-grid-community';
-	import type { Trade } from '@/lib/types/tradeTypes.ts';
-	import { TradeSideCellRenderer } from '@/lib/components/TradeSideCellRenderer.ts';
-	import EditPositionModal from '@/lib/components/EditPositionModal.svelte';
 
 	export let data: PageData;
 
@@ -416,25 +419,20 @@
 				(Number(data.position?.averageEntryPrice) - Number(data.position?.stopLossPrice));
 			previousRR = rR;
 		}
-
-		fetch('/position/' + data.position.id + '/edit', {
-			method: 'PATCH',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				position: { ...data.position, stopLossPrice, profitTargetPrice }
-			})
-		});
-		isCalculatingRR = false;
-		await invalidateAll();
-	}, 500);
-
-	$: {
-		if (stopLossPrice || profitTargetPrice || rR) {
-			updateRiskReward();
+		if (browser) {
+			fetch('/position/' + data.position.id + '/edit', {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					position: { ...data.position, stopLossPrice, profitTargetPrice }
+				})
+			});
+			await invalidateAll();
 		}
-	}
+		isCalculatingRR = false;
+	}, 500);
 </script>
 
 <section>
@@ -539,6 +537,7 @@
 							type="number"
 							bind:value={stopLossPrice}
 							disabled={isCalculatingRR}
+							on:blur={updateRiskReward}
 							class="input input-sm input-bordered w-full"
 						/>
 					</label>
@@ -550,6 +549,7 @@
 							type="number"
 							bind:value={profitTargetPrice}
 							disabled={isCalculatingRR}
+							on:blur={updateRiskReward}
 							class="input input-sm input-bordered w-full"
 						/>
 					</label>
@@ -562,6 +562,7 @@
 							bind:value={rR}
 							step="0.01"
 							disabled={isCalculatingRR}
+							on:blur={updateRiskReward}
 							class="input input-sm input-bordered w-full"
 						/>
 					</label>

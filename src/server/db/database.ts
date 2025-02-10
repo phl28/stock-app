@@ -1,6 +1,7 @@
+import { sql } from '@vercel/postgres';
+
 import { drizzle as VercelDrizzle, type VercelPgDatabase } from 'drizzle-orm/vercel-postgres';
 import { drizzle as LocalDrizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { sql } from '@vercel/postgres';
 import pkg from 'pg';
 
 import * as schema from './schema';

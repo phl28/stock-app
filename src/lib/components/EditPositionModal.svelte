@@ -1,15 +1,17 @@
 <script lang="ts">
+	import { tick } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 	import { darkTheme, dispatchToast } from '@/routes/stores';
+
 	import type { Position, Trade } from '$lib/types/tradeTypes';
 	import Grid from './Grid.svelte';
 	import { formatDuration } from '../helpers/DataHelpers';
 	import { formatCurrency } from '../helpers/CurrencyHelpers';
-	import type { GridApi, GridOptions } from 'ag-grid-community';
 	import { TradeSideCellRenderer } from './TradeSideCellRenderer';
 	import { DateTimeEditor } from './DateTimeEditor';
-	import { tick } from 'svelte';
+
+	import type { GridApi, GridOptions } from 'ag-grid-community';
 	import { ArrowDown, ArrowUp } from 'lucide-svelte';
-	import { invalidateAll } from '$app/navigation';
 
 	type PartialTrade = Pick<Trade, 'id' | 'executedAt' | 'price' | 'fees' | 'volume' | 'tradeSide'>;
 

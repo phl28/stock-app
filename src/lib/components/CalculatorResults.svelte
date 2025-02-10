@@ -1,9 +1,11 @@
 <script lang="ts">
-	import calculator from '$lib/calculator/calculator';
-	import type { GridApi, GridOptions, ICellRendererParams } from 'ag-grid-community';
 	import Grid from '$lib/components/Grid.svelte';
 	import { darkTheme } from '@/routes/stores';
+
+	import calculator from '$lib/calculator/calculator';
 	import { RRCellRenderer } from './RRCellRenderer';
+
+	import type { GridApi, GridOptions, ICellRendererParams } from 'ag-grid-community';
 
 	export let input = {
 		risk: 0.0003,

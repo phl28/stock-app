@@ -1,13 +1,15 @@
 <script lang="ts">
-	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
-	import { ColorType, CrosshairMode, type ISeriesApi } from 'lightweight-charts';
+	import { enhance } from '$app/forms';
+	import { onMount, tick } from 'svelte';
+
 	import { dispatchToast, darkTheme } from '../stores.ts';
 	import { convertUnixTimestampToDate } from '$lib/helpers/DataHelpers';
-	import { enhance } from '$app/forms';
 	import type { StockData, VolumeData } from '$lib/types/chartTypes';
 	import CalculatorResults from '$lib/components/CalculatorResults.svelte';
 	import calculator from '$lib/calculator/calculator';
-	import { onMount, tick } from 'svelte';
+
+	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
+	import { ColorType, CrosshairMode, type ISeriesApi } from 'lightweight-charts';
 	import { Search } from 'lucide-svelte';
 
 	export let data;

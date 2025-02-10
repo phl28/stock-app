@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+
 	import type { Trade, Position } from '$lib/types/tradeTypes';
 	import { replacer } from '$lib/helpers/JsonHelpers';
 	import { dispatchToast, modalStore } from '@/routes/stores';

@@ -1,4 +1,5 @@
 import type { RequestHandler } from './$types';
+
 import { del } from '@vercel/blob';
 
 type DeleteImageRequest = {

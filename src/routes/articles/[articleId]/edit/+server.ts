@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
-import { updateArticle } from '@/server/db/database';
 import type { RequestHandler } from './$types';
+
+import { updateArticle } from '@/server/db/database';
 import { assertHasSession } from '@/lib/types/utils';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {

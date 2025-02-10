@@ -1,7 +1,8 @@
 import { error } from '@sveltejs/kit';
-import { updatePositionJournal } from '@/server/db/database';
 import type { RequestHandler } from './$types';
+
 import { assertHasSession } from '@/lib/types/utils';
+import { updatePositionJournal } from '@/server/db/database';
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	assertHasSession(locals);

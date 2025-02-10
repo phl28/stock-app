@@ -1,8 +1,9 @@
 import { fail } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
+
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL } from '$env/static/public';
 import type { ChartResponse } from '$lib/types/chartTypes';
-import type { PageServerLoad } from './$types';
 
 const API_KEY = PRIVATE_POLYGON_IO_API_KEY;
 

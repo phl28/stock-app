@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+
 	import logo from '$lib/images/logo-no-background.png';
 	import { darkTheme } from '@/routes/stores.ts';
+
 	import UserButton from 'clerk-sveltekit/client/UserButton.svelte';
 	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
 	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte';

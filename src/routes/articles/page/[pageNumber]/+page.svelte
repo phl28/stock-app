@@ -1,11 +1,13 @@
 <script lang="ts">
-	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
-	import type { PageData } from './$types.js';
-	import { Search } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
-	import type { ActionResult } from '@sveltejs/kit';
 	import { goto } from '$app/navigation';
+	import type { ActionResult } from '@sveltejs/kit';
+	import type { PageData } from './$types.js';
+
 	import { generatePageNumbers } from '$lib/helpers/PageHelpers';
+
+	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
+	import { Search } from 'lucide-svelte';
 
 	export let data: PageData;
 

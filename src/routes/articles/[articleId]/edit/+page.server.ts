@@ -1,6 +1,7 @@
-import { error, fail } from '@sveltejs/kit';
-import { getArticle } from '@/server/db/database';
+import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+
+import { getArticle } from '@/server/db/database';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const articleId = parseInt(params.articleId);

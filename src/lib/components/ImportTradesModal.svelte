@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { dispatchToast } from '@/routes/stores';
-	import Papa from 'papaparse';
-	import { invalidateAll } from '$app/navigation';
 	import { tick } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
+
+	import { dispatchToast } from '@/routes/stores';
+
+	import Papa from 'papaparse';
 
 	export let isModalOpen: boolean = false;
 	export let handleCloseModal: () => void;

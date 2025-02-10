@@ -1,9 +1,11 @@
 <script lang="ts">
-	import '../app.css';
-	import Header from '$lib/components/Header.svelte';
-	import { darkTheme } from './stores.ts';
-	import Toasts from '$lib/components/Toasts.svelte';
 	import { dev } from '$app/environment';
+	import '../app.css';
+
+	import Header from '$lib/components/Header.svelte';
+	import Toasts from '$lib/components/Toasts.svelte';
+	import { darkTheme } from './stores.ts';
+
 	import { inject } from '@vercel/analytics';
 	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
 

@@ -1,7 +1,8 @@
 <script lang="ts">
+	import type { PageData } from './$types';
+
 	import Editor from '$lib/components/Editor.svelte';
 	import { dispatchToast } from '@/routes/stores';
-	import type { PageData } from './$types';
 
 	export let data: PageData;
 

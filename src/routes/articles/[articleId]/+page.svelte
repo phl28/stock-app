@@ -1,10 +1,12 @@
 <script lang="ts">
-	import Editor from '$lib/components/Editor.svelte';
-	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
-	import type { PageData } from './$types';
-	import { dispatchToast } from '@/routes/stores';
-	import { Trash2, Pencil } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
+	import type { PageData } from './$types';
+
+	import { dispatchToast } from '@/routes/stores';
+	import Editor from '$lib/components/Editor.svelte';
+
+	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
+	import { Trash2, Pencil } from 'lucide-svelte';
 
 	export let data: PageData;
 
