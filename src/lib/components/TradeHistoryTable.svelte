@@ -1,11 +1,13 @@
 <script lang="ts">
-	import HistoryNavBar from '$lib/components/HistoryNavBar.svelte';
-	import { formatCurrency } from '$lib/helpers/CurrencyHelpers';
-	import type { Trade, Position } from '$lib/types/tradeTypes';
 	import { darkTheme } from '@/routes/stores';
 	import Grid from './Grid.svelte';
-	import type { GridOptions, GridApi } from 'ag-grid-community';
+	import HistoryNavBar from '$lib/components/HistoryNavBar.svelte';
+
+	import { formatCurrency } from '$lib/helpers/CurrencyHelpers';
+	import type { Trade, Position } from '$lib/types/tradeTypes';
 	import { TradeSideCellRenderer } from './TradeSideCellRenderer';
+
+	import type { GridOptions, GridApi } from 'ag-grid-community';
 
 	export let trades: Trade[];
 	export let positions: Position[];

@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
+
 	import { dispatchToast } from '@/routes/stores';
 	import { Currency, Platform, Region, TradeSide } from '../types';
-	import { tick } from 'svelte';
 
 	export let isModalOpen: boolean = false;
 	export let handleCloseModal: () => void;

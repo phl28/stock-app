@@ -1,4 +1,13 @@
+import { dev } from '$app/environment';
+import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
+import { PUBLIC_POLYGON_IO_URL, PUBLIC_SERVER_URL } from '$env/static/public';
+import { error, isHttpError } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types.js';
+
 import type { Currency, Platform, Region, Trade, TradeSide } from '$lib/types/tradeTypes';
+import type { FutuResponse } from '$lib/types';
+import { reviver } from '@/lib/helpers/JsonHelpers.js';
+import { assertHasSession } from '@/lib/types/utils.js';
 import {
 	deleteTradeHistory,
 	deleteTradeHistoryBatch,
@@ -9,14 +18,6 @@ import {
 	getPaginatedTradeHistory,
 	assignTradesToPosition
 } from '@/server/db/database';
-import { reviver } from '@/lib/helpers/JsonHelpers.js';
-import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
-import { PUBLIC_POLYGON_IO_URL, PUBLIC_SERVER_URL } from '$env/static/public';
-import { error, isHttpError } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types.js';
-import type { FutuResponse } from '$lib/types/serverTypes';
-import { dev } from '$app/environment';
-import { assertHasSession } from '@/lib/types/utils.js';
 
 const checkTickerValid = async (ticker: string) => {
 	if (ticker.at(0) === '(' && ticker.at(-1) === ')') {

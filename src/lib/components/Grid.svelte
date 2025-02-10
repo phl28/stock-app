@@ -1,13 +1,16 @@
 <script lang="ts">
+	import { createEventDispatcher, onMount } from 'svelte';
+
 	import {
 		AllCommunityModule,
 		ModuleRegistry,
 		createGrid,
 		themeQuartz,
-		colorSchemeDarkBlue
+		colorSchemeDarkBlue,
+		type CellValueChangedEvent,
+		type GridApi,
+		type GridOptions
 	} from 'ag-grid-community';
-	import type { CellValueChangedEvent, GridApi, GridOptions } from 'ag-grid-community';
-	import { createEventDispatcher, onMount } from 'svelte';
 
 	ModuleRegistry.registerModules([AllCommunityModule]);
 

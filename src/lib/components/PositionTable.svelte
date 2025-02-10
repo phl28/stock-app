@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { darkTheme } from '@/routes/stores';
+
 	import { formatCurrency } from '$lib/helpers/CurrencyHelpers';
 	import type { Position } from '$lib/types/tradeTypes';
-	import type { GridApi, GridOptions } from 'ag-grid-community';
 	import Grid from './Grid.svelte';
 	import PositionNavBar from './PositionNavBar.svelte';
-	import { darkTheme } from '@/routes/stores';
 	import { TradeSideCellRenderer } from './TradeSideCellRenderer';
+
+	import type { GridApi, GridOptions } from 'ag-grid-community';
 
 	export let positions: Position[];
 

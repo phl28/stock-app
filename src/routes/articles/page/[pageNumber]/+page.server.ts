@@ -1,6 +1,7 @@
 import { error, redirect, type Actions } from '@sveltejs/kit';
-import { addArticle, getPaginatedArticles, searchArticles } from '@/server/db/database';
 import type { PageServerLoad } from './$types.js';
+
+import { addArticle, getPaginatedArticles, searchArticles } from '@/server/db/database';
 import { assertHasSession } from '@/lib/types/utils.js';
 
 type ArticleData = {

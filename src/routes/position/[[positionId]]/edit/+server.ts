@@ -2,15 +2,15 @@ import type { RequestHandler } from './$types';
 import { error, isHttpError } from '@sveltejs/kit';
 
 import { assertHasSession } from '@/lib/types/utils';
-import { updatePositionTradesBatch } from '@/server/db/database';
+import { updatePositionRR } from '@/server/db/database';
 
-export const POST: RequestHandler = async ({ request, locals }) => {
+export const PATCH: RequestHandler = async ({ request, params, locals }) => {
 	try {
 		assertHasSession(locals);
 		const requestBody = await request.json();
-		await updatePositionTradesBatch({
-			positionId: Number(requestBody.positionId),
-			trades: requestBody.trades,
+		const positionId = Number(params.positionId);
+		await updatePositionRR({
+			position: { id: positionId, ...requestBody.position },
 			userId: locals.session.userId
 		});
 		return new Response('success');

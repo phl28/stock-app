@@ -1,8 +1,9 @@
 <script lang="ts">
-	import TradeHistoryTable from '$lib/components/TradeHistoryTable.svelte';
-	import PositionTable from '$lib/components/PositionTable.svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
+
+	import TradeHistoryTable from '$lib/components/TradeHistoryTable.svelte';
+	import PositionTable from '$lib/components/PositionTable.svelte';
 	import { generatePageNumbers } from '$lib/helpers/PageHelpers';
 
 	export let data: PageData;

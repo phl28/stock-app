@@ -1,9 +1,10 @@
-import { assertHasSession } from '@/lib/types/utils';
 import type { PageServerLoad } from './$types';
-import { deletePosition, getPosition, markPositionReviewed } from '@/server/db/database';
 import { error, isHttpError } from '@sveltejs/kit';
 import { PRIVATE_POLYGON_IO_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL } from '$env/static/public';
+
+import { assertHasSession } from '@/lib/types/utils';
+import { deletePosition, getPosition, markPositionReviewed } from '@/server/db/database';
 
 const API_KEY = PRIVATE_POLYGON_IO_API_KEY;
 

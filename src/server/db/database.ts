@@ -1,6 +1,7 @@
+import { sql } from '@vercel/postgres';
+
 import { drizzle as VercelDrizzle, type VercelPgDatabase } from 'drizzle-orm/vercel-postgres';
 import { drizzle as LocalDrizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { sql } from '@vercel/postgres';
 import pkg from 'pg';
 
 import * as schema from './schema';
@@ -443,6 +444,23 @@ export const updatePositionJournal = async ({
 			.returning();
 		return updatedPosition;
 	});
+};
+
+export const updatePositionRR = async ({
+	userId,
+	position
+}: {
+	userId: string;
+	position: Pick<SelectPosition, 'id' | 'stopLossPrice' | 'profitTargetPrice'>;
+}) => {
+	await db
+		.update(positionsTable)
+		.set({
+			stopLossPrice: position.stopLossPrice,
+			profitTargetPrice: position.profitTargetPrice,
+			updatedAt: new Date()
+		})
+		.where(and(eq(positionsTable.id, position.id), eq(positionsTable.createdBy, userId)));
 };
 
 // Articles

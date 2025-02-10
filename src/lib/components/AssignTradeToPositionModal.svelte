@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { createEventDispatcher, tick } from 'svelte';
 	import { enhance } from '$app/forms';
+
 	import { dispatchToast } from '@/routes/stores';
 	import type { Position, Trade } from '../types/tradeTypes';
-	import { createEventDispatcher, tick } from 'svelte';
 
 	const dispatch = createEventDispatcher();
 

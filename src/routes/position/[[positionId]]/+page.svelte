@@ -1,41 +1,50 @@
 <script lang="ts">
+	import { onMount, tick } from 'svelte';
+	import { enhance } from '$app/forms';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { browser } from '$app/environment';
+	import type { PageData } from './$types';
+
+	import { dispatchToast, darkTheme, modalStore } from '@/routes/stores.ts';
+	import type { StockData, VolumeData } from '@/lib/types/chartTypes.ts';
+	import { convertUnixTimestampToDate, formatDuration } from '@/lib/helpers/DataHelpers.ts';
+	import { formatCurrency } from '@/lib/helpers/CurrencyHelpers.ts';
+	import Editor from '@/lib/components/Editor.svelte';
+	import Grid from '@/lib/components/Grid.svelte';
+	import type { Trade } from '@/lib/types/tradeTypes.ts';
+	import { TradeSideCellRenderer } from '@/lib/components/TradeSideCellRenderer.ts';
+	import EditPositionModal from '@/lib/components/EditPositionModal.svelte';
+
 	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
 	import {
 		ColorType,
 		CrosshairMode,
 		LineStyle,
+		type IPriceLine,
 		type ISeriesApi,
 		type SeriesMarker,
 		type Time
 	} from 'lightweight-charts';
-	import type { PageData } from './$types';
-	import { dispatchToast, darkTheme, modalStore } from '@/routes/stores.ts';
-	import type { StockData, VolumeData } from '@/lib/types/chartTypes.ts';
-	import { convertUnixTimestampToDate, formatDuration } from '@/lib/helpers/DataHelpers.ts';
-	import { onMount, tick } from 'svelte';
 	import { ArrowDown, ArrowUp, CheckCheck, EllipsisVertical } from 'lucide-svelte';
-	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
-	import { formatCurrency } from '@/lib/helpers/CurrencyHelpers.ts';
-	import Editor from '@/lib/components/Editor.svelte';
-	import Grid from '@/lib/components/Grid.svelte';
 	import {
 		colorSchemeDarkBlue,
 		themeQuartz,
 		type GridApi,
 		type GridOptions
 	} from 'ag-grid-community';
-	import type { Trade } from '@/lib/types/tradeTypes.ts';
-	import { TradeSideCellRenderer } from '@/lib/components/TradeSideCellRenderer.ts';
-	import EditPositionModal from '@/lib/components/EditPositionModal.svelte';
-	import calculator from '@/lib/calculator/calculator';
 
 	export let data: PageData;
+
+	let isCalculatingRR = false;
 
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
 	//  only used when there are SMA data
 	let lineSeries: ISeriesApi<'Line'> | null = null;
+	let avgEntryPriceLine: IPriceLine | undefined = undefined;
+	let avgExitPriceLine: IPriceLine | undefined = undefined;
+	let profitTargetPriceLine: IPriceLine | undefined = undefined;
+	let stopLossPriceLine: IPriceLine | undefined = undefined;
 
 	let container: HTMLDivElement;
 	let containerWidth = 600;
@@ -54,19 +63,6 @@
 	}
 
 	onMount(() => {
-		if (data) {
-			if (data.stockData) {
-				try {
-					fillChartData(data);
-				} catch (err) {
-					dispatchToast({ type: 'error', message: 'Error initializing chart' });
-				}
-			}
-			if (data.position) {
-				fillPositionData(data.position, data.trades ?? []);
-			}
-		}
-
 		if (container) {
 			const parentWidth = container.parentElement?.clientWidth ?? 600;
 			containerWidth = Math.min(parentWidth, 600);
@@ -82,6 +78,21 @@
 			}
 		};
 	});
+
+	$: {
+		if (data) {
+			if (data.stockData) {
+				try {
+					fillChartData(data);
+				} catch (err) {
+					dispatchToast({ type: 'error', message: 'Error initializing chart' });
+				}
+			}
+			if (data.position) {
+				fillPositionData(data.position, data.trades ?? []);
+			}
+		}
+	}
 
 	let stockData: StockData[];
 	let volumeData: VolumeData[];
@@ -142,7 +153,13 @@
 		}
 		await tick();
 		chartSeries?.setMarkers(markers);
-		chartSeries?.createPriceLine({
+
+		if (avgEntryPriceLine) chartSeries?.removePriceLine(avgEntryPriceLine);
+		if (avgExitPriceLine) chartSeries?.removePriceLine(avgExitPriceLine);
+		if (profitTargetPriceLine) chartSeries?.removePriceLine(profitTargetPriceLine);
+		if (stopLossPriceLine) chartSeries?.removePriceLine(stopLossPriceLine);
+
+		avgEntryPriceLine = chartSeries?.createPriceLine({
 			price: Number(position.averageEntryPrice),
 			color: 'green',
 			lineWidth: 2,
@@ -151,7 +168,7 @@
 			title: 'Avg Entry'
 		});
 		if (position.averageExitPrice) {
-			chartSeries?.createPriceLine({
+			avgExitPriceLine = chartSeries?.createPriceLine({
 				price: Number(position.averageExitPrice),
 				color: 'red',
 				lineWidth: 2,
@@ -161,7 +178,7 @@
 			});
 		}
 		if (position.profitTargetPrice) {
-			chartSeries?.createPriceLine({
+			profitTargetPriceLine = chartSeries?.createPriceLine({
 				price: Number(position.profitTargetPrice),
 				color: 'blue',
 				lineWidth: 2,
@@ -171,7 +188,7 @@
 			});
 		}
 		if (position.stopLossPrice) {
-			chartSeries?.createPriceLine({
+			stopLossPriceLine = chartSeries?.createPriceLine({
 				price: Number(position.stopLossPrice),
 				color: 'orange',
 				lineWidth: 2,
@@ -269,52 +286,6 @@
 
 	const toggleEditPositionModal = () => {
 		modalStore.toggleEditPositionModal();
-	};
-
-	let editingCell: { rowIndex: number; column: string } | null = null;
-
-	$: editingState = (rowIndex: number, column: string) =>
-		editingCell?.rowIndex === rowIndex && editingCell?.column === column;
-	// Temporary storage for edited values
-	let editValue: string = '';
-
-	// Function to start editing a cell
-	const startEditing = async (rowIndex: number, column: string, value: string | number) => {
-		editingCell = { rowIndex, column };
-		editValue = value.toString();
-		await tick();
-	};
-
-	// Function to save edited value
-	const saveEdit = async (position: any) => {
-		// if (!editingCell) return;
-		// try {
-		// 	const response = await fetch('/api/position/update', {
-		// 		method: 'POST',
-		// 		headers: {
-		// 			'Content-Type': 'application/json'
-		// 		},
-		// 		body: JSON.stringify({
-		// 			tradeId: position.tradeId,
-		// 			[editingCell.column]: editValue
-		// 		})
-		// 	});
-		// 	if (!response.ok) throw new Error('Failed to update position');
-		// 	dispatchToast({ type: 'success', message: 'Position updated successfully!' });
-		// 	await invalidateAll();
-		// } catch (error) {
-		// 	dispatchToast({ type: 'error', message: 'Failed to update position' });
-		// }
-		// editingCell = null;
-	};
-
-	const handleKeyDown = (event: KeyboardEvent, position: any) => {
-		if (event.key === 'Enter') {
-			event.preventDefault();
-			saveEdit(position);
-		} else if (event.key === 'Escape') {
-			editingCell = null;
-		}
 	};
 
 	const handleSaveJournal = async (outputData: any) => {
@@ -419,14 +390,49 @@
 		);
 	}
 
-	const { calcRewardToRisk } = calculator;
-	let rR: number | undefined = undefined;
-	$: {
-		const risk = Number(data.position?.averageEntryPrice) - Number(data.position?.stopLossPrice);
-		const reward =
-			Number(data.position?.profitTargetPrice) - Number(data.position?.averageEntryPrice);
-		rR = calcRewardToRisk(risk, reward);
-	}
+	let rR: number | undefined =
+		(Number(data.position?.profitTargetPrice) - Number(data.position?.averageEntryPrice)) /
+		(Number(data.position?.averageEntryPrice) - Number(data.position?.stopLossPrice));
+	let previousRR: number | undefined = rR;
+	let stopLossPrice: number | undefined = Number(data.position?.stopLossPrice) || undefined;
+	let previousStopLossPrice: number | undefined = stopLossPrice;
+	let profitTargetPrice: number | undefined = Number(data.position?.profitTargetPrice) || undefined;
+	let previousProfitTargetPrice: number | undefined = profitTargetPrice;
+
+	const updateRiskReward = debounce(async () => {
+		if (!data.position) return;
+		isCalculatingRR = true;
+
+		if (previousRR !== rR && stopLossPrice && rR) {
+			profitTargetPrice =
+				(Number(data.position.averageEntryPrice) - stopLossPrice) * rR +
+				Number(data.position.averageEntryPrice);
+			previousProfitTargetPrice = profitTargetPrice;
+		} else if (
+			(previousStopLossPrice !== stopLossPrice ||
+				previousProfitTargetPrice !== profitTargetPrice) &&
+			profitTargetPrice &&
+			stopLossPrice
+		) {
+			rR =
+				(Number(data.position?.profitTargetPrice) - Number(data.position?.averageEntryPrice)) /
+				(Number(data.position?.averageEntryPrice) - Number(data.position?.stopLossPrice));
+			previousRR = rR;
+		}
+		if (browser) {
+			fetch('/position/' + data.position.id + '/edit', {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					position: { ...data.position, stopLossPrice, profitTargetPrice }
+				})
+			});
+			await invalidateAll();
+		}
+		isCalculatingRR = false;
+	}, 500);
 </script>
 
 <section>
@@ -456,7 +462,7 @@
 							method="POST"
 							action="?/deletePosition"
 							use:enhance={() => {
-								return async ({ result, update }) => {
+								return async ({ result }) => {
 									if (result.type === 'success') {
 										goto('/trade/1');
 										dispatchToast({ type: 'success', message: 'Position deleted successfully!' });
@@ -527,19 +533,38 @@
 						<div class="label">
 							<span class="label-text">Stop Loss</span>
 						</div>
-						<input type="number" value={data.position?.stopLossPrice} disabled />
+						<input
+							type="number"
+							bind:value={stopLossPrice}
+							disabled={isCalculatingRR}
+							on:blur={updateRiskReward}
+							class="input input-sm input-bordered w-full"
+						/>
 					</label>
 					<label class="form-control w-full">
 						<div class="label">
 							<span class="label-text">Profit Target</span>
 						</div>
-						<input type="number" value={data.position?.profitTargetPrice} disabled />
+						<input
+							type="number"
+							bind:value={profitTargetPrice}
+							disabled={isCalculatingRR}
+							on:blur={updateRiskReward}
+							class="input input-sm input-bordered w-full"
+						/>
 					</label>
 					<label class="form-control w-full">
 						<div class="label">
-							<span class="label-text">R/R</span>
+							<span class="label-text">R / R Units</span>
 						</div>
-						<input type="number" value={data.position?.profitTargetPrice} disabled />
+						<input
+							type="number"
+							bind:value={rR}
+							step="0.01"
+							disabled={isCalculatingRR}
+							on:blur={updateRiskReward}
+							class="input input-sm input-bordered w-full"
+						/>
 					</label>
 				</div>
 			</div>

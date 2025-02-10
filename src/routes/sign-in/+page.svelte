@@ -1,8 +1,10 @@
 <script lang="ts">
+	import type { PageData } from './$types';
+
+	import { darkTheme } from '@/routes/stores.ts';
+
 	import SignIn from 'clerk-sveltekit/client/SignIn.svelte';
 	import { dark } from '@clerk/themes';
-	import { darkTheme } from '@/routes/stores.ts';
-	import type { PageData } from './$types';
 
 	export let data: PageData;
 </script>
