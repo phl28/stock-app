@@ -445,6 +445,23 @@ export const updatePositionJournal = async ({
 	});
 };
 
+export const updatePositionRR = async ({
+	userId,
+	position
+}: {
+	userId: string;
+	position: Pick<SelectPosition, 'id' | 'stopLossPrice' | 'profitTargetPrice'>;
+}) => {
+	await db
+		.update(positionsTable)
+		.set({
+			stopLossPrice: position.stopLossPrice,
+			profitTargetPrice: position.profitTargetPrice,
+			updatedAt: new Date()
+		})
+		.where(and(eq(positionsTable.id, position.id), eq(positionsTable.createdBy, userId)));
+};
+
 // Articles
 export const getPaginatedArticles = async (
 	pageSize: number,
