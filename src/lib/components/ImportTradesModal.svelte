@@ -121,7 +121,7 @@
 			return mappedRow;
 		});
 		try {
-			const response = await fetch('/trade', {
+			const response = await fetch('/trade/bulk-insert', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

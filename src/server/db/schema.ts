@@ -65,11 +65,11 @@ export const tradeHistory = pgTable(
 		ticker: varchar('ticker', { length: 15 }).notNull(),
 		region: region('region').notNull().default('US'),
 		currency: currency('currency').notNull().default('USD'),
+		platform: platform('platform').notNull().default('FUTU'),
+		tradeSide: tradeSide('trade_side').notNull().default('BUY'),
 		price: decimal('price', { precision: 20, scale: 8 }).notNull(),
 		fees: decimal('fees', { precision: 20, scale: 8 }).default('0'),
 		volume: integer('volume').notNull(),
-		platform: platform('platform').notNull().default('FUTU'),
-		tradeSide: tradeSide('trade_side').notNull().default('BUY'),
 		updatedAt: timestamp('updated_at'),
 		executedAt: timestamp('executed_at').notNull(),
 		createdAt: timestamp('created_at')
