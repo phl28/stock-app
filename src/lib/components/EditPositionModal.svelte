@@ -10,7 +10,12 @@
 	import { TradeSideCellRenderer } from './TradeSideCellRenderer';
 	import { DateTimeEditor } from './DateTimeEditor';
 
-	import type { GridApi, GridOptions } from 'ag-grid-community';
+	import type {
+		CellValueChangedEvent,
+		GridApi,
+		GridOptions,
+		RowSelectedEvent
+	} from 'ag-grid-community';
 	import { ArrowDown, ArrowUp } from 'lucide-svelte';
 
 	type PartialTrade = Pick<Trade, 'id' | 'executedAt' | 'price' | 'fees' | 'volume' | 'tradeSide'>;
@@ -21,22 +26,26 @@
 	export let handleCloseModal: () => void;
 
 	let modal: HTMLDialogElement;
-
+	let gridApi: GridApi<PartialTrade>;
+	let gridData: PartialTrade[] = [];
+	let selectedRows: PartialTrade[] = [];
+	let isEdited: boolean = false;
 	$: (async () => {
 		await tick();
 		if (modal) {
 			if (isModalOpen && !modal.open) {
 				modal.showModal();
+				gridData = trades.map((t) => ({ ...t }));
+				if (gridApi) gridApi.setGridOption('rowData', gridData);
 			} else if (!isModalOpen && modal.open) {
 				modal.close();
 			}
 		}
 	})();
 
-	let gridApi: GridApi<PartialTrade>;
 	const handleGridReady = (event: CustomEvent) => {
-		const api = event.detail;
-		gridApi = api;
+		gridApi = event.detail;
+		gridApi.setGridOption('rowData', gridData);
 	};
 
 	const gridOptions: GridOptions<PartialTrade> = {
@@ -47,6 +56,16 @@
 		},
 		autoSizeStrategy: {
 			type: 'fitGridWidth'
+		},
+		rowSelection: {
+			mode: 'multiRow'
+		},
+		onRowSelected: (event: RowSelectedEvent) => {
+			const api = event.api;
+			selectedRows = api.getSelectedRows();
+		},
+		onCellValueChanged: (event: CellValueChangedEvent) => {
+			isEdited = JSON.stringify(gridData) !== JSON.stringify(trades);
 		},
 		columnDefs: [
 			{
@@ -101,9 +120,19 @@
 
 	$: {
 		if (gridApi) {
-			gridApi.setGridOption('rowData', trades);
+			gridApi.setGridOption('rowData', gridData);
 		}
 	}
+
+	const resetGridData = () => {
+		gridData = trades.map((t) => ({ ...t }));
+		if (gridApi) gridApi.setGridOption('rowData', gridData);
+	};
+
+	const onClose = () => {
+		resetGridData();
+		handleCloseModal();
+	};
 
 	const handleUpdateTrades = async () => {
 		const allTrades: PartialTrade[] = [];
@@ -128,7 +157,59 @@
 		}
 
 		await invalidateAll();
-		handleCloseModal();
+		onClose();
+	};
+
+	const addNewRow = async () => {
+		try {
+			let newTrade: Partial<Trade> = {
+				positionId: position.id,
+				ticker: position.ticker,
+				region: position.region,
+				currency: position.currency,
+				platform: position.platform,
+				executedAt: new Date(),
+				price: '0',
+				fees: '0',
+				volume: 0,
+				tradeSide: 'BUY'
+			};
+			const response = await fetch('/trade/bulk-insert', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ trades: [newTrade] })
+			});
+			if (!response.ok) {
+				throw new Error('Failed to add trade');
+			}
+			const { trades: newTrades } = await response.json();
+			gridData = [...gridData, ...newTrades];
+			gridApi.setGridOption('rowData', gridData);
+			await invalidateAll();
+		} catch (error) {
+			dispatchToast({ type: 'error', message: 'Failed to add trade' });
+		}
+	};
+
+	const deleteSelectedRows = async () => {
+		try {
+			const selectedNodes = gridApi.getSelectedNodes();
+			const selectedIds = selectedNodes.map((node) => node.data?.id);
+			const response = await fetch('/trade/bulk-delete', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ ids: selectedIds })
+			});
+			gridData = gridData.filter((row) => !selectedIds.includes(row.id));
+			gridApi.setGridOption('rowData', gridData);
+			await invalidateAll();
+		} catch (err) {
+			dispatchToast({ type: 'error', message: 'Failed to delete trades' });
+		}
 	};
 </script>
 
@@ -138,7 +219,7 @@
 		<div class="flex justify-between">
 			<div class="flex flex-grow-[3] flex-col">
 				<div class="flex">
-					<label class="label flex cursor-pointer flex-col items-start gap-1">
+					<label class="label flex cursor-pointer flex-col items-start gap-1 pl-0">
 						<span class="label-text">Ticker</span>
 						<input
 							id="ticker"
@@ -159,7 +240,17 @@
 						/>
 					</label>
 				</div>
-				<div class="overflow-x-auto">
+				<div class="mt-4 overflow-x-auto">
+					<div class="mb-4 flex gap-2">
+						<button class="btn btn-success btn-sm" on:click={addNewRow}>Add Trade</button>
+						<button
+							class="btn btn-error btn-sm"
+							on:click={deleteSelectedRows}
+							disabled={selectedRows.length === 0}
+						>
+							Delete Selected
+						</button>
+					</div>
 					<Grid
 						style="height: 250px"
 						{gridOptions}
@@ -220,11 +311,21 @@
 			</div>
 		</div>
 		<div class="modal-action">
-			<button class="btn" type="button" on:click={handleCloseModal}>Close</button>
-			<button class="btn btn-primary" on:click={handleUpdateTrades} type="submit">Save</button>
+			<button class="btn btn-warning" type="button" on:click={resetGridData} disabled={!isEdited}>
+				Reset
+			</button>
+			<button class="btn btn-neutral" type="button" on:click={onClose}>Close</button>
+			<button
+				class="btn btn-primary"
+				on:click={handleUpdateTrades}
+				type="submit"
+				disabled={!isEdited}
+			>
+				Save
+			</button>
 		</div>
 	</div>
 	<div class="modal-backdrop">
-		<button type="button" on:click={handleCloseModal}>close</button>
+		<button type="button" on:click={onClose}>close</button>
 	</div>
 </dialog>

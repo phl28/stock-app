@@ -38,10 +38,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					stockData
 				};
 			}
+			return {
+				position,
+				trades
+			};
 		}
-		return {
-			position
-		};
 	} catch (err) {
 		if (isHttpError(err)) {
 			throw error(err.status, err.body.message);
