@@ -12,4 +12,5 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vscode/launch.json
 .vscode/settings.json
+.zed/*
 __pycache__
