@@ -98,36 +98,24 @@
 	let volumeData: VolumeData[];
 
 	const fillChartData = async (data: any) => {
-		if (!data.stockData.results) {
+		if (!data.stockData) {
 			dispatchToast({ type: 'error', message: 'No data found' });
 			return;
 		}
-		let stock: StockData[] = [];
+
 		let volume: VolumeData[] = [];
 		let prevClose = 0;
-		for (const item of data.stockData.results) {
-			const date = convertUnixTimestampToDate(item.t);
-			stock = [
-				...stock,
-				{
-					time: date,
-					open: item.o,
-					high: item.h,
-					low: item.l,
-					close: item.c
-				}
-			];
+		for (const item of data.volumeData) {
 			volume = [
 				...volume,
 				{
-					time: date,
-					value: item.v,
+					...item,
 					color: prevClose < item.c ? 'rgba(0, 150, 136, 0.8)' : 'rgba(255,82,82, 0.8)'
 				}
 			];
 			prevClose = item.c;
 		}
-		stockData = stock;
+		stockData = data.stockData;
 		volumeData = volume;
 		await tick();
 		if (!chartSeries || !volumeSeries) {
