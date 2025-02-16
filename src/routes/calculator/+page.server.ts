@@ -7,7 +7,7 @@ import type { ChartResponse } from '$lib/types/chartTypes';
 
 const API_KEY = PRIVATE_POLYGON_IO_API_KEY;
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ fetch }) => {
 	const today = new Date();
 	let twoYearsAgo = new Date(today.getFullYear() - 2, today.getMonth(), today.getDate());
 

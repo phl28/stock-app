@@ -19,7 +19,7 @@ import {
 	assignTradesToPosition
 } from '@/server/db/database';
 
-const checkTickerValid = async (ticker: string) => {
+const checkTickerValid = async (fetch: typeof globalThis.fetch, ticker: string) => {
 	if (ticker.at(0) === '(' && ticker.at(-1) === ')') {
 		// this indicates the ticker is wrapped in a bracket and it is delisted.
 		return true;
@@ -99,7 +99,7 @@ export const actions = {
 		}
 		return;
 	},
-	addTrade: async ({ request, locals }) => {
+	addTrade: async ({ fetch, request, locals }) => {
 		assertHasSession(locals);
 		const formData = await request.formData();
 		const newTrade = {
@@ -114,7 +114,7 @@ export const actions = {
 			executedAt: new Date(formData.get('executedAt') as string),
 			createdBy: locals.session.userId
 		};
-		const isTickerValid = await checkTickerValid(newTrade.ticker);
+		const isTickerValid = await checkTickerValid(fetch, newTrade.ticker);
 		if (!isTickerValid) {
 			return error(400, { message: 'Ticker is not valid' });
 		}
