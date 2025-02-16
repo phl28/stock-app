@@ -35,6 +35,7 @@
 				alignItems: 'center',
 				cursor: 'pointer'
 			},
+			filter: true,
 			width: 150
 		},
 		onRowClicked: (event) => {
@@ -84,14 +85,14 @@
 			},
 			{
 				field: 'averageEntryPrice',
-				valueGetter: ({ data }) =>
+				valueFormatter: ({ data }) =>
 					formatCurrency(data?.averageEntryPrice ?? '', data?.region === 'US' ? 'USD' : 'HKD'),
 				headerName: 'Average Price'
 			},
 			{
 				field: 'grossProfitLoss',
 				headerName: 'Gross P/L',
-				valueGetter: ({ data }) =>
+				valueFormatter: ({ data }) =>
 					formatCurrency(data?.grossProfitLoss ?? '', data?.region === 'US' ? 'USD' : 'HKD')
 			},
 			{
