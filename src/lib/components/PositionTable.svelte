@@ -21,6 +21,7 @@
 		const api = event.detail;
 		gridApi = api;
 	};
+
 	const gridOptions: GridOptions<Position> = {
 		suppressMovableColumns: true,
 		suppressCellFocus: true,
@@ -33,7 +34,9 @@
 				display: 'flex',
 				justifyContent: 'flex-start',
 				alignItems: 'center',
-				cursor: 'pointer'
+				cursor: 'pointer',
+				padding: '0.75rem 1rem',
+				fontSize: '0.875rem'
 			},
 			width: 150
 		},
@@ -42,15 +45,28 @@
 			handlePositionRowClick(event.data);
 		},
 		domLayout: 'autoHeight',
+		rowStyle: {
+			cursor: 'pointer',
+			transition: 'all 0.2s'
+		},
+		rowClass: 'hover:bg-base-200/50',
 		columnDefs: [
 			{
 				field: 'closedAt',
 				cellDataType: 'boolean',
-				headerName: 'Active',
+				headerName: 'Status',
 				valueGetter: ({ data }) => {
 					return data?.closedAt === null;
 				},
-				width: 90
+				cellRenderer: (params: any) => {
+					const isActive = params.value;
+					return `<div class="badge ${
+						isActive ? 'badge-success' : 'badge-ghost'
+					} text-xs font-medium">
+						${isActive ? 'Active' : 'Closed'}
+					</div>`;
+				},
+				width: 100
 			},
 			{
 				field: 'isShort',
@@ -66,50 +82,67 @@
 				width: 100
 			},
 			{
-				field: 'ticker'
+				field: 'ticker',
+				headerName: 'Symbol',
+				width: 120
 			},
 			{
-				field: 'platform'
+				field: 'platform',
+				width: 130
 			},
 			{
-				field: 'region'
+				field: 'region',
+				width: 100
 			},
 			{
 				field: 'numOfTrades',
-				headerName: '# of Trades'
+				headerName: 'Trades',
+				width: 100
 			},
 			{
 				field: 'totalVolume',
-				headerName: 'Quantity'
+				headerName: 'Quantity',
+				width: 120
 			},
 			{
 				field: 'averageEntryPrice',
 				valueGetter: ({ data }) =>
 					formatCurrency(data?.averageEntryPrice ?? '', data?.region === 'US' ? 'USD' : 'HKD'),
-				headerName: 'Average Price'
+				headerName: 'Avg. Price',
+				width: 130
 			},
 			{
 				field: 'grossProfitLoss',
-				headerName: 'Gross P/L',
-				valueGetter: ({ data }) =>
-					formatCurrency(data?.grossProfitLoss ?? '', data?.region === 'US' ? 'USD' : 'HKD')
+				headerName: 'P/L',
+				cellRenderer: (params: any) => {
+					const value = params.value;
+					const isPositive = value > 0;
+					return `<div class="font-medium ${isPositive ? 'text-success' : 'text-error'}">
+						${formatCurrency(value ?? '', params.data.region === 'US' ? 'USD' : 'HKD')}
+					</div>`;
+				},
+				width: 130
 			},
 			{
 				field: 'openedAt',
-				cellDataType: 'date'
+				cellDataType: 'date',
+				headerName: 'Date',
+				valueFormatter: ({ value }) => new Date(value).toLocaleDateString(),
+				width: 120
 			}
 		]
 	};
 </script>
 
-<div class="w-full">
+<div class="w-full space-y-4">
 	<PositionNavBar numOfPositions={positions.length} />
-	<div class="overflow-x-auto">
+	<div class="card overflow-hidden bg-base-100 p-0">
 		<Grid
 			style={'max-height: 500px'}
 			{gridOptions}
 			isDarkMode={$darkTheme}
 			on:gridReady={handleGridReady}
+			className="rounded-xl"
 		/>
 	</div>
 </div>

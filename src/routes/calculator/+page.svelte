@@ -205,6 +205,11 @@
 	let riskReward: number = 0;
 	let stockTickInputValid: boolean = false;
 
+	const handleStockTickInput = (event: Event) => {
+		const input = (event.target as HTMLInputElement).value;
+		stockTickInputValid = input.length > 0 && /^[A-Za-z]+$/.test(input);
+	};
+
 	$: {
 		stopLossPerc = calcStopLossPerc(entry, stop);
 		positionSize = calcPositionSize(risk / 100, stopLossPerc);
@@ -233,161 +238,123 @@
 		</p>
 	</div>
 
-	<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-		<!-- Calculator Panel -->
-		<div class="card bg-base-100 p-6 shadow-lg">
-			<div class="mb-6">
-				<form
-					method="POST"
-					action="?/fetchStockData"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							if (result.type === 'error') {
-								dispatchToast({ type: 'error', message: result.error.message });
-							} else if (result.type === 'success') {
-								await update({ reset: false });
-								fillChartData(result.data);
-								waterMarkText = `${stockTickInput} 1D`;
-							} else if (result.type === 'failure') {
-								dispatchToast({ type: 'error', message: String(result.data?.message) });
-							} else {
-								dispatchToast({ type: 'error', message: 'An unexpected error occurred' });
-							}
-							stockTickInput = '';
-						};
-					}}
-					class="relative"
-				>
-					<div class="form-control">
-						<label class="label" for="ticker">
-							<span class="label-text font-medium">Stock Ticker</span>
-						</label>
-						<div class="flex justify-center gap-2">
+	<div class="grid gap-8 lg:grid-cols-2">
+		<div class="space-y-6">
+			<div class="card bg-base-100 p-6 shadow-lg">
+				<h2 class="mb-6 text-2xl font-bold">Position Calculator</h2>
+				<div class="grid gap-6 sm:grid-cols-2">
+					<label class="form-control w-full">
+						<div class="label">
+							<span class="label-text font-medium">Account Size</span>
+						</div>
+						<div class="relative">
+							<span class="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50">$</span>
+							<input
+								type="number"
+								bind:value={accSize}
+								class="input input-bordered w-full pl-8"
+								placeholder="Enter account size"
+							/>
+						</div>
+					</label>
+
+					<label class="form-control w-full">
+						<div class="label">
+							<span class="label-text font-medium">Risk Percentage</span>
+						</div>
+						<div class="relative">
+							<input
+								type="number"
+								bind:value={risk}
+								step="0.1"
+								class="input input-bordered w-full pr-8"
+								placeholder="Enter risk %"
+							/>
+							<span class="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/50">%</span>
+						</div>
+					</label>
+
+					<label class="form-control w-full">
+						<div class="label">
+							<span class="label-text font-medium">Entry Price</span>
+						</div>
+						<div class="relative">
+							<span class="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50">$</span>
+							<input
+								type="number"
+								bind:value={entry}
+								class="input input-bordered w-full pl-8"
+								placeholder="Enter entry price"
+							/>
+						</div>
+					</label>
+
+					<label class="form-control w-full">
+						<div class="label">
+							<span class="label-text font-medium">Stop Loss</span>
+						</div>
+						<div class="relative">
+							<span class="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50">$</span>
+							<input
+								type="number"
+								bind:value={stop}
+								class="input input-bordered w-full pl-8"
+								placeholder="Enter stop loss"
+							/>
+						</div>
+					</label>
+
+					<label class="form-control w-full">
+						<div class="label">
+							<span class="label-text font-medium">Target Price</span>
+						</div>
+						<div class="relative">
+							<span class="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50">$</span>
+							<input
+								type="number"
+								bind:value={target}
+								class="input input-bordered w-full pl-8"
+								placeholder="Enter target price"
+							/>
+						</div>
+					</label>
+
+					<label class="form-control w-full">
+						<div class="label">
+							<span class="label-text font-medium">Stock Symbol</span>
+						</div>
+						<div class="relative">
 							<input
 								type="text"
-								id="ticker"
-								name="ticker"
 								bind:value={stockTickInput}
-								class="input input-bordered flex-1"
-								placeholder="Enter ticker symbol (e.g., AAPL)"
+								class="input input-bordered w-full"
+								placeholder="Enter stock symbol"
+								on:input={handleStockTickInput}
 							/>
-							<button class="btn btn-primary" type="submit" disabled={!stockTickInputValid}>
-								<Search class="h-5 w-5" />
-							</button>
+							{#if stockTickInputValid}
+								<span class="absolute right-3 top-1/2 -translate-y-1/2 text-success">
+									<i class="fas fa-check"></i>
+								</span>
+							{/if}
 						</div>
-					</div>
-				</form>
-			</div>
-
-			<div class="grid gap-4 sm:grid-cols-2">
-				<div class="form-control">
-					<label class="label" for="accSize">
-						<span class="label-text font-medium">Account Size (USD)</span>
 					</label>
-					<input type="number" id="accSize" bind:value={accSize} class="input input-bordered" />
-				</div>
-
-				<div class="form-control">
-					<label class="label" for="risk">
-						<span class="label-text font-medium">Risk (%)</span>
-					</label>
-					<input
-						type="number"
-						id="risk"
-						bind:value={risk}
-						class="input input-bordered"
-						step="0.1"
-					/>
-				</div>
-
-				<div class="form-control">
-					<label class="label" for="entry">
-						<span class="label-text font-medium">Entry Price</span>
-					</label>
-					<input
-						type="number"
-						id="entry"
-						bind:value={entry}
-						class="input input-bordered"
-						step="0.01"
-					/>
-				</div>
-
-				<div class="form-control">
-					<label class="label" for="stop">
-						<span class="label-text font-medium">Stop Loss</span>
-					</label>
-					<input
-						type="number"
-						id="stop"
-						bind:value={stop}
-						class="input input-bordered"
-						step="0.01"
-					/>
-				</div>
-
-				<div class="form-control">
-					<label class="label" for="target">
-						<span class="label-text font-medium">Target Price</span>
-					</label>
-					<input
-						type="number"
-						id="target"
-						bind:value={target}
-						class="input input-bordered"
-						step="0.01"
-					/>
 				</div>
 			</div>
 
-			<div class="divider my-6"></div>
-
-			<div class="grid gap-4 sm:grid-cols-2">
-				<div class="stat rounded-box bg-base-200 p-4">
-					<div class="stat-title">Stop Loss</div>
-					<div class="stat-value text-xl">
-						${stopLossAmt.toFixed(2)}
-					</div>
-					<div class="stat-desc">
-						{(stopLossPerc * 100).toFixed(2)}%
-					</div>
-				</div>
-
-				<div class="stat rounded-box bg-base-200 p-4">
-					<div class="stat-title">Position Size</div>
-					<div class="stat-value text-xl">
-						{positionAmt} shares
-					</div>
-					<div class="stat-desc">
-						{(positionSize * 100).toFixed(2)}% of account
-					</div>
-				</div>
-
-				<div class="stat rounded-box bg-base-200 p-4">
-					<div class="stat-title">Potential Profit</div>
-					<div class="stat-value text-xl text-success">
-						{(profit * 100).toFixed(2)}%
-					</div>
-					<div class="stat-desc">
-						Account growth: {(accGrowth * 100).toFixed(2)}%
-					</div>
-				</div>
-
-				<div class="stat rounded-box bg-base-200 p-4">
-					<div class="stat-title">Risk/Reward</div>
-					<div class="stat-value text-xl">
-						{riskReward.toFixed(2)}
-					</div>
-					<div class="stat-desc">Higher is better</div>
-				</div>
+			<div class="card bg-base-100 p-6 shadow-lg">
+				<h3 class="mb-4 text-xl font-bold">Results</h3>
+				<CalculatorResults input={{ risk, entry, stop, target, stopLossPerc }} />
 			</div>
 		</div>
 
-		<!-- Chart Panel -->
-		<div class="card flex flex-col bg-base-100 p-4 shadow-lg sm:p-6" bind:this={container}>
-			<CalculatorResults input={{ risk, entry, stop, target, stopLossPerc }} />
-			<div class="divider my-6"></div>
-			<div class="relative w-full px-2">
+		<div class="card flex flex-col bg-base-100 p-6 shadow-lg" bind:this={container}>
+			<div class="mb-6 flex items-center justify-between">
+				<h3 class="text-xl font-bold">Market Data</h3>
+				{#if stockTickInputValid}
+					<div class="badge badge-primary">{stockTickInput.toUpperCase()}</div>
+				{/if}
+			</div>
+			<div class="relative w-full">
 				<Chart {...chartOptions} {watermark} {...THEMES[$darkTheme ? 'Dark' : 'Light'].chart}>
 					<CandlestickSeries
 						bind:data={stockData}
