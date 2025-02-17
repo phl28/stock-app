@@ -4,8 +4,8 @@
 
 @layer base {
 	:root {
+		--radius: 0.75rem;
 		--header-height: 4rem;
-		--content-blur: blur(8px);
 	}
 
 	body {
@@ -13,89 +13,123 @@
 	}
 
 	h1 {
-		@apply text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl;
+		@apply scroll-m-20 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl;
 	}
 	h2 {
-		@apply text-3xl font-semibold tracking-tight md:text-4xl;
+		@apply scroll-m-20 text-3xl font-semibold tracking-tight md:text-4xl;
 	}
 	h3 {
-		@apply text-2xl font-semibold tracking-tight md:text-3xl;
+		@apply scroll-m-20 text-2xl font-semibold tracking-tight md:text-3xl;
 	}
 	h4 {
-		@apply text-xl font-semibold tracking-tight md:text-2xl;
+		@apply scroll-m-20 text-xl font-semibold tracking-tight md:text-2xl;
 	}
 	h5 {
-		@apply text-lg font-semibold tracking-tight;
+		@apply scroll-m-20 text-lg font-semibold tracking-tight;
 	}
 	h6 {
-		@apply text-base font-semibold tracking-tight;
+		@apply scroll-m-20 text-base font-semibold tracking-tight;
+	}
+
+	p {
+		@apply leading-7 [&:not(:first-child)]:mt-6;
 	}
 }
 
 @layer components {
 	.btn {
-		@apply transition-all duration-200 font-medium;
+		@apply inline-flex h-10 items-center justify-center rounded-lg px-4 py-2 text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+	}
+
+	.btn-sm {
+		@apply h-9 rounded-md px-3;
+	}
+
+	.btn-lg {
+		@apply h-11 rounded-lg px-8;
 	}
 
 	.btn-primary {
-		@apply shadow-lg shadow-primary/30 hover:shadow-primary/40;
+		@apply bg-primary text-primary-foreground hover:bg-primary/90;
+	}
+
+	.btn-secondary {
+		@apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+	}
+
+	.btn-ghost {
+		@apply hover:bg-accent hover:text-accent-foreground;
 	}
 
 	.card {
-		@apply rounded-xl border border-base-200 bg-base-100 transition-all duration-200 hover:shadow-xl;
+		@apply rounded-lg border border-base-200 bg-base-100 p-6 shadow-sm transition-all duration-200 hover:shadow-md;
 	}
 
-	.input,
-	.select,
+	.input {
+		@apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+	}
+
+	.select {
+		@apply h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+	}
+
 	.textarea {
-		@apply rounded-lg border-base-200 bg-base-100 transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary;
+		@apply flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
 	}
 
 	.table {
-		@apply rounded-xl bg-base-100 shadow-lg;
+		@apply w-full overflow-auto rounded-lg border border-base-200;
 	}
 
 	.table th {
-		@apply bg-base-200 text-base-content/80;
+		@apply h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0;
+	}
+
+	.table td {
+		@apply p-4 align-middle [&:has([role=checkbox])]:pr-0;
 	}
 
 	.table tr {
-		@apply hover:bg-base-200/50;
-	}
-
-	.navbar {
-		@apply fixed top-0 z-50 h-[var(--header-height)] border-b border-base-200 bg-base-100/80 backdrop-blur-[var(--content-blur)];
-	}
-
-	main {
-		@apply mt-[var(--header-height)] min-h-[calc(100vh-var(--header-height))] px-4 py-6;
-	}
-
-	.modal {
-		@apply backdrop-blur-sm;
-	}
-
-	.modal-box {
-		@apply rounded-xl border border-base-200 p-6 shadow-2xl;
-	}
-
-	.dropdown-content {
-		@apply rounded-xl border border-base-200 bg-base-100 p-2 shadow-xl;
-	}
-
-	.menu {
-		@apply rounded-xl;
-	}
-
-	.menu li > * {
-		@apply rounded-lg;
+		@apply border-b border-base-200 transition-colors hover:bg-muted/50;
 	}
 
 	.badge {
-		@apply rounded-lg px-2 py-1;
+		@apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+	}
+
+	.badge-primary {
+		@apply border-transparent bg-primary text-primary-foreground hover:bg-primary/80;
+	}
+
+	.badge-secondary {
+		@apply border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80;
+	}
+
+	.badge-outline {
+		@apply text-foreground;
+	}
+
+	.menu {
+		@apply flex flex-col gap-1 p-1;
+	}
+
+	.menu li > * {
+		@apply flex cursor-pointer select-none items-center rounded-md px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground;
 	}
 
 	.divider {
-		@apply before:bg-base-200 after:bg-base-200;
+		@apply my-4 h-[1px] w-full bg-border;
+	}
+
+	.modal {
+		@apply fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm;
+	}
+
+	.modal-box {
+		@apply relative w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg sm:rounded-lg;
+	}
+
+	.dropdown-content {
+		@apply z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md;
 	}
 }

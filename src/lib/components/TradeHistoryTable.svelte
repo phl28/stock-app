@@ -53,8 +53,12 @@
 				alignItems: 'center',
 				cursor: 'pointer',
 				padding: '0.75rem 1rem',
-				fontSize: '0.875rem'
-			}
+				fontSize: '0.875rem',
+				fontFamily: 'var(--font-sans)',
+				transition: 'background-color 0.2s'
+			},
+			sortable: true,
+			resizable: true
 		},
 		autoSizeStrategy: {
 			type: 'fitGridWidth'
@@ -64,32 +68,49 @@
 			cursor: 'pointer',
 			transition: 'all 0.2s'
 		},
-		rowClass: 'hover:bg-base-200/50',
+		rowClass: 'hover:bg-muted/50',
+		headerHeight: 48,
+		rowHeight: 52,
 		columnDefs: [
 			{
 				field: 'ticker',
 				headerName: 'Symbol',
-				width: 120
+				width: 120,
+				cellRenderer: (params: any) => {
+					return `<div class="font-medium">${params.value}</div>`;
+				}
 			},
 			{
 				field: 'region',
-				width: 100
+				width: 100,
+				cellRenderer: (params: any) => {
+					return `<div class="text-muted-foreground">${params.value}</div>`;
+				}
 			},
 			{
 				field: 'volume',
 				headerName: 'Quantity',
-				width: 120
+				width: 120,
+				cellRenderer: (params: any) => {
+					return `<div class="font-medium">${params.value}</div>`;
+				}
 			},
 			{
 				field: 'price',
 				headerName: 'Price',
 				valueGetter: ({ data }) =>
 					`${formatCurrency(data?.price ?? '', data?.region === 'US' ? 'USD' : 'HKD')}`,
-				width: 130
+				width: 130,
+				cellRenderer: (params: any) => {
+					return `<div class="font-medium">${params.value}</div>`;
+				}
 			},
 			{
 				field: 'platform',
-				width: 130
+				width: 130,
+				cellRenderer: (params: any) => {
+					return `<div class="text-muted-foreground">${params.value}</div>`;
+				}
 			},
 			{
 				field: 'tradeSide',
@@ -104,7 +125,10 @@
 				field: 'executedAt',
 				headerName: 'Date',
 				valueFormatter: ({ value }) => new Date(value).toLocaleDateString(),
-				width: 120
+				width: 120,
+				cellRenderer: (params: any) => {
+					return `<div class="text-muted-foreground">${params.value}</div>`;
+				}
 			}
 		],
 		onSelectionChanged: (event) => {
@@ -132,24 +156,30 @@
 	}
 </script>
 
-<div class="w-full space-y-4">
+<div class="w-full space-y-6">
 	<HistoryNavBar bind:selectedTrades numOfTrades={trades.length} {positions} />
 	<div class="space-y-4">
 		<div class="flex items-center justify-between">
-			<h5 class="text-lg font-semibold">Unassigned Trades ({unassignedTrades.length})</h5>
+			<h3 class="text-lg font-semibold tracking-tight">
+				Unassigned Trades ({unassignedTrades.length})
+			</h3>
 			{#if unassignedTrades.length > 0}
-				<div class="badge badge-primary">
+				<div
+					class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+				>
 					{Math.round((unassignedTrades.length / trades.length) * 100)}% of total
 				</div>
 			{/if}
 		</div>
-		<div class="card overflow-hidden bg-base-100 p-0">
+		<div
+			class="border-border bg-card text-card-foreground overflow-hidden rounded-lg border shadow-sm"
+		>
 			<Grid
-				style={'max-height: 500px'}
+				style={'max-height: 600px'}
 				{gridOptions}
 				isDarkMode={$darkTheme}
 				on:gridReady={handleGridReady}
-				className="rounded-xl"
+				className="ag-theme-alpine"
 			/>
 		</div>
 	</div>

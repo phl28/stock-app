@@ -62,10 +62,22 @@
 
 	const gridOptions: GridOptions<TableData> = {
 		defaultColDef: {
-			resizable: false
+			resizable: true,
+			cellStyle: {
+				display: 'flex',
+				justifyContent: 'flex-start',
+				alignItems: 'center',
+				padding: '0.75rem 1rem',
+				fontSize: '0.875rem',
+				fontFamily: 'var(--font-sans)',
+				transition: 'background-color 0.2s'
+			}
 		},
 		suppressMovableColumns: true,
 		domLayout: 'autoHeight',
+		headerHeight: 48,
+		rowHeight: 52,
+		rowClass: 'hover:bg-muted/50',
 		columnDefs: [
 			{
 				field: 'rr',
@@ -84,22 +96,44 @@
 							component: RRCellRenderer
 						};
 					}
+				},
+				cellRenderer: (params: any) => {
+					if (params.node.rowIndex !== 4) {
+						return `<div class="font-medium">${params.valueFormatted}</div>`;
+					}
 				}
 			},
 			{
 				field: 'reward',
 				headerName: 'Account Growth',
-				valueFormatter: ({ value }) => `${(value * 100).toFixed(2)}%`
+				valueFormatter: ({ value }) => `${(value * 100).toFixed(2)}%`,
+				cellRenderer: (params: any) => {
+					const value = parseFloat(params.valueFormatted);
+					const isPositive = value > 0;
+					return `<div class="font-medium ${isPositive ? 'text-success' : 'text-error'}">${
+						params.valueFormatted
+					}</div>`;
+				}
 			},
 			{
 				field: 'profit',
 				headerName: 'Trade Profit',
-				valueFormatter: ({ value }) => `${(value * 100).toFixed(2)}%`
+				valueFormatter: ({ value }) => `${(value * 100).toFixed(2)}%`,
+				cellRenderer: (params: any) => {
+					const value = parseFloat(params.valueFormatted);
+					const isPositive = value > 0;
+					return `<div class="font-medium ${isPositive ? 'text-success' : 'text-error'}">${
+						params.valueFormatted
+					}</div>`;
+				}
 			},
 			{
 				field: 'coverPrice',
 				headerName: 'Target Price',
-				valueFormatter: ({ value }) => `$${value.toFixed(2)}`
+				valueFormatter: ({ value }) => `$${value.toFixed(2)}`,
+				cellRenderer: (params: any) => {
+					return `<div class="font-medium text-muted-foreground">${params.valueFormatted}</div>`;
+				}
 			}
 		]
 	};
@@ -120,11 +154,12 @@
 	}
 </script>
 
-<div class="overflow-auto rounded-lg border bg-base-100">
+<div class="border-border bg-card text-card-foreground overflow-hidden rounded-lg border shadow-sm">
 	<Grid
 		{gridOptions}
 		isDarkMode={$darkTheme}
 		on:gridReady={handleGridReady}
 		on:cellValueChanged={handleCellValueChanged}
+		className="ag-theme-alpine"
 	/>
 </div>
