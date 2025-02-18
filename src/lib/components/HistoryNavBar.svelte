@@ -2,20 +2,19 @@
 	import { enhance } from '$app/forms';
 
 	import type { Trade, Position } from '$lib/types/tradeTypes';
-	import { replacer } from '$lib/helpers/JsonHelpers';
 	import { dispatchToast, modalStore } from '@/routes/stores';
 	import AssignTradeToPositionModal from './AssignTradeToPositionModal.svelte';
 	import ImportTradesModal from './ImportTradesModal.svelte';
 	import AddTradeModal from './AddTradeModal.svelte';
 
-	export let selectedTrades: Map<number, Trade> = new Map();
+	export let selectedTrades: Trade[] = [];
 	export let numOfTrades: number = 0;
 	export let positions: Position[] = [];
 
 	let positionId: number | 'newPosition' | undefined = undefined;
 
 	let selectedTickers: string[] = [];
-	$: selectedTickers = Array.from(new Set(selectedTrades.values().map((trade) => trade.ticker)));
+	$: selectedTickers = Array.from(new Set(selectedTrades.map((trade) => trade.ticker)));
 
 	$: possiblePositions = positions.filter((position) => position.ticker === selectedTickers[0]);
 
@@ -35,7 +34,7 @@
 <div class="m-2 flex flex-row items-center justify-between">
 	<h5>Trades ({numOfTrades})</h5>
 	<div class="flex justify-end space-x-2">
-		{#if selectedTrades.size > 0}
+		{#if selectedTrades.length > 0}
 			<form
 				action="?/deleteTradesBatch"
 				method="POST"
@@ -50,8 +49,8 @@
 					};
 				}}
 			>
-				{#each selectedTrades.entries() as [id, _]}
-					<input type="hidden" name="id" value={id} />
+				{#each selectedTrades as trade}
+					<input type="hidden" name="id" value={trade.id} />
 				{/each}
 				<button class="btn btn-error" type="submit">Delete</button>
 			</form>
@@ -74,7 +73,7 @@
 				bind:possiblePositions
 				handleCloseModal={toggleAssignTradeModal}
 				on:assigned={() => {
-					selectedTrades = new Map();
+					selectedTrades = [];
 				}}
 			/>
 		{/if}

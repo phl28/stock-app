@@ -128,9 +128,9 @@ export const actions = {
 		assertHasSession(locals);
 		const formData = await request.formData();
 		const trades = formData.get('trades') as string;
-		const updatedTrades = JSON.parse(trades, reviver) as Map<number, Trade>;
+		const updatedTrades = JSON.parse(trades) as Trade[];
 		const tradeList: Trade[] = [];
-		for (let trade of updatedTrades.values()) {
+		for (let trade of updatedTrades) {
 			tradeList.push({ ...trade, createdBy: locals.session.userId });
 		}
 		await updateTradeHistoryBatch(tradeList);

@@ -12,21 +12,20 @@
 	export let trades: Trade[];
 	export let positions: Position[];
 
-	let selectedTrades = new Map<number, Trade>();
+	let selectedTrades: Trade[] = [];
 	let selectedAllUnassigned: boolean = false;
 
 	const toggleSelection = (trade: Trade[]) => {
-		selectedTrades = new Map(trade.map((t) => [t.id, t]));
-		selectedTrades = selectedTrades;
+		selectedTrades = trade;
 	};
 
 	let unassignedTrades: Trade[] = [];
 
 	const toggleSelectAllUnassigned = () => {
 		if (selectedAllUnassigned) {
-			selectedTrades = new Map();
+			selectedTrades = [];
 		} else {
-			selectedTrades = new Map(unassignedTrades.map((trade) => [trade.id, trade]));
+			selectedTrades = [...unassignedTrades];
 		}
 		selectedAllUnassigned = !selectedAllUnassigned;
 	};
