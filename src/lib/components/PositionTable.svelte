@@ -21,6 +21,7 @@
 		const api = event.detail;
 		gridApi = api;
 	};
+
 	const gridOptions: GridOptions<Position> = {
 		suppressMovableColumns: true,
 		suppressCellFocus: true,
@@ -33,9 +34,8 @@
 				display: 'flex',
 				justifyContent: 'flex-start',
 				alignItems: 'center',
-				cursor: 'pointer'
 			},
-			width: 150
+			width: 80,
 		},
 		onRowClicked: (event) => {
 			if (!event.data) return;
@@ -50,7 +50,6 @@
 				valueGetter: ({ data }) => {
 					return data?.closedAt === null;
 				},
-				width: 90
 			},
 			{
 				field: 'isShort',
@@ -63,10 +62,10 @@
 				cellRendererParams: {
 					badge: true
 				},
-				width: 100
 			},
 			{
-				field: 'ticker'
+				field: 'ticker',
+				headerName: 'Symbol'
 			},
 			{
 				field: 'platform'
@@ -76,7 +75,7 @@
 			},
 			{
 				field: 'numOfTrades',
-				headerName: '# of Trades'
+				headerName: 'Trades'
 			},
 			{
 				field: 'totalVolume',
@@ -84,32 +83,34 @@
 			},
 			{
 				field: 'averageEntryPrice',
-				valueGetter: ({ data }) =>
+				valueFormatter: ({ data }) =>
 					formatCurrency(data?.averageEntryPrice ?? '', data?.region === 'US' ? 'USD' : 'HKD'),
-				headerName: 'Average Price'
+				headerName: 'Avg. Price',
+				cellDataType: 'number'
 			},
 			{
 				field: 'grossProfitLoss',
-				headerName: 'Gross P/L',
-				valueGetter: ({ data }) =>
-					formatCurrency(data?.grossProfitLoss ?? '', data?.region === 'US' ? 'USD' : 'HKD')
+				headerName: 'P/L',
+				valueFormatter: ({ data }) => {
+					return formatCurrency(data?.grossProfitLoss ?? '', data?.region === 'US' ? 'USD' : 'HKD');
+				},
+				cellDataType: 'number'
 			},
 			{
 				field: 'openedAt',
-				cellDataType: 'date'
+				cellDataType: 'date',
+				headerName: 'Date'
 			}
 		]
 	};
 </script>
 
-<div class="w-full">
+<div class="w-full space-y-6">
 	<PositionNavBar numOfPositions={positions.length} />
-	<div class="overflow-x-auto">
 		<Grid
-			style={'max-height: 500px'}
+			style={'max-height: 600px'}
 			{gridOptions}
 			isDarkMode={$darkTheme}
 			on:gridReady={handleGridReady}
 		/>
-	</div>
 </div>
