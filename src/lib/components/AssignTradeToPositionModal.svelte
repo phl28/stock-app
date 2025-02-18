@@ -8,7 +8,7 @@
 	const dispatch = createEventDispatcher();
 
 	export let isModalOpen: boolean = false;
-	export let selectedTrades: Map<number, Trade> = new Map();
+	export let selectedTrades: Trade[] = [];
 	export let positionId: number | 'newPosition' | undefined = undefined;
 	export let possiblePositions: Position[] = [];
 	export let handleCloseModal: () => void;
@@ -26,10 +26,10 @@
 		}
 	})();
 
-	$: localSelectedTrades = new Map(selectedTrades);
+	$: localSelectedTrades = selectedTrades;
 
 	let isShort: boolean = false;
-	$: tradeIds = JSON.stringify(Array.from(localSelectedTrades.keys()));
+	$: tradeIds = JSON.stringify(localSelectedTrades.map(trade => trade.id));
 </script>
 
 <dialog id="assign-position-modal" class="modal" bind:this={modal}>

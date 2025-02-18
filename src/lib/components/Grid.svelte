@@ -5,7 +5,7 @@
 		AllCommunityModule,
 		ModuleRegistry,
 		createGrid,
-		themeQuartz,
+		themeAlpine,
 		colorSchemeDarkBlue,
 		type CellValueChangedEvent,
 		type GridApi,
@@ -28,19 +28,22 @@
 		if (gridApi) {
 			gridApi.setGridOption(
 				'theme',
-				isDarkMode ? themeQuartz.withPart(colorSchemeDarkBlue) : themeQuartz
+				isDarkMode ? themeAlpine.withPart(colorSchemeDarkBlue) : themeAlpine
 			);
 		}
 	}
 
 	const defaultOptions: Partial<GridOptions> = {
-		theme: isDarkMode ? themeQuartz.withPart(colorSchemeDarkBlue) : themeQuartz,
+		theme: isDarkMode ? themeAlpine.withPart(colorSchemeDarkBlue) : themeAlpine,
 		defaultColDef: {
 			cellStyle: {
 				display: 'flex',
 				justifyContent: 'center',
 				alignItems: 'center'
 			},
+			sortable: true,
+			resizable: true,
+			filter: true,
 			...gridOptions.defaultColDef
 		},
 		autoSizeStrategy: {
