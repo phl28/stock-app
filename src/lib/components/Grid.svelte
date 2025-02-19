@@ -6,11 +6,9 @@
 		ModuleRegistry,
 		createGrid,
 		themeAlpine,
-		colorSchemeDarkBlue,
-		type CellValueChangedEvent,
-		type GridApi,
-		type GridOptions
+		colorSchemeDarkBlue
 	} from 'ag-grid-community';
+	import type { GridOptions, GridApi, CellValueChangedEvent } from 'ag-grid-community';
 
 	ModuleRegistry.registerModules([AllCommunityModule]);
 
