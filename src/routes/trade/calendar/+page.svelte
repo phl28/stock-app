@@ -2,6 +2,7 @@
 	import Calendar from '@event-calendar/core';
 	import DayGrid from '@event-calendar/day-grid';
 
+	export let data;
 	const handleDateSet = async (info) => {
 		console.log('Date range changed:', info.start, info.end);
 		// Fetch events for the new date range here

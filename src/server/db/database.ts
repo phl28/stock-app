@@ -104,22 +104,18 @@ export const getLastTradeHistory = async ({
 export const insertTradeHistory = async (trade: InsertTrade) => {
 	trade.ticker = trade.ticker.toUpperCase();
 
-	try {
-		const result = await db.transaction(async (tx) => {
-			const [insertedTrade] = await tx
-				.insert(tradeHistoryTable)
-				.values({
-					...trade,
-					updatedAt: new Date()
-				})
-				.returning();
+	const result = await db.transaction(async (tx) => {
+		const [insertedTrade] = await tx
+			.insert(tradeHistoryTable)
+			.values({
+				...trade,
+				updatedAt: new Date()
+			})
+			.returning();
 
-			return insertedTrade;
-		});
-		return result;
-	} catch (error) {
-		throw error;
-	}
+		return insertedTrade;
+	});
+	return result;
 };
 
 export const updatePositionTradesBatch = async ({
@@ -160,23 +156,6 @@ export const updatePositionTradesBatch = async ({
 		updatedPosition.createdBy = userId;
 		await tx.update(positionsTable).set(updatedPosition).where(eq(positionsTable.id, positionId));
 	});
-};
-
-export const updateTradeHistoryBatch = async (trades: Partial<InsertTrade>[]) => {
-	const values = trades.map((trade) => dsql`(${trade.id}, ${new Date().toISOString()}::TIMESTAMP)`);
-
-	// 	const query = dsql`
-	//     WITH updates(id, updatedAt) AS (
-	//       VALUES ${dsql.join(values, ',')}
-	//     )
-	//     UPDATE ${tradeHistoryTable} AS th
-	//     SET
-	//       updated_at = u.updatedAt
-	//     FROM updates AS u
-	//     WHERE th.id = u.id::INTEGER
-	//   `;
-
-	// 	return await db.execute(query);
 };
 
 export const deleteTradeHistory = async ({ id, userId }: { id: number; userId: string }) => {
