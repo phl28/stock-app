@@ -1,5 +1,9 @@
 <script lang="ts">
-	export let numOfPositions: number = 0;
+	interface Props {
+		numOfPositions?: number;
+	}
+
+	let { numOfPositions = 0 }: Props = $props();
 </script>
 
 <div class="m-2 flex flex-row items-center justify-between">

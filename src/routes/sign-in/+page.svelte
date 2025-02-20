@@ -6,7 +6,11 @@
 	import SignIn from 'clerk-sveltekit/client/SignIn.svelte';
 	import { dark } from '@clerk/themes';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 </script>
 
 <div class="my-auto flex h-[calc(100vh-var(--header-height))] items-center justify-center">

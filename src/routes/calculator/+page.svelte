@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { enhance } from '$app/forms';
 	import { onMount, tick } from 'svelte';
 
@@ -12,10 +14,14 @@
 	import { Search } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
-	export let data: PageData;
-	let containerWidth = 600;
-	let containerHeight = 300;
-	let container: HTMLDivElement;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
+	let containerWidth = $state(600);
+	let containerHeight = $state(300);
+	let container: HTMLDivElement = $state();
 	let resizeObserver: ResizeObserver;
 
 	const updateDimensions = (entries: ResizeObserverEntry[]) => {
@@ -52,10 +58,10 @@
 		};
 	});
 
-	let stockData: StockData[];
-	let volumeData: VolumeData[];
-	let stockTickInput: string = 'AAPL';
-	let stockTick: string;
+	let stockData: StockData[] = $state();
+	let volumeData: VolumeData[] = $state();
+	let stockTickInput: string = $state('AAPL');
+	let stockTick: string = $state();
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
 	// let lineSeries: ISeriesApi<'Line'> | null = null;
@@ -139,17 +145,17 @@
 		}
 	};
 
-	let waterMarkText: string = `${stockTickInput.toUpperCase()} 1D`;
-	$: watermark = {
+	let waterMarkText: string = $state(`${stockTickInput.toUpperCase()} 1D`);
+	let watermark = $derived({
 		visible: true,
 		fontSize: 48,
 		horzAlign: 'center' as const,
 		vertAlign: 'center' as const,
 		color: 'rgba(171, 71, 188, 0.15)',
 		text: waterMarkText
-	};
+	});
 
-	$: chartOptions = {
+	let chartOptions = $derived({
 		width: containerWidth,
 		height: containerHeight,
 		crosshair: { mode: CrosshairMode.Magnet },
@@ -167,7 +173,7 @@
 			},
 			textColor: '#333'
 		}
-	};
+	});
 
 	const {
 		calcStopLossPerc,
@@ -179,21 +185,21 @@
 		calcRewardToRisk
 	} = calculator;
 
-	let accSize: number = 1000000;
-	let entry: number = 100;
-	let stop: number = 96;
-	let target: number = 120;
-	let risk: number = 0.3;
-	let stopLossAmt: number = 300;
-	let stopLossPerc: number = 0.004;
-	let positionAmt: number = 0;
-	let positionSize: number = 0;
-	let profit: number = 0;
-	let accGrowth: number = 0;
-	let riskReward: number = 0;
-	let stockTickInputValid: boolean = false;
+	let accSize: number = $state(1000000);
+	let entry: number = $state(100);
+	let stop: number = $state(96);
+	let target: number = $state(120);
+	let risk: number = $state(0.3);
+	let stopLossAmt: number = $state(300);
+	let stopLossPerc: number = $state(0.004);
+	let positionAmt: number = $state(0);
+	let positionSize: number = $state(0);
+	let profit: number = $state(0);
+	let accGrowth: number = $state(0);
+	let riskReward: number = $state(0);
+	let stockTickInputValid: boolean = $state(false);
 
-	$: {
+	run(() => {
 		stopLossPerc = calcStopLossPerc(entry, stop);
 		positionSize = calcPositionSize(risk / 100, stopLossPerc);
 		positionAmt = calcPositionAmt(accSize, positionSize, entry);
@@ -202,7 +208,7 @@
 		accGrowth = calcRewardPerc(profit, positionSize);
 		riskReward = calcRewardToRisk(risk / 100, accGrowth);
 		stockTickInputValid = stockTickInput.length > 0;
-	}
+	});
 </script>
 
 <svelte:head>

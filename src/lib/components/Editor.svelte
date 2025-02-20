@@ -1,16 +1,30 @@
-<script>
+<script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 
 	import { compressImage } from '$lib/helpers/ImageCompressor';
 
-	export let data = {};
-	export let readOnly = false;
-	export let placeholder = 'What are your thoughts for this week?';
-	export let autofocus = true;
-	export let onSave = undefined;
-	export let removeImages = undefined;
-	export let autoSave = false;
+	interface Props {
+		data?: any;
+		readOnly?: boolean;
+		placeholder?: string;
+		autofocus?: boolean;
+		onSave?: any;
+		removeImages?: any;
+		autoSave?: boolean;
+		children?: import('svelte').Snippet;
+	}
+
+	let {
+		data = {},
+		readOnly = false,
+		placeholder = 'What are your thoughts for this week?',
+		autofocus = true,
+		onSave = undefined,
+		removeImages = undefined,
+		autoSave = false,
+		children
+	}: Props = $props();
 
 	let saveTimeout;
 
@@ -152,7 +166,7 @@
 ></div>
 {#if !readOnly && !autoSave}
 	<div class="flex items-center justify-end gap-2">
-		<slot></slot>
-		<button class="btn btn-neutral" on:click={save}>Save</button>
+		{@render children?.()}
+		<button class="btn btn-neutral" onclick={save}>Save</button>
 	</div>
 {/if}

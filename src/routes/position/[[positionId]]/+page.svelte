@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { onMount, tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { goto, invalidateAll } from '$app/navigation';
@@ -33,9 +35,13 @@
 		type GridOptions
 	} from 'ag-grid-community';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
 
-	let isCalculatingRR = false;
+	let { data }: Props = $props();
+
+	let isCalculatingRR = $state(false);
 
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
@@ -46,9 +52,9 @@
 	let profitTargetPriceLine: IPriceLine | undefined = undefined;
 	let stopLossPriceLine: IPriceLine | undefined = undefined;
 
-	let container: HTMLDivElement;
-	let containerWidth = 600;
-	let containerHeight = 300;
+	let container: HTMLDivElement = $state();
+	let containerWidth = $state(600);
+	let containerHeight = $state(300);
 	let resizeObserver: ResizeObserver;
 
 	function debounce<Args extends unknown[], ReturnType>(
@@ -79,23 +85,8 @@
 		};
 	});
 
-	$: {
-		if (data) {
-			if (data.stockData) {
-				try {
-					fillChartData(data);
-				} catch {
-					dispatchToast({ type: 'error', message: 'Error initializing chart' });
-				}
-			}
-			if (data.position) {
-				fillPositionData(data.position, data.trades ?? []);
-			}
-		}
-	}
-
-	let stockData: StockData[];
-	let volumeData: VolumeData[];
+	let stockData: StockData[] = $state();
+	let volumeData: VolumeData[] = $state();
 
 	const fillChartData = async (data: PageData) => {
 		if (!data.stockData) {
@@ -247,34 +238,6 @@
 	};
 
 	let waterMarkText: string = `${data.position?.ticker} 1D`;
-	$: watermark = {
-		visible: true,
-		fontSize: 48,
-		horzAlign: 'center' as const,
-		vertAlign: 'center' as const,
-		color: 'rgba(171, 71, 188, 0.15)',
-		text: waterMarkText
-	};
-
-	$: chartOptions = {
-		width: containerWidth,
-		height: containerHeight,
-		crosshair: { mode: CrosshairMode.Magnet },
-		rightPriceScale: {
-			borderColor: 'rgba(197, 203, 206, 0.8)',
-			scaleMargins: { top: 0.3, bottom: 0.25 }
-		},
-		timeScale: {
-			borderColor: 'rgba(197, 203, 206, 0.8)'
-		},
-		layout: {
-			background: {
-				type: ColorType.Solid,
-				color: '#FFFFFF'
-			},
-			textColor: '#333'
-		}
-	};
 
 	const toggleEditPositionModal = () => {
 		modalStore.toggleEditPositionModal();
@@ -364,31 +327,23 @@
 		]
 	};
 
-	let gridApi: GridApi;
+	let gridApi: GridApi = $state();
 
-	$: {
-		if (gridApi) {
-			gridApi.setGridOption('rowData', [...(data.trades ?? [])]);
-		}
-	}
 	const handleGridReady = (event: CustomEvent) => {
 		const api = event.detail;
 		gridApi = api;
 	};
-	$: if (gridApi) {
-		gridApi.setGridOption(
-			'theme',
-			$darkTheme ? themeQuartz.withPart(colorSchemeDarkBlue) : themeQuartz
-		);
-	}
 
-	let rR: number | undefined =
+	let rR: number | undefined = $state(
 		(Number(data.position?.profitTargetPrice) - Number(data.position?.averageEntryPrice)) /
-		(Number(data.position?.averageEntryPrice) - Number(data.position?.stopLossPrice));
+			(Number(data.position?.averageEntryPrice) - Number(data.position?.stopLossPrice))
+	);
 	let previousRR: number | undefined = rR;
-	let stopLossPrice: number | undefined = Number(data.position?.stopLossPrice) || undefined;
+	let stopLossPrice: number | undefined = $state(Number(data.position?.stopLossPrice) || undefined);
 	let previousStopLossPrice: number | undefined = stopLossPrice;
-	let profitTargetPrice: number | undefined = Number(data.position?.profitTargetPrice) || undefined;
+	let profitTargetPrice: number | undefined = $state(
+		Number(data.position?.profitTargetPrice) || undefined
+	);
 	let previousProfitTargetPrice: number | undefined = profitTargetPrice;
 
 	const updateRiskReward = debounce(async () => {
@@ -425,6 +380,60 @@
 		}
 		isCalculatingRR = false;
 	}, 500);
+	run(() => {
+		if (data) {
+			if (data.stockData) {
+				try {
+					fillChartData(data);
+				} catch {
+					dispatchToast({ type: 'error', message: 'Error initializing chart' });
+				}
+			}
+			if (data.position) {
+				fillPositionData(data.position, data.trades ?? []);
+			}
+		}
+	});
+	let watermark = $derived({
+		visible: true,
+		fontSize: 48,
+		horzAlign: 'center' as const,
+		vertAlign: 'center' as const,
+		color: 'rgba(171, 71, 188, 0.15)',
+		text: waterMarkText
+	});
+	let chartOptions = $derived({
+		width: containerWidth,
+		height: containerHeight,
+		crosshair: { mode: CrosshairMode.Magnet },
+		rightPriceScale: {
+			borderColor: 'rgba(197, 203, 206, 0.8)',
+			scaleMargins: { top: 0.3, bottom: 0.25 }
+		},
+		timeScale: {
+			borderColor: 'rgba(197, 203, 206, 0.8)'
+		},
+		layout: {
+			background: {
+				type: ColorType.Solid,
+				color: '#FFFFFF'
+			},
+			textColor: '#333'
+		}
+	});
+	run(() => {
+		if (gridApi) {
+			gridApi.setGridOption('rowData', [...(data.trades ?? [])]);
+		}
+	});
+	run(() => {
+		if (gridApi) {
+			gridApi.setGridOption(
+				'theme',
+				$darkTheme ? themeQuartz.withPart(colorSchemeDarkBlue) : themeQuartz
+			);
+		}
+	});
 </script>
 
 <section>
@@ -446,7 +455,7 @@
 				<div tabindex="0" role="button" class="btn m-1"><EllipsisVertical /></div>
 				<ul class="menu dropdown-content z-[1000] w-52 rounded-box bg-base-100 p-2 shadow">
 					<li>
-						<button on:click={toggleEditPositionModal}>Edit Position</button>
+						<button onclick={toggleEditPositionModal}>Edit Position</button>
 					</li>
 					<div class="divider m-0 p-0"></div>
 					<li>
@@ -529,7 +538,7 @@
 							type="number"
 							bind:value={stopLossPrice}
 							disabled={isCalculatingRR}
-							on:blur={updateRiskReward}
+							onblur={updateRiskReward}
 							class="input input-sm input-bordered w-full"
 						/>
 					</label>
@@ -541,7 +550,7 @@
 							type="number"
 							bind:value={profitTargetPrice}
 							disabled={isCalculatingRR}
-							on:blur={updateRiskReward}
+							onblur={updateRiskReward}
 							class="input input-sm input-bordered w-full"
 						/>
 					</label>
@@ -554,7 +563,7 @@
 							bind:value={rR}
 							step="0.01"
 							disabled={isCalculatingRR}
-							on:blur={updateRiskReward}
+							onblur={updateRiskReward}
 							class="input input-sm input-bordered w-full"
 						/>
 					</label>

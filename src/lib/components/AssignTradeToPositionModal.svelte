@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { createEventDispatcher, tick } from 'svelte';
 	import { enhance } from '$app/forms';
 
@@ -7,29 +9,41 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let isModalOpen: boolean = false;
-	export let selectedTrades: Trade[] = [];
-	export let positionId: number | 'newPosition' | undefined = undefined;
-	export let possiblePositions: Position[] = [];
-	export let handleCloseModal: () => void;
+	interface Props {
+		isModalOpen?: boolean;
+		selectedTrades?: Trade[];
+		positionId?: number | 'newPosition' | undefined;
+		possiblePositions?: Position[];
+		handleCloseModal: () => void;
+	}
 
-	let modal: HTMLDialogElement;
+	let {
+		isModalOpen = false,
+		selectedTrades = [],
+		positionId = $bindable(undefined),
+		possiblePositions = [],
+		handleCloseModal
+	}: Props = $props();
 
-	$: (async () => {
-		await tick();
-		if (modal) {
-			if (isModalOpen && !modal.open) {
-				modal.showModal();
-			} else if (!isModalOpen && modal.open) {
-				modal.close();
+	let modal: HTMLDialogElement = $state();
+
+	run(() => {
+		(async () => {
+			await tick();
+			if (modal) {
+				if (isModalOpen && !modal.open) {
+					modal.showModal();
+				} else if (!isModalOpen && modal.open) {
+					modal.close();
+				}
 			}
-		}
-	})();
+		})();
+	});
 
-	$: localSelectedTrades = selectedTrades;
+	let localSelectedTrades = $derived(selectedTrades);
 
-	let isShort: boolean = false;
-	$: tradeIds = JSON.stringify(localSelectedTrades.map((trade) => trade.id));
+	let isShort: boolean = $state(false);
+	let tradeIds = $derived(JSON.stringify(localSelectedTrades.map((trade) => trade.id)));
 </script>
 
 <dialog id="assign-position-modal" class="modal" bind:this={modal}>
@@ -79,12 +93,12 @@
 							class="toggle"
 							checked={isShort}
 							name="isShort"
-							on:change={() => (isShort = !isShort)}
+							onchange={() => (isShort = !isShort)}
 						/>
 					</label>
 				</div>
 				<div class="modal-action">
-					<button class="btn" type="button" on:click={handleCloseModal}>Close</button>
+					<button class="btn" type="button" onclick={handleCloseModal}>Close</button>
 					<button class="btn btn-primary" type="submit" disabled={positionId === undefined}
 						>Add</button
 					>
@@ -93,6 +107,6 @@
 		</form>
 	</div>
 	<div class="modal-backdrop">
-		<button type="button" on:click={handleCloseModal}>close</button>
+		<button type="button" onclick={handleCloseModal}>close</button>
 	</div>
 </dialog>
