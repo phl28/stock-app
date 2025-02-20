@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		return {
 			article: article[0]
 		};
-	} catch (err) {
+	} catch {
 		throw error(404, 'Article not found');
 	}
 };

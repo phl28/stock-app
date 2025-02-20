@@ -10,7 +10,7 @@
 	let publish: boolean = data.article.publishedAt ? true : false;
 	const originallyPublished: boolean = data.article.publishedAt ? true : false;
 
-	const handleSaveArticle = async (outputData: any) => {
+	const handleSaveArticle = async (outputData: object) => {
 		try {
 			const response = await fetch(`/articles/${data.article.articleId}/edit`, {
 				method: 'POST',
@@ -53,7 +53,7 @@
 				throw new Error('Failed to delete images');
 			}
 			dispatchToast({ type: 'success', message: 'Images deleted successfully!' });
-		} catch (error) {
+		} catch {
 			dispatchToast({ type: 'error', message: 'Failed to delete images' });
 		}
 	};

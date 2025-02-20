@@ -21,21 +21,23 @@ export class TradeSideCellRenderer implements ICellRendererComp {
 			badgeDiv.appendChild(document.createTextNode(badgeText));
 			this.eGui.appendChild(badgeDiv);
 		} else {
-			params.value === 'BUY'
-				? new CircleArrowUp({
-						target: this.eGui,
-						props: {
-							size: 20,
-							strokeWidth: 1.5
-						}
-					})
-				: new CircleArrowDown({
-						target: this.eGui,
-						props: {
-							size: 20,
-							strokeWidth: 1.5
-						}
-					});
+			if (params.value === 'BUY') {
+				new CircleArrowUp({
+					target: this.eGui,
+					props: {
+						size: 20,
+						strokeWidth: 1.5
+					}
+				});
+			} else {
+				new CircleArrowDown({
+					target: this.eGui,
+					props: {
+						size: 20,
+						strokeWidth: 1.5
+					}
+				});
+			}
 		}
 	}
 
@@ -43,7 +45,7 @@ export class TradeSideCellRenderer implements ICellRendererComp {
 		return this.eGui;
 	}
 
-	refresh(params: ICellRendererParams): boolean {
+	refresh(): boolean {
 		return false;
 	}
 }

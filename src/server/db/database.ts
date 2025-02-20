@@ -146,10 +146,6 @@ export const updatePositionTradesBatch = async ({
 			.select()
 			.from(tradeHistoryTable)
 			.where(eq(tradeHistoryTable.positionId, positionId));
-		const positionResult = await tx
-			.select()
-			.from(positionsTable)
-			.where(eq(positionsTable.id, positionId));
 		const updatedPosition = getPositionInfoFromTrades({
 			trades: tradeResult
 		});

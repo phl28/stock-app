@@ -13,7 +13,8 @@ export interface VolumeData {
 }
 
 export interface ChartResponse {
-	stockData: any;
-	smaData: any[];
-	error: any;
+	stockData: StockData[];
+	volumeData: VolumeData[];
+	// smaData: StockData[];
+	error: Error | null;
 }

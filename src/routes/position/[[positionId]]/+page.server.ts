@@ -102,7 +102,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 		const { position, trades } = data ?? {};
 		if (position && position.ticker && trades) {
 			const lastExecutedDate = trades.at(-1)?.executedAt ?? new Date();
-			let twoYearsAgo = new Date(
+			const twoYearsAgo = new Date(
 				lastExecutedDate.getFullYear() - 2,
 				lastExecutedDate.getMonth(),
 				lastExecutedDate.getDate()

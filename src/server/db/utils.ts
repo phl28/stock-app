@@ -15,7 +15,7 @@ type Metric = {
 /**
  *
  * @param trades always required
- * @param position require if isShort is undefined
+ * @param position require if isShort is undefined and the trades are newly assigned to a position
  * @param isShort require if position is undefined
  * @returns position information
  */
@@ -105,9 +105,9 @@ export const getPositionInfoFromTrades = ({
 			latestExecution: null
 		}
 	);
-	let averageEntryPrice =
+	const averageEntryPrice =
 		metricsFromSelectedTrades.totalEntryCost / metricsFromSelectedTrades.boughtShares;
-	let averageExitPrice =
+	const averageExitPrice =
 		metricsFromSelectedTrades.totalExitCost / metricsFromSelectedTrades.soldShares;
 	totalVolume = metricsFromSelectedTrades.totalVolume;
 	outstandingVolume = metricsFromSelectedTrades.outstandingVolume;

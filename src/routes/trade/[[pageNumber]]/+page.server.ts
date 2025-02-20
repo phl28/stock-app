@@ -4,17 +4,15 @@ import { PUBLIC_POLYGON_IO_URL, PUBLIC_SERVER_URL } from '$env/static/public';
 import { error, isHttpError } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types.js';
 
-import type { Currency, Platform, Region, Trade, TradeSide } from '$lib/types/tradeTypes';
+import type { Currency, Platform, Region, TradeSide } from '$lib/types/tradeTypes';
 import type { FutuResponse } from '$lib/types';
-import { reviver } from '@/lib/helpers/JsonHelpers.js';
-import { assertHasSession } from '@/lib/types/utils.js';
+import { assertHasSession, type AppLocals } from '@/lib/types/utils.js';
 import {
 	deleteTradeHistory,
 	deleteTradeHistoryBatch,
 	getLastTradeHistory,
 	getPositions,
 	insertTradeHistory,
-	updateTradeHistoryBatch,
 	getPaginatedTradeHistory,
 	assignTradesToPosition
 } from '@/server/db/database';
@@ -51,6 +49,7 @@ const fetchFutuTrades = async (startDate?: Date, endDate?: Date) => {
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	try {
+		console.log('locals', locals);
 		assertHasSession(locals);
 		const pageNumber = isNaN(Number(params.pageNumber)) ? 1 : Number(params.pageNumber);
 		const { trades, currentPage, totalPages, totalTrades } = await getPaginatedTradeHistory({
@@ -74,7 +73,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions = {
-	syncTrades: async ({ locals }) => {
+	syncTrades: async ({ locals }: { locals: AppLocals }) => {
 		assertHasSession(locals);
 		const lastTrade = await getLastTradeHistory({
 			userId: locals.session.userId,
@@ -99,7 +98,15 @@ export const actions = {
 		}
 		return;
 	},
-	addTrade: async ({ fetch, request, locals }) => {
+	addTrade: async ({
+		fetch,
+		request,
+		locals
+	}: {
+		fetch: typeof globalThis.fetch;
+		request: Request;
+		locals: AppLocals;
+	}) => {
 		assertHasSession(locals);
 		const formData = await request.formData();
 		const newTrade = {
@@ -124,26 +131,14 @@ export const actions = {
 		await insertTradeHistory(newTrade);
 		return;
 	},
-	updateTradeBatch: async ({ request, locals }) => {
-		assertHasSession(locals);
-		const formData = await request.formData();
-		const trades = formData.get('trades') as string;
-		const updatedTrades = JSON.parse(trades) as Trade[];
-		const tradeList: Trade[] = [];
-		for (let trade of updatedTrades) {
-			tradeList.push({ ...trade, createdBy: locals.session.userId });
-		}
-		await updateTradeHistoryBatch(tradeList);
-		return;
-	},
-	deleteTrade: async ({ request, locals }) => {
+	deleteTrade: async ({ request, locals }: { request: Request; locals: AppLocals }) => {
 		assertHasSession(locals);
 		const formData = await request.formData();
 		const id = parseInt(formData.get('id') as string);
 		await deleteTradeHistory({ userId: locals.session.userId, id });
 		return;
 	},
-	deleteTradesBatch: async ({ request, locals }) => {
+	deleteTradesBatch: async ({ request, locals }: { request: Request; locals: AppLocals }) => {
 		assertHasSession(locals);
 		const formData = await request.formData();
 		const stringIds = formData.getAll('id') as string[];
@@ -151,7 +146,7 @@ export const actions = {
 		await deleteTradeHistoryBatch({ userId: locals.session.userId, ids });
 		return;
 	},
-	assignTradesToPosition: async ({ request, locals }) => {
+	assignTradesToPosition: async ({ request, locals }: { request: Request; locals: AppLocals }) => {
 		assertHasSession(locals);
 		const formData = await request.formData();
 		const positionId = formData.get('positionId') as string;

@@ -20,7 +20,7 @@ export class RRCellRenderer implements ICellRendererComp {
 		valueSpan.style.width = '100%';
 		valueSpan.style.textAlign = 'center';
 
-		const icon = new PencilLine({
+		new PencilLine({
 			target: iconContainer,
 			props: {
 				size: 20,
@@ -36,7 +36,7 @@ export class RRCellRenderer implements ICellRendererComp {
 		return this.eGui;
 	}
 
-	refresh(params: ICellRendererParams): boolean {
+	refresh(): boolean {
 		return false;
 	}
 }

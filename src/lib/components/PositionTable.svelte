@@ -8,18 +8,12 @@
 	import PositionNavBar from './PositionNavBar.svelte';
 	import { TradeSideCellRenderer } from './TradeSideCellRenderer';
 
-	import type { GridApi, GridOptions } from 'ag-grid-community';
+	import type { GridOptions } from 'ag-grid-community';
 
 	export let positions: Position[];
 
 	const handlePositionRowClick = (position: Position) => {
 		goto('/position/' + position.id);
-	};
-
-	let gridApi: GridApi;
-	const handleGridReady = (event: CustomEvent) => {
-		const api = event.detail;
-		gridApi = api;
 	};
 
 	const gridOptions: GridOptions<Position> = {
@@ -33,9 +27,9 @@
 			cellStyle: {
 				display: 'flex',
 				justifyContent: 'flex-start',
-				alignItems: 'center',
+				alignItems: 'center'
 			},
-			width: 80,
+			width: 80
 		},
 		onRowClicked: (event) => {
 			if (!event.data) return;
@@ -49,7 +43,7 @@
 				headerName: 'Active',
 				valueGetter: ({ data }) => {
 					return data?.closedAt === null;
-				},
+				}
 			},
 			{
 				field: 'isShort',
@@ -61,7 +55,7 @@
 				cellRenderer: TradeSideCellRenderer,
 				cellRendererParams: {
 					badge: true
-				},
+				}
 			},
 			{
 				field: 'ticker',
@@ -107,10 +101,5 @@
 
 <div class="w-full space-y-6">
 	<PositionNavBar numOfPositions={positions.length} />
-		<Grid
-			style={'max-height: 600px'}
-			{gridOptions}
-			isDarkMode={$darkTheme}
-			on:gridReady={handleGridReady}
-		/>
+	<Grid style={'max-height: 600px'} {gridOptions} isDarkMode={$darkTheme} />
 </div>

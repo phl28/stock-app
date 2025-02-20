@@ -1,6 +1,8 @@
+import type { ClerkJWTClaims } from '@clerk/types';
+
 type Session = {
 	userId: string;
-	claims: { [key: string]: any };
+	claims: { [key: string]: ClerkJWTClaims };
 };
 
 export type AppLocals = App.Locals & {
