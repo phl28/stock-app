@@ -29,7 +29,7 @@
 	$: localSelectedTrades = selectedTrades;
 
 	let isShort: boolean = false;
-	$: tradeIds = JSON.stringify(localSelectedTrades.map(trade => trade.id));
+	$: tradeIds = JSON.stringify(localSelectedTrades.map((trade) => trade.id));
 </script>
 
 <dialog id="assign-position-modal" class="modal" bind:this={modal}>
