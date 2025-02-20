@@ -15,7 +15,8 @@ import {
 	desc,
 	count,
 	isNotNull,
-	isNull
+	isNull,
+	between
 } from 'drizzle-orm';
 
 import { getPositionInfoFromTrades } from './utils';
@@ -85,6 +86,27 @@ export const getPaginatedTradeHistory = async ({
 		totalPages: Math.ceil(Number(tradeCount) / pageSize),
 		totalTrades: Number(tradeCount)
 	};
+};
+
+export const getTradeHistoryByTimePeriod = async ({
+	startDate,
+	endDate,
+	userId
+}: {
+	startDate: Date;
+	endDate: Date;
+	userId: string;
+}) => {
+	const trades = await db
+		.select()
+		.from(tradeHistoryTable)
+		.where(
+			and(
+				eq(tradeHistoryTable.createdBy, userId),
+				between(tradeHistoryTable.executedAt, startDate, endDate)
+			)
+		);
+	return trades;
 };
 
 export const getLastTradeHistory = async ({

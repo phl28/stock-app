@@ -49,7 +49,6 @@ const fetchFutuTrades = async (startDate?: Date, endDate?: Date) => {
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	try {
-		console.log('locals', locals);
 		assertHasSession(locals);
 		const pageNumber = isNaN(Number(params.pageNumber)) ? 1 : Number(params.pageNumber);
 		const { trades, currentPage, totalPages, totalTrades } = await getPaginatedTradeHistory({
