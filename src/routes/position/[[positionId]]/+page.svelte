@@ -5,14 +5,14 @@
 	import { browser } from '$app/environment';
 	import type { PageData } from './$types';
 
-	import { dispatchToast, darkTheme, modalStore } from '@/routes/stores.ts';
+	import { dispatchToast, darkTheme, modalStore } from '@/routes/stores';
 	import type { StockData, VolumeData } from '@/lib/types/chartTypes.ts';
-	import { convertUnixTimestampToDate, formatDuration } from '@/lib/helpers/DataHelpers.ts';
-	import { formatCurrency } from '@/lib/helpers/CurrencyHelpers.ts';
+	import { formatDuration } from '@/lib/helpers/DataHelpers';
+	import { formatCurrency } from '@/lib/helpers/CurrencyHelpers';
 	import Editor from '@/lib/components/Editor.svelte';
 	import Grid from '@/lib/components/Grid.svelte';
-	import type { Trade } from '@/lib/types/tradeTypes.ts';
-	import { TradeSideCellRenderer } from '@/lib/components/TradeSideCellRenderer.ts';
+	import type { Position, Trade } from '@/lib/types/tradeTypes.ts';
+	import { TradeSideCellRenderer } from '@/lib/components/TradeSideCellRenderer';
 	import EditPositionModal from '@/lib/components/EditPositionModal.svelte';
 
 	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
@@ -40,7 +40,7 @@
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
 	//  only used when there are SMA data
-	let lineSeries: ISeriesApi<'Line'> | null = null;
+	// let lineSeries: ISeriesApi<'Line'> | null = null;
 	let avgEntryPriceLine: IPriceLine | undefined = undefined;
 	let avgExitPriceLine: IPriceLine | undefined = undefined;
 	let profitTargetPriceLine: IPriceLine | undefined = undefined;
@@ -51,14 +51,14 @@
 	let containerHeight = 300;
 	let resizeObserver: ResizeObserver;
 
-	function debounce<T extends (...args: any[]) => any>(
-		func: T,
+	function debounce<Args extends unknown[], ReturnType>(
+		func: (...args: Args) => ReturnType,
 		wait: number
-	): (...args: Parameters<T>) => void {
-		let timeout: NodeJS.Timeout;
-		return (...args: Parameters<T>) => {
-			clearTimeout(timeout);
-			timeout = setTimeout(() => func(...args), wait);
+	): (...args: Args) => void {
+		let timeout: number;
+		return (...args: Args) => {
+			window.clearTimeout(timeout);
+			timeout = window.setTimeout(() => func(...args), wait);
 		};
 	}
 
@@ -84,7 +84,7 @@
 			if (data.stockData) {
 				try {
 					fillChartData(data);
-				} catch (err) {
+				} catch {
 					dispatchToast({ type: 'error', message: 'Error initializing chart' });
 				}
 			}
@@ -97,7 +97,7 @@
 	let stockData: StockData[];
 	let volumeData: VolumeData[];
 
-	const fillChartData = async (data: any) => {
+	const fillChartData = async (data: PageData) => {
 		if (!data.stockData) {
 			dispatchToast({ type: 'error', message: 'No data found' });
 			return;
@@ -105,16 +105,17 @@
 
 		let volume: VolumeData[] = [];
 		let prevClose = 0;
-		for (const item of data.volumeData) {
+		data.volumeData.forEach((item, idx) => {
+			const close = data.stockData[idx].close;
 			volume = [
 				...volume,
 				{
 					...item,
-					color: prevClose < item.c ? 'rgba(0, 150, 136, 0.8)' : 'rgba(255,82,82, 0.8)'
+					color: prevClose < close ? 'rgba(0, 150, 136, 0.8)' : 'rgba(255,82,82, 0.8)'
 				}
 			];
-			prevClose = item.c;
-		}
+			prevClose = close;
+		});
 		stockData = data.stockData;
 		volumeData = volume;
 		await tick();
@@ -125,7 +126,10 @@
 		volumeSeries.setData(volumeData);
 	};
 
-	const fillPositionData = async (position: any, trades: any[]) => {
+	const fillPositionData = async (
+		position: Position,
+		trades: Pick<Trade, 'id' | 'tradeSide' | 'executedAt' | 'volume' | 'price' | 'fees'>[]
+	) => {
 		let markers: SeriesMarker<Time>[] = [];
 		for (const trade of trades) {
 			markers = [
@@ -276,7 +280,7 @@
 		modalStore.toggleEditPositionModal();
 	};
 
-	const handleSaveJournal = async (outputData: any) => {
+	const handleSaveJournal = async (outputData: object) => {
 		if (!data.position) return;
 		try {
 			const response = await fetch(`/position/${data.position.id}/journal/update`, {
@@ -311,7 +315,7 @@
 			if (!response.ok) {
 				throw new Error('Failed to delete images');
 			}
-		} catch (error) {
+		} catch {
 			dispatchToast({ type: 'error', message: 'Failed to delete images' });
 		}
 	};

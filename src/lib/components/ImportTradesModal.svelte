@@ -4,10 +4,15 @@
 
 	import { dispatchToast } from '@/routes/stores';
 
-	import Papa from 'papaparse';
+	import Papa, { type ParseError, type ParseResult } from 'papaparse';
+	import type { Trade } from '../types';
 
 	export let isModalOpen: boolean = false;
 	export let handleCloseModal: () => void;
+
+	type CSVRow = {
+		[key: string]: string | number | Date;
+	};
 
 	let modal: HTMLDialogElement;
 
@@ -26,7 +31,7 @@
 	let headerMapping: { [key: string]: string } = {};
 	let file: File | null = null;
 	let importStep: number = 0;
-	let parsedData: { [key: string]: any }[] = [];
+	let parsedData: CSVRow[] = [];
 
 	type ImportState = 'idle' | 'pending' | 'resolved' | 'rejected';
 	let importState: ImportState = 'idle';
@@ -44,9 +49,9 @@
 		{ label: 'Executed At', value: 'executedAt', required: true, similar: ['fill time'] }
 	];
 
-	const requiredHeaders = expectedHeaders
-		.filter((header) => header.required)
-		.map((header) => header.value);
+	// const requiredHeaders = expectedHeaders
+	// 	.filter((header) => header.required)
+	// 	.map((header) => header.value);
 
 	const handleFileUpload = (event: Event) => {
 		const target = event.target as HTMLInputElement;
@@ -62,9 +67,9 @@
 		}
 
 		Papa.parse(file, {
-			complete: (results: any) => {
+			complete: (results: ParseResult<CSVRow>) => {
 				// @FIXME type is temporary here
-				parsedData = results.data as { [key: string]: any }[];
+				parsedData = results.data;
 				headers = results.meta.fields ?? [];
 				headerMapping = {};
 				headers.forEach((header) => {
@@ -83,7 +88,7 @@
 				});
 				importStep = 1;
 			},
-			error: (error: any) => {
+			error: (error: ParseError) => {
 				// @FIXME type is temporary here
 				dispatchToast({ type: 'error', message: error.message });
 			},
@@ -95,23 +100,27 @@
 		importState = 'pending';
 		const mappedTrades = parsedData.map((row) => {
 			if (!row) return;
-			const mappedRow: { [key: string]: any } = {
+			const mappedRow: Partial<Trade> = {
 				region: 'US',
 				currency: 'USD',
 				platform: 'FUTU',
-				fees: '',
-				profitLoss: null
+				fees: ''
 			};
 			Object.entries(headerMapping).forEach(([csvHeader, requiredHeader]) => {
 				if (requiredHeader === '') return;
 				if (requiredHeader === 'executedAt') {
 					mappedRow.executedAt = new Date(row[csvHeader]);
 				} else if (requiredHeader === 'tradeSide') {
-					mappedRow.tradeSide = row[csvHeader]?.toLowerCase().includes('buy') ? 'BUY' : 'SELL';
+					mappedRow.tradeSide = row[csvHeader].toString()?.toLowerCase().includes('buy')
+						? 'BUY'
+						: 'SELL';
 				} else if (requiredHeader === 'volume') {
-					mappedRow[requiredHeader] = parseFloat(row[csvHeader]);
+					mappedRow[requiredHeader] = parseFloat(row[csvHeader].toString());
 				} else {
-					mappedRow[requiredHeader] = row[csvHeader];
+					const value = row[csvHeader];
+					if (typeof value === 'string' || typeof value === 'number') {
+						(mappedRow as any)[requiredHeader] = value;
+					}
 				}
 			});
 			if (mappedRow.fees === '') mappedRow.fees = '0';

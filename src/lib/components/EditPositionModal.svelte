@@ -10,12 +10,7 @@
 	import { TradeSideCellRenderer } from './TradeSideCellRenderer';
 	import { DateTimeEditor } from './DateTimeEditor';
 
-	import type {
-		CellValueChangedEvent,
-		GridApi,
-		GridOptions,
-		RowSelectedEvent
-	} from 'ag-grid-community';
+	import type { GridApi, GridOptions, RowSelectedEvent } from 'ag-grid-community';
 	import { ArrowDown, ArrowUp } from 'lucide-svelte';
 
 	type PartialTrade = Pick<Trade, 'id' | 'executedAt' | 'price' | 'fees' | 'volume' | 'tradeSide'>;
@@ -64,7 +59,7 @@
 			const api = event.api;
 			selectedRows = api.getSelectedRows();
 		},
-		onCellValueChanged: (event: CellValueChangedEvent) => {
+		onCellValueChanged: () => {
 			isEdited = JSON.stringify(gridData) !== JSON.stringify(trades);
 		},
 		columnDefs: [
@@ -188,7 +183,7 @@
 			gridData = [...gridData, ...newTrades];
 			gridApi.setGridOption('rowData', gridData);
 			await invalidateAll();
-		} catch (error) {
+		} catch {
 			dispatchToast({ type: 'error', message: 'Failed to add trade' });
 		}
 	};
@@ -197,7 +192,7 @@
 		try {
 			const selectedNodes = gridApi.getSelectedNodes();
 			const selectedIds = selectedNodes.map((node) => node.data?.id);
-			const response = await fetch('/trade/bulk-delete', {
+			await fetch('/trade/bulk-delete', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -207,7 +202,7 @@
 			gridData = gridData.filter((row) => !selectedIds.includes(row.id));
 			gridApi.setGridOption('rowData', gridData);
 			await invalidateAll();
-		} catch (err) {
+		} catch {
 			dispatchToast({ type: 'error', message: 'Failed to delete trades' });
 		}
 	};

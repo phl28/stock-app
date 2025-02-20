@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	try {
 		assertHasSession(locals);
 		userId = locals.session.userId;
-	} catch (err) {
+	} catch {
 		console.error('User is not logged in');
 	}
 	try {
@@ -39,7 +39,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const pageNumber = Number(params.pageNumber) ?? 1;
 		const result = await getPaginatedArticles(9, pageNumber, publishedOnly);
 		return result satisfies ArticlesResponse;
-	} catch (err) {
+	} catch {
 		error(404, 'Articles not found');
 	}
 };
@@ -55,7 +55,7 @@ export const actions = {
 		try {
 			const { articleId: newArticleId } = await addArticle(article);
 			articleId = newArticleId;
-		} catch (err) {
+		} catch {
 			throw error(400, 'Article could not be created');
 		}
 		throw redirect(303, `/articles/${articleId}/edit`);

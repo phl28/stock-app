@@ -2,8 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { onMount, tick } from 'svelte';
 
-	import { dispatchToast, darkTheme } from '../stores.ts';
-	import { convertUnixTimestampToDate } from '$lib/helpers/DataHelpers';
+	import { dispatchToast, darkTheme } from '../stores';
 	import type { StockData, VolumeData } from '$lib/types/chartTypes';
 	import CalculatorResults from '$lib/components/CalculatorResults.svelte';
 	import calculator from '$lib/calculator/calculator';
@@ -11,8 +10,9 @@
 	import { Chart, CandlestickSeries, HistogramSeries, PriceScale } from 'svelte-lightweight-charts';
 	import { ColorType, CrosshairMode, type ISeriesApi } from 'lightweight-charts';
 	import { Search } from 'lucide-svelte';
+	import type { ActionData, PageData } from './$types';
 
-	export let data;
+	export let data: PageData;
 	let containerWidth = 600;
 	let containerHeight = 300;
 	let container: HTMLDivElement;
@@ -28,11 +28,11 @@
 
 	onMount(() => {
 		if (data.error) {
-			dispatchToast({ type: 'error', message: data.error });
+			dispatchToast({ type: 'error', message: data.error.message });
 		} else if (data && data.stockData) {
 			try {
 				fillChartData(data);
-			} catch (err) {
+			} catch {
 				dispatchToast({ type: 'error', message: 'Error initializing chart' });
 			}
 		}
@@ -58,40 +58,28 @@
 	let stockTick: string;
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
-	let lineSeries: ISeriesApi<'Line'> | null = null;
+	// let lineSeries: ISeriesApi<'Line'> | null = null;
 
-	const fillChartData = async (data: any) => {
-		if (!data.stockData.results) {
+	const fillChartData = async (data: PageData | ActionData) => {
+		if (!data?.stockData) {
 			dispatchToast({ type: 'error', message: 'No data found' });
 			return;
 		}
-		let stock: StockData[] = [];
 		let volume: VolumeData[] = [];
 		let prevClose = 0;
-		for (const item of data.stockData.results) {
-			const date = convertUnixTimestampToDate(item.t);
-			stock = [
-				...stock,
-				{
-					time: date,
-					open: item.o,
-					high: item.h,
-					low: item.l,
-					close: item.c
-				}
-			];
+		data.volumeData.forEach((item, idx) => {
+			const close = data.stockData[idx].close;
 			volume = [
 				...volume,
 				{
-					time: date,
-					value: item.v,
-					color: prevClose < item.c ? 'rgba(0, 150, 136, 0.8)' : 'rgba(255,82,82, 0.8)'
+					...item,
+					color: prevClose < close ? 'rgba(0, 150, 136, 0.8)' : 'rgba(255,82,82, 0.8)'
 				}
 			];
-			prevClose = item.c;
-		}
-		stockTick = data.stockData.ticker;
-		stockData = stock;
+			prevClose = close;
+		});
+		stockTick = stockTickInput.toUpperCase();
+		stockData = data.stockData;
 		volumeData = volume;
 		await tick();
 		if (!chartSeries || !volumeSeries) {
@@ -108,9 +96,9 @@
 		volumeSeries = ref;
 	};
 
-	const handleLineSeriesReference = (ref: ISeriesApi<'Line'> | null) => {
-		lineSeries = ref;
-	};
+	// const handleLineSeriesReference = (ref: ISeriesApi<'Line'> | null) => {
+	// 	lineSeries = ref;
+	// };
 
 	const THEMES = {
 		Dark: {
@@ -234,7 +222,6 @@
 	</div>
 
 	<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-		<!-- Calculator Panel -->
 		<div class="card bg-base-100 p-6 shadow-lg">
 			<div class="mb-6">
 				<form
@@ -244,7 +231,7 @@
 						return async ({ result, update }) => {
 							if (result.type === 'error') {
 								dispatchToast({ type: 'error', message: result.error.message });
-							} else if (result.type === 'success') {
+							} else if (result.type === 'success' && result.data) {
 								await update({ reset: false });
 								fillChartData(result.data);
 								waterMarkText = `${stockTickInput} 1D`;
@@ -383,7 +370,6 @@
 			</div>
 		</div>
 
-		<!-- Chart Panel -->
 		<div class="card flex flex-col bg-base-100 p-4 shadow-lg sm:p-6" bind:this={container}>
 			<CalculatorResults input={{ risk, entry, stop, target, stopLossPerc }} />
 			<div class="divider my-6"></div>

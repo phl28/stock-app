@@ -23,7 +23,12 @@ type AlphaVantageData = {
 	};
 };
 
-const fetchStockData = async (ticker: string, startDate: Date, endDate: Date) => {
+const fetchStockData = async (
+	fetch: typeof globalThis.fetch,
+	ticker: string,
+	startDate: Date,
+	endDate: Date
+) => {
 	const today = new Date();
 	const twoYearsAgoToday = new Date(today.getFullYear() - 2, today.getMonth(), today.getDate());
 
@@ -86,7 +91,7 @@ const fetchStockData = async (ticker: string, startDate: Date, endDate: Date) =>
 	return { stockData, volumeData };
 };
 
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 	assertHasSession(locals);
 	const positionId = Number(params.positionId);
 	if (isNaN(positionId) || positionId < 0) {
@@ -97,13 +102,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const { position, trades } = data ?? {};
 		if (position && position.ticker && trades) {
 			const lastExecutedDate = trades.at(-1)?.executedAt ?? new Date();
-			let twoYearsAgo = new Date(
+			const twoYearsAgo = new Date(
 				lastExecutedDate.getFullYear() - 2,
 				lastExecutedDate.getMonth(),
 				lastExecutedDate.getDate()
 			);
 
 			const { stockData, volumeData } = await fetchStockData(
+				fetch,
 				position.ticker,
 				twoYearsAgo,
 				lastExecutedDate

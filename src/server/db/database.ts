@@ -15,7 +15,8 @@ import {
 	desc,
 	count,
 	isNotNull,
-	isNull
+	isNull,
+	between
 } from 'drizzle-orm';
 
 import { getPositionInfoFromTrades } from './utils';
@@ -87,6 +88,27 @@ export const getPaginatedTradeHistory = async ({
 	};
 };
 
+export const getTradeHistoryByTimePeriod = async ({
+	startDate,
+	endDate,
+	userId
+}: {
+	startDate: Date;
+	endDate: Date;
+	userId: string;
+}) => {
+	const trades = await db
+		.select()
+		.from(tradeHistoryTable)
+		.where(
+			and(
+				eq(tradeHistoryTable.createdBy, userId),
+				between(tradeHistoryTable.executedAt, startDate, endDate)
+			)
+		);
+	return trades;
+};
+
 export const getLastTradeHistory = async ({
 	userId,
 	platform
@@ -104,22 +126,18 @@ export const getLastTradeHistory = async ({
 export const insertTradeHistory = async (trade: InsertTrade) => {
 	trade.ticker = trade.ticker.toUpperCase();
 
-	try {
-		const result = await db.transaction(async (tx) => {
-			const [insertedTrade] = await tx
-				.insert(tradeHistoryTable)
-				.values({
-					...trade,
-					updatedAt: new Date()
-				})
-				.returning();
+	const result = await db.transaction(async (tx) => {
+		const [insertedTrade] = await tx
+			.insert(tradeHistoryTable)
+			.values({
+				...trade,
+				updatedAt: new Date()
+			})
+			.returning();
 
-			return insertedTrade;
-		});
-		return result;
-	} catch (error) {
-		throw error;
-	}
+		return insertedTrade;
+	});
+	return result;
 };
 
 export const updatePositionTradesBatch = async ({
@@ -150,33 +168,12 @@ export const updatePositionTradesBatch = async ({
 			.select()
 			.from(tradeHistoryTable)
 			.where(eq(tradeHistoryTable.positionId, positionId));
-		const positionResult = await tx
-			.select()
-			.from(positionsTable)
-			.where(eq(positionsTable.id, positionId));
 		const updatedPosition = getPositionInfoFromTrades({
 			trades: tradeResult
 		});
 		updatedPosition.createdBy = userId;
 		await tx.update(positionsTable).set(updatedPosition).where(eq(positionsTable.id, positionId));
 	});
-};
-
-export const updateTradeHistoryBatch = async (trades: Partial<InsertTrade>[]) => {
-	const values = trades.map((trade) => dsql`(${trade.id}, ${new Date().toISOString()}::TIMESTAMP)`);
-
-	// 	const query = dsql`
-	//     WITH updates(id, updatedAt) AS (
-	//       VALUES ${dsql.join(values, ',')}
-	//     )
-	//     UPDATE ${tradeHistoryTable} AS th
-	//     SET
-	//       updated_at = u.updatedAt
-	//     FROM updates AS u
-	//     WHERE th.id = u.id::INTEGER
-	//   `;
-
-	// 	return await db.execute(query);
 };
 
 export const deleteTradeHistory = async ({ id, userId }: { id: number; userId: string }) => {
