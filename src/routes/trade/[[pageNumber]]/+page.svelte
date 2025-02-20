@@ -6,9 +6,13 @@
 	import PositionTable from '$lib/components/PositionTable.svelte';
 	import { generatePageNumbers } from '$lib/helpers/PageHelpers';
 
-	export let data: PageData;
-	$: ({ positions = [], trades = [] } = data);
-	let view = 'positions';
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
+	let { positions = [], trades = [] } = $derived(data);
+	let view = $state('positions');
 
 	const handlePageIncrement = () => {
 		if (data.currentPage < data.totalPages) {
@@ -26,7 +30,7 @@
 		goto(`/trade/${pageNumber}`);
 	};
 
-	$: pageNumbers = generatePageNumbers(data.currentPage, data.totalPages);
+	let pageNumbers = $derived(generatePageNumbers(data.currentPage, data.totalPages));
 </script>
 
 <svelte:head>
@@ -61,13 +65,13 @@
 				<div class="join">
 					<button
 						class={`btn join-item ${data.currentPage === 1 ? 'btn-disabled' : ''}`}
-						on:click={handlePageDecrement}>«</button
+						onclick={handlePageDecrement}>«</button
 					>
 					{#each pageNumbers as pageNum}
 						{#if typeof pageNum === 'number'}
 							<button
 								class={`btn join-item ${pageNum === data.currentPage ? 'btn-active' : ''}`}
-								on:click={() => handlePageRedirect(pageNum)}
+								onclick={() => handlePageRedirect(pageNum)}
 							>
 								{pageNum}
 							</button>
@@ -77,7 +81,7 @@
 					{/each}
 					<button
 						class={`btn join-item ${data.currentPage === data.totalPages ? 'btn-disabled' : ''}`}
-						on:click={handlePageIncrement}>»</button
+						onclick={handlePageIncrement}>»</button
 					>
 				</div>
 			</div>

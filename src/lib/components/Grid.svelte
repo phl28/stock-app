@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 
 	import {
@@ -14,22 +16,26 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let gridOptions: GridOptions;
-	export let className: string = '';
-	export let style: string = '';
-	export let isDarkMode: boolean = false;
+	interface Props {
+		gridOptions: GridOptions;
+		className?: string;
+		style?: string;
+		isDarkMode?: boolean;
+	}
 
-	let gridApi: GridApi;
-	let gridElement: HTMLElement;
+	let { gridOptions, className = '', style = '', isDarkMode = false }: Props = $props();
 
-	$: {
+	let gridApi: GridApi = $state();
+	let gridElement: HTMLElement = $state();
+
+	run(() => {
 		if (gridApi) {
 			gridApi.setGridOption(
 				'theme',
 				isDarkMode ? themeAlpine.withPart(colorSchemeDarkBlue) : themeAlpine
 			);
 		}
-	}
+	});
 
 	const defaultOptions: Partial<GridOptions> = {
 		theme: isDarkMode ? themeAlpine.withPart(colorSchemeDarkBlue) : themeAlpine,
@@ -80,7 +86,7 @@
 	});
 </script>
 
-<div bind:this={gridElement} class={className} {style} />
+<div bind:this={gridElement} class={className} {style}></div>
 
 <style>
 	div {

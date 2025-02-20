@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { darkTheme } from '@/routes/stores';
 	import Grid from './Grid.svelte';
 	import HistoryNavBar from '$lib/components/HistoryNavBar.svelte';
@@ -9,17 +11,21 @@
 
 	import type { GridOptions, GridApi } from 'ag-grid-community';
 
-	export let trades: Trade[];
-	export let positions: Position[];
+	interface Props {
+		trades: Trade[];
+		positions: Position[];
+	}
 
-	let selectedTrades: Trade[] = [];
+	let { trades, positions }: Props = $props();
+
+	let selectedTrades: Trade[] = $state([]);
 	let selectedAllUnassigned: boolean = false;
 
 	const toggleSelection = (trade: Trade[]) => {
 		selectedTrades = trade;
 	};
 
-	let unassignedTrades: Trade[] = [];
+	let unassignedTrades: Trade[] = $state([]);
 
 	const toggleSelectAllUnassigned = () => {
 		if (selectedAllUnassigned) {
@@ -30,16 +36,16 @@
 		selectedAllUnassigned = !selectedAllUnassigned;
 	};
 
-	$: {
+	run(() => {
 		unassignedTrades = [];
 		for (const trade of trades) {
 			if (!trade.positionId) {
 				unassignedTrades = [...unassignedTrades, trade];
 			}
 		}
-	}
+	});
 
-	const gridOptions: GridOptions<Trade> = {
+	const gridOptions: GridOptions<Trade> = $state({
 		rowSelection: {
 			mode: 'multiRow'
 		},
@@ -91,20 +97,20 @@
 				toggleSelection(trades);
 			}
 		}
-	};
+	});
 
-	let gridApi: GridApi;
+	let gridApi: GridApi = $state();
 	const handleGridReady = (event: CustomEvent) => {
 		gridApi = event.detail;
 	};
 
-	$: {
+	run(() => {
 		if (gridApi) {
 			gridApi.setGridOption('rowData', [...unassignedTrades]);
 		} else {
 			gridOptions.rowData = [...unassignedTrades];
 		}
-	}
+	});
 </script>
 
 <div class="w-full">

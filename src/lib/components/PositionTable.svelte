@@ -10,7 +10,11 @@
 
 	import type { GridOptions } from 'ag-grid-community';
 
-	export let positions: Position[];
+	interface Props {
+		positions: Position[];
+	}
+
+	let { positions }: Props = $props();
 
 	const handlePositionRowClick = (position: Position) => {
 		goto('/position/' + position.id);

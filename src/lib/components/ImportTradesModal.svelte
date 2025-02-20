@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { tick } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 
@@ -7,34 +9,40 @@
 	import Papa, { type ParseError, type ParseResult } from 'papaparse';
 	import type { Trade } from '../types';
 
-	export let isModalOpen: boolean = false;
-	export let handleCloseModal: () => void;
+	interface Props {
+		isModalOpen?: boolean;
+		handleCloseModal: () => void;
+	}
+
+	let { isModalOpen = false, handleCloseModal }: Props = $props();
 
 	type CSVRow = {
 		[key: string]: string | number | Date;
 	};
 
-	let modal: HTMLDialogElement;
+	let modal: HTMLDialogElement = $state();
 
-	$: (async () => {
-		await tick();
-		if (modal) {
-			if (isModalOpen && !modal.open) {
-				modal.showModal();
-			} else if (!isModalOpen && modal.open) {
-				modal.close();
+	run(() => {
+		(async () => {
+			await tick();
+			if (modal) {
+				if (isModalOpen && !modal.open) {
+					modal.showModal();
+				} else if (!isModalOpen && modal.open) {
+					modal.close();
+				}
 			}
-		}
-	})();
+		})();
+	});
 
-	let headers: string[] = [];
-	let headerMapping: { [key: string]: string } = {};
-	let file: File | null = null;
-	let importStep: number = 0;
+	let headers: string[] = $state([]);
+	let headerMapping: { [key: string]: string } = $state({});
+	let file: File | null = $state(null);
+	let importStep: number = $state(0);
 	let parsedData: CSVRow[] = [];
 
 	type ImportState = 'idle' | 'pending' | 'resolved' | 'rejected';
-	let importState: ImportState = 'idle';
+	let importState: ImportState = $state('idle');
 
 	const expectedHeaders = [
 		{ label: 'Ticker', value: 'ticker', required: true, similar: ['symbol'] },
@@ -166,12 +174,12 @@
 					type="file"
 					class="file-input file-input-bordered w-full max-w-xs"
 					accept=".csv"
-					on:change={handleFileUpload}
+					onchange={handleFileUpload}
 					required
 				/>
 				<div class="modal-action">
-					<button class="btn" on:click={handleCloseModal}>Close</button>
-					<button class="btn btn-primary" on:click={parseCsv} disabled={!file}>Next</button>
+					<button class="btn" onclick={handleCloseModal}>Close</button>
+					<button class="btn btn-primary" onclick={parseCsv} disabled={!file}>Next</button>
 				</div>
 			</div>
 		{:else if importStep === 1}
@@ -192,8 +200,8 @@
 					</div>
 				{/each}
 				<div class="modal-action">
-					<button class="btn" on:click={() => (importStep = 0)}>Back</button>
-					<button class="btn btn-primary" on:click={importTrades} disabled={importState !== 'idle'}>
+					<button class="btn" onclick={() => (importStep = 0)}>Back</button>
+					<button class="btn btn-primary" onclick={importTrades} disabled={importState !== 'idle'}>
 						{#if importState === 'idle'}
 							Import
 						{:else if importState === 'pending'}
@@ -206,6 +214,6 @@
 		{/if}
 	</div>
 	<div class="modal-backdrop">
-		<button on:click={handleCloseModal}>close</button>
+		<button onclick={handleCloseModal}>close</button>
 	</div>
 </dialog>

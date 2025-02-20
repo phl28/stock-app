@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import Grid from '$lib/components/Grid.svelte';
 	import { darkTheme } from '@/routes/stores';
 
@@ -7,13 +9,15 @@
 
 	import type { GridApi, GridOptions, ICellRendererParams } from 'ag-grid-community';
 
-	export let input = {
-		risk: 0.0003,
-		entry: 100,
-		stop: 96,
-		target: 120,
-		stopLossPerc: 0.004
-	};
+	let {
+		input = {
+			risk: 0.0003,
+			entry: 100,
+			stop: 96,
+			target: 120,
+			stopLossPerc: 0.004
+		}
+	} = $props();
 
 	interface CalculatorInput {
 		risk: number;
@@ -30,7 +34,6 @@
 		coverPrice: number;
 	}
 
-	$: data = calculateData(input);
 	const { calcProfitPerc, calcRewardPerc, calcCoverPrice } = calculator;
 	const riskReward = [2.0, 3.0, 4.0, 5.0];
 
@@ -43,24 +46,15 @@
 		});
 	};
 
-	let gridApi: GridApi;
+	let gridApi: GridApi = $state();
 	const handleGridReady = (event: CustomEvent) => {
 		const api = event.detail;
 		gridApi = api;
 	};
 
-	let customRR: number = 6;
+	let customRR: number = $state(6);
 
-	$: customData = {
-		rr: customRR,
-		reward: calcRewardPerc(undefined, undefined, customRR, input.risk / 100),
-		profit: calcProfitPerc(undefined, undefined, input.stopLossPerc, customRR),
-		get coverPrice() {
-			return calcCoverPrice(input.entry, this.profit);
-		}
-	};
-
-	const gridOptions: GridOptions<TableData> = {
+	const gridOptions: GridOptions<TableData> = $state({
 		defaultColDef: {
 			resizable: false
 		},
@@ -102,15 +96,7 @@
 				valueFormatter: ({ value }) => `$${value.toFixed(2)}`
 			}
 		]
-	};
-
-	$: {
-		if (gridApi) {
-			gridApi.setGridOption('rowData', [...data, customData]);
-		} else {
-			gridOptions.rowData = [...data, customData];
-		}
-	}
+	});
 
 	function handleCellValueChanged(event: CustomEvent) {
 		const { rowIndex, newValue } = event.detail;
@@ -118,6 +104,22 @@
 			customRR = Number(newValue);
 		}
 	}
+	let data = $derived(calculateData(input));
+	let customData = $derived({
+		rr: customRR,
+		reward: calcRewardPerc(undefined, undefined, customRR, input.risk / 100),
+		profit: calcProfitPerc(undefined, undefined, input.stopLossPerc, customRR),
+		get coverPrice() {
+			return calcCoverPrice(input.entry, this.profit);
+		}
+	});
+	run(() => {
+		if (gridApi) {
+			gridApi.setGridOption('rowData', [...data, customData]);
+		} else {
+			gridOptions.rowData = [...data, customData];
+		}
+	});
 </script>
 
 <div class="overflow-auto rounded-lg border bg-base-100">

@@ -1,39 +1,33 @@
 <script lang="ts">
+	import { run, createBubbler, preventDefault } from 'svelte/legacy';
+
+	const bubble = createBubbler();
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 
 	import { dispatchToast } from '@/routes/stores';
 	import { Currency, Platform, Region, TradeSide } from '../types';
 
-	export let isModalOpen: boolean = false;
-	export let handleCloseModal: () => void;
+	interface Props {
+		isModalOpen?: boolean;
+		handleCloseModal: () => void;
+	}
 
-	let modal: HTMLDialogElement;
+	let { isModalOpen = false, handleCloseModal }: Props = $props();
 
-	$: (async () => {
-		await tick();
-		if (modal) {
-			if (isModalOpen && !modal.open) {
-				modal.showModal();
-			} else if (!isModalOpen && modal.open) {
-				modal.close();
-			}
-		}
-	})();
+	let modal: HTMLDialogElement = $state();
 
-	$: isFormValid = ticker && region && currency && price && volume && platform && side;
+	let ticker: string = $state();
+	let region: string = $state();
+	let currency: string = $state();
+	let price: number = $state();
+	let fees: number = $state();
+	let volume: number = $state();
+	let platform: string = $state();
+	let side: string = $state();
+	let executedAt: string = $state(new Date().toISOString().split('T')[0]);
 
-	let ticker: string;
-	let region: string;
-	let currency: string;
-	let price: number;
-	let fees: number;
-	let volume: number;
-	let platform: string;
-	let side: string;
-	let executedAt: string = new Date().toISOString().split('T')[0];
-
-	let addAnother: boolean = true;
+	let addAnother: boolean = $state(true);
 
 	const resetForm = () => {
 		ticker = '';
@@ -47,6 +41,19 @@
 		executedAt = new Date().toISOString().split('T')[0];
 		addAnother = true;
 	};
+	run(() => {
+		(async () => {
+			await tick();
+			if (modal) {
+				if (isModalOpen && !modal.open) {
+					modal.showModal();
+				} else if (!isModalOpen && modal.open) {
+					modal.close();
+				}
+			}
+		})();
+	});
+	let isFormValid = $derived(ticker && region && currency && price && volume && platform && side);
 </script>
 
 <dialog id="add-trade-modal" class="modal" bind:this={modal}>
@@ -54,7 +61,7 @@
 		<h3 class="text-lg font-bold">Add new trade(s)</h3>
 		<p class="py-4">Enter the details of the new trade:</p>
 		<form
-			on:submit|preventDefault
+			onsubmit={preventDefault(bubble('submit'))}
 			method="POST"
 			action="?/addTrade"
 			use:enhance={() => {
@@ -179,18 +186,18 @@
 							type="checkbox"
 							class="toggle"
 							bind:checked={addAnother}
-							on:change={() => (addAnother = !addAnother)}
+							onchange={() => (addAnother = !addAnother)}
 						/>
 					</label>
 				</div>
 				<div class="modal-action">
-					<button class="btn" type="button" on:click={handleCloseModal}>Close</button>
+					<button class="btn" type="button" onclick={handleCloseModal}>Close</button>
 					<button class="btn btn-primary" type="submit" disabled={!isFormValid}>Add</button>
 				</div>
 			</div>
 		</form>
 	</div>
 	<div class="modal-backdrop">
-		<button type="button" on:click={handleCloseModal}>close</button>
+		<button type="button" onclick={handleCloseModal}>close</button>
 	</div>
 </dialog>
