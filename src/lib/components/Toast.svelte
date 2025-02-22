@@ -1,19 +1,17 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
 	import { fade } from 'svelte/transition';
 
 	import { CircleCheck, Info, OctagonX, TriangleAlert } from 'lucide-svelte';
 
-	const dispatch = createEventDispatcher();
-
-	interface Props {
+	type ToastProps = {
 		type?: string;
 		children?: import('svelte').Snippet;
-	}
+		dismiss: () => void;
+	};
 
-	let { type = 'error', children }: Props = $props();
+	let { type = 'error', children, dismiss }: ToastProps = $props();
 
-	setTimeout(() => dispatch('dismiss'), 3000);
+	setTimeout(dismiss, 3000);
 </script>
 
 <div class="toast relative p-1" transition:fade>

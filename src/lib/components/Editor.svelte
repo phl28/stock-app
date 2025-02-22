@@ -1,19 +1,8 @@
-<script lang="ts">
+<script>
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 
 	import { compressImage } from '$lib/helpers/ImageCompressor';
-
-	interface Props {
-		data?: any;
-		readOnly?: boolean;
-		placeholder?: string;
-		autofocus?: boolean;
-		onSave?: any;
-		removeImages?: any;
-		autoSave?: boolean;
-		children?: import('svelte').Snippet;
-	}
 
 	let {
 		data = {},
@@ -23,13 +12,14 @@
 		onSave = undefined,
 		removeImages = undefined,
 		autoSave = false,
-		children
-	}: Props = $props();
+		children = undefined
+	} = $props();
 
 	let saveTimeout;
 
 	let editor;
 	const removedImagesUrl = [];
+	let CustomImageTool;
 
 	onMount(async () => {
 		if (browser) {
@@ -42,14 +32,14 @@
 			const Table = (await import('@editorjs/table')).default;
 			const Embed = (await import('@editorjs/embed')).default;
 
-			class CustomImageTool extends ImageTool {
+			CustomImageTool = class extends ImageTool {
 				removed() {
 					const fileUrl = this._data.file.url;
 					if (fileUrl.includes('blob.vercel-storage.com')) {
 						removedImagesUrl.push(fileUrl);
 					}
 				}
-			}
+			};
 
 			editor = new EditorJS({
 				/**

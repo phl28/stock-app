@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 
 	import {
 		AllCommunityModule,
@@ -14,21 +12,33 @@
 
 	ModuleRegistry.registerModules([AllCommunityModule]);
 
-	const dispatch = createEventDispatcher();
-
-	interface Props {
+	type GridProps = {
 		gridOptions: GridOptions;
 		className?: string;
 		style?: string;
 		isDarkMode?: boolean;
-	}
+		cellValueChanged?: (params: {
+			rowIndex: number | null;
+			colId: string;
+			oldValue: unknown;
+			newValue: unknown;
+		}) => void;
+		gridReady?: (api: GridApi) => void;
+	};
 
-	let { gridOptions, className = '', style = '', isDarkMode = false }: Props = $props();
+	let {
+		gridOptions,
+		className = '',
+		style = '',
+		isDarkMode = false,
+		cellValueChanged,
+		gridReady
+	}: GridProps = $props();
 
-	let gridApi: GridApi = $state();
-	let gridElement: HTMLElement = $state();
+	let gridApi: GridApi | undefined = $state();
+	let gridElement: HTMLElement | undefined = $state();
 
-	run(() => {
+	$effect(() => {
 		if (gridApi) {
 			gridApi.setGridOption(
 				'theme',
@@ -54,12 +64,14 @@
 			type: 'fitCellContents'
 		},
 		onCellValueChanged: (event: CellValueChangedEvent) => {
-			dispatch('cellValueChanged', {
-				rowIndex: event.rowIndex,
-				colId: event.column.getColId(),
-				oldValue: event.oldValue,
-				newValue: event.newValue
-			});
+			if (cellValueChanged) {
+				cellValueChanged({
+					rowIndex: event.rowIndex,
+					colId: event.column.getColId(),
+					oldValue: event.oldValue,
+					newValue: event.newValue
+				});
+			}
 
 			if (gridOptions.onCellValueChanged) {
 				gridOptions.onCellValueChanged(event);
@@ -75,8 +87,9 @@
 	onMount(() => {
 		if (gridElement) {
 			gridApi = createGrid(gridElement, mergedGridOptions);
-			dispatch('gridReady', gridApi);
-
+			if (gridReady) {
+				gridReady(gridApi);
+			}
 			return () => {
 				if (gridApi) {
 					gridApi.destroy();

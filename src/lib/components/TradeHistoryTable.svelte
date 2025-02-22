@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { darkTheme } from '@/routes/stores';
 	import Grid from './Grid.svelte';
 	import HistoryNavBar from '$lib/components/HistoryNavBar.svelte';
@@ -36,7 +34,7 @@
 		selectedAllUnassigned = !selectedAllUnassigned;
 	};
 
-	run(() => {
+	$effect(() => {
 		unassignedTrades = [];
 		for (const trade of trades) {
 			if (!trade.positionId) {
@@ -99,12 +97,12 @@
 		}
 	});
 
-	let gridApi: GridApi = $state();
-	const handleGridReady = (event: CustomEvent) => {
-		gridApi = event.detail;
+	let gridApi: GridApi | undefined = $state();
+	const handleGridReady = (api: GridApi) => {
+		gridApi = api;
 	};
 
-	run(() => {
+	$effect(() => {
 		if (gridApi) {
 			gridApi.setGridOption('rowData', [...unassignedTrades]);
 		} else {
@@ -117,6 +115,6 @@
 	<HistoryNavBar bind:selectedTrades numOfTrades={trades.length} {positions} />
 	<div class="my-2 overflow-x-auto">
 		<h5 class="mt-6 text-center">Unassigned Trades ({unassignedTrades.length})</h5>
-		<Grid {gridOptions} isDarkMode={$darkTheme} on:gridReady={handleGridReady} />
+		<Grid {gridOptions} isDarkMode={$darkTheme} gridReady={handleGridReady} />
 	</div>
 </div>

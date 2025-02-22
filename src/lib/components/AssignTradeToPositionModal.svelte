@@ -1,13 +1,9 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
-	import { createEventDispatcher, tick } from 'svelte';
+	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 
 	import { dispatchToast } from '@/routes/stores';
 	import type { Position, Trade } from '../types/tradeTypes';
-
-	const dispatch = createEventDispatcher();
 
 	interface Props {
 		isModalOpen?: boolean;
@@ -15,19 +11,21 @@
 		positionId?: number | 'newPosition' | undefined;
 		possiblePositions?: Position[];
 		handleCloseModal: () => void;
+		onAssigned: () => void;
 	}
 
 	let {
 		isModalOpen = false,
 		selectedTrades = [],
-		positionId = $bindable(undefined),
+		positionId = undefined,
 		possiblePositions = [],
-		handleCloseModal
+		handleCloseModal,
+		onAssigned
 	}: Props = $props();
 
-	let modal: HTMLDialogElement = $state();
+	let modal: HTMLDialogElement | undefined = $state();
 
-	run(() => {
+	$effect(() => {
 		(async () => {
 			await tick();
 			if (modal) {
@@ -60,7 +58,7 @@
 							message: 'Trades assigned to position successfully!'
 						});
 						await update();
-						dispatch('assigned');
+						onAssigned();
 					} else if (result.type === 'error') {
 						dispatchToast({ type: 'error', message: result.error.message });
 					}

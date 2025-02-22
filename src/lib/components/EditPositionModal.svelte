@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { tick } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { darkTheme, dispatchToast } from '@/routes/stores';
@@ -26,12 +24,12 @@
 
 	let { isModalOpen = false, position, trades, handleCloseModal }: Props = $props();
 
-	let modal: HTMLDialogElement = $state();
-	let gridApi: GridApi<PartialTrade> = $state();
+	let modal: HTMLDialogElement | undefined = $state();
+	let gridApi: GridApi<PartialTrade> | undefined = $state();
 	let gridData: PartialTrade[] = $state([]);
 	let selectedRows: PartialTrade[] = $state([]);
 	let isEdited: boolean = $state(false);
-	run(() => {
+	$effect(() => {
 		(async () => {
 			await tick();
 			if (modal) {
@@ -46,8 +44,8 @@
 		})();
 	});
 
-	const handleGridReady = (event: CustomEvent) => {
-		gridApi = event.detail;
+	const handleGridReady = (api: GridApi) => {
+		gridApi = api;
 		gridApi.setGridOption('rowData', gridData);
 	};
 
@@ -121,7 +119,7 @@
 		]
 	};
 
-	run(() => {
+	$effect(() => {
 		if (gridApi) {
 			gridApi.setGridOption('rowData', gridData);
 		}
@@ -138,6 +136,7 @@
 	};
 
 	const handleUpdateTrades = async () => {
+		if (!gridApi) return;
 		const allTrades: PartialTrade[] = [];
 		gridApi.forEachNode((node) => {
 			if (node.data) {
@@ -164,6 +163,7 @@
 	};
 
 	const addNewRow = async () => {
+		if (!gridApi) return;
 		try {
 			let newTrade: Partial<Trade> = {
 				positionId: position.id,
@@ -197,6 +197,7 @@
 	};
 
 	const deleteSelectedRows = async () => {
+		if (!gridApi) return;
 		try {
 			const selectedNodes = gridApi.getSelectedNodes();
 			const selectedIds = selectedNodes.map((node) => node.data?.id);
@@ -258,7 +259,7 @@
 						style="height: 250px"
 						{gridOptions}
 						isDarkMode={$darkTheme}
-						on:gridReady={handleGridReady}
+						gridReady={handleGridReady}
 					/>
 				</div>
 			</div>

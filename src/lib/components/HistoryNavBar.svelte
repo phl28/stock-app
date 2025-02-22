@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { enhance } from '$app/forms';
 
 	import type { Trade, Position } from '$lib/types/tradeTypes';
@@ -20,14 +18,13 @@
 	let positionId: number | 'newPosition' | undefined = $state(undefined);
 
 	let selectedTickers: string[] = $state([]);
-	run(() => {
+	$effect(() => {
 		selectedTickers = Array.from(new Set(selectedTrades.map((trade) => trade.ticker)));
 	});
 
-	let possiblePositions;
-	run(() => {
-		possiblePositions = positions.filter((position) => position.ticker === selectedTickers[0]);
-	});
+	let possiblePositions = $derived(
+		positions.filter((position) => position.ticker === selectedTickers[0])
+	);
 
 	const toggleAddTradeModal = () => {
 		modalStore.toggleAddTradeModal();
@@ -78,11 +75,11 @@
 		{#if $modalStore.assignTradeModal}
 			<AssignTradeToPositionModal
 				isModalOpen={$modalStore.assignTradeModal}
-				bind:selectedTrades
-				bind:positionId
-				bind:possiblePositions
+				{selectedTrades}
+				{positionId}
+				{possiblePositions}
 				handleCloseModal={toggleAssignTradeModal}
-				on:assigned={() => {
+				onAssigned={() => {
 					selectedTrades = [];
 				}}
 			/>

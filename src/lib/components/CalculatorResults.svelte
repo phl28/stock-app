@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import Grid from '$lib/components/Grid.svelte';
 	import { darkTheme } from '@/routes/stores';
 
@@ -9,6 +7,7 @@
 
 	import type { GridApi, GridOptions, ICellRendererParams } from 'ag-grid-community';
 
+	type CalculatorResultsProps = { input: CalculatorInput };
 	let {
 		input = {
 			risk: 0.0003,
@@ -17,7 +16,7 @@
 			target: 120,
 			stopLossPerc: 0.004
 		}
-	} = $props();
+	}: CalculatorResultsProps = $props();
 
 	interface CalculatorInput {
 		risk: number;
@@ -46,9 +45,8 @@
 		});
 	};
 
-	let gridApi: GridApi = $state();
-	const handleGridReady = (event: CustomEvent) => {
-		const api = event.detail;
+	let gridApi: GridApi | undefined = $state();
+	const handleGridReady = (api: GridApi) => {
 		gridApi = api;
 	};
 
@@ -98,8 +96,15 @@
 		]
 	});
 
-	function handleCellValueChanged(event: CustomEvent) {
-		const { rowIndex, newValue } = event.detail;
+	function handleCellValueChanged({
+		rowIndex,
+		newValue
+	}: {
+		rowIndex: number | null;
+		colId: string;
+		newValue: unknown;
+		oldValue: unknown;
+	}) {
 		if (rowIndex === 4) {
 			customRR = Number(newValue);
 		}
@@ -113,7 +118,7 @@
 			return calcCoverPrice(input.entry, this.profit);
 		}
 	});
-	run(() => {
+	$effect(() => {
 		if (gridApi) {
 			gridApi.setGridOption('rowData', [...data, customData]);
 		} else {
@@ -126,7 +131,7 @@
 	<Grid
 		{gridOptions}
 		isDarkMode={$darkTheme}
-		on:gridReady={handleGridReady}
-		on:cellValueChanged={handleCellValueChanged}
+		gridReady={handleGridReady}
+		cellValueChanged={handleCellValueChanged}
 	/>
 </div>

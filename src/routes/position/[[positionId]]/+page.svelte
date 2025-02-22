@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { onMount, tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { goto, invalidateAll } from '$app/navigation';
@@ -52,7 +50,7 @@
 	let profitTargetPriceLine: IPriceLine | undefined = undefined;
 	let stopLossPriceLine: IPriceLine | undefined = undefined;
 
-	let container: HTMLDivElement = $state();
+	let container: HTMLDivElement | undefined = $state();
 	let containerWidth = $state(600);
 	let containerHeight = $state(300);
 	let resizeObserver: ResizeObserver;
@@ -85,8 +83,8 @@
 		};
 	});
 
-	let stockData: StockData[] = $state();
-	let volumeData: VolumeData[] = $state();
+	let stockData: StockData[] = $state([]);
+	let volumeData: VolumeData[] = $state([]);
 
 	const fillChartData = async (data: PageData) => {
 		if (!data.stockData) {
@@ -185,7 +183,7 @@
 	const updateDimensions = debounce((entries: ResizeObserverEntry[]) => {
 		for (const entry of entries) {
 			const { width } = entry.contentRect;
-			containerWidth = Math.min(width, container.parentElement?.clientWidth ?? width);
+			containerWidth = Math.min(width, container?.parentElement?.clientWidth ?? width);
 			containerHeight = Math.round(containerWidth * 0.5);
 		}
 	}, 100);
@@ -327,10 +325,9 @@
 		]
 	};
 
-	let gridApi: GridApi = $state();
+	let gridApi: GridApi | undefined = $state();
 
-	const handleGridReady = (event: CustomEvent) => {
-		const api = event.detail;
+	const handleGridReady = (api: GridApi) => {
 		gridApi = api;
 	};
 
@@ -338,13 +335,16 @@
 		(Number(data.position?.profitTargetPrice) - Number(data.position?.averageEntryPrice)) /
 			(Number(data.position?.averageEntryPrice) - Number(data.position?.stopLossPrice))
 	);
-	let previousRR: number | undefined = rR;
+	let previousRR: number | undefined =
+		(Number(data.position?.profitTargetPrice) - Number(data.position?.averageEntryPrice)) /
+		(Number(data.position?.averageEntryPrice) - Number(data.position?.stopLossPrice));
 	let stopLossPrice: number | undefined = $state(Number(data.position?.stopLossPrice) || undefined);
-	let previousStopLossPrice: number | undefined = stopLossPrice;
+	let previousStopLossPrice: number | undefined = Number(data.position?.stopLossPrice) || undefined;
 	let profitTargetPrice: number | undefined = $state(
 		Number(data.position?.profitTargetPrice) || undefined
 	);
-	let previousProfitTargetPrice: number | undefined = profitTargetPrice;
+	let previousProfitTargetPrice: number | undefined =
+		Number(data.position?.profitTargetPrice) || undefined;
 
 	const updateRiskReward = debounce(async () => {
 		if (!data.position) return;
@@ -380,7 +380,7 @@
 		}
 		isCalculatingRR = false;
 	}, 500);
-	run(() => {
+	$effect(() => {
 		if (data) {
 			if (data.stockData) {
 				try {
@@ -421,12 +421,12 @@
 			textColor: '#333'
 		}
 	});
-	run(() => {
+	$effect(() => {
 		if (gridApi) {
 			gridApi.setGridOption('rowData', [...(data.trades ?? [])]);
 		}
 	});
-	run(() => {
+	$effect(() => {
 		if (gridApi) {
 			gridApi.setGridOption(
 				'theme',
@@ -523,7 +523,7 @@
 						style="height: 250px"
 						{gridOptions}
 						isDarkMode={$darkTheme}
-						on:gridReady={handleGridReady}
+						gridReady={handleGridReady}
 					/>
 				</div>
 			</div>

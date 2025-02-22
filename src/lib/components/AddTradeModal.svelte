@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { run, createBubbler, preventDefault } from 'svelte/legacy';
-
-	const bubble = createBubbler();
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 
@@ -15,16 +12,16 @@
 
 	let { isModalOpen = false, handleCloseModal }: Props = $props();
 
-	let modal: HTMLDialogElement = $state();
+	let modal: HTMLDialogElement | undefined = $state();
 
-	let ticker: string = $state();
-	let region: string = $state();
-	let currency: string = $state();
-	let price: number = $state();
-	let fees: number = $state();
-	let volume: number = $state();
-	let platform: string = $state();
-	let side: string = $state();
+	let ticker: string = $state('');
+	let region: string = $state('US');
+	let currency: string = $state('USD');
+	let price: number = $state(0);
+	let fees: number = $state(0);
+	let volume: number = $state(0);
+	let platform: string = $state('FUTU');
+	let side: string = $state('BUY');
 	let executedAt: string = $state(new Date().toISOString().split('T')[0]);
 
 	let addAnother: boolean = $state(true);
@@ -41,7 +38,7 @@
 		executedAt = new Date().toISOString().split('T')[0];
 		addAnother = true;
 	};
-	run(() => {
+	$effect(() => {
 		(async () => {
 			await tick();
 			if (modal) {
@@ -61,7 +58,7 @@
 		<h3 class="text-lg font-bold">Add new trade(s)</h3>
 		<p class="py-4">Enter the details of the new trade:</p>
 		<form
-			onsubmit={preventDefault(bubble('submit'))}
+			onsubmit={(e) => e.preventDefault()}
 			method="POST"
 			action="?/addTrade"
 			use:enhance={() => {
@@ -201,3 +198,5 @@
 		<button type="button" onclick={handleCloseModal}>close</button>
 	</div>
 </dialog>
+
+å

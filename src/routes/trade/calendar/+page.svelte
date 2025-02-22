@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
 	import Calendar from '@event-calendar/core';
 	import DayGrid from '@event-calendar/day-grid';
 

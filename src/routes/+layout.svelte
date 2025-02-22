@@ -4,7 +4,7 @@
 
 	import Header from '$lib/components/Header.svelte';
 	import Toasts from '$lib/components/Toasts.svelte';
-	import { darkTheme } from './stores.ts';
+	import { darkTheme } from './stores';
 
 	import { inject } from '@vercel/analytics';
 	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';

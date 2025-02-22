@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { enhance } from '$app/forms';
 	import { onMount, tick } from 'svelte';
 
@@ -21,13 +19,13 @@
 	let { data }: Props = $props();
 	let containerWidth = $state(600);
 	let containerHeight = $state(300);
-	let container: HTMLDivElement = $state();
+	let container: HTMLDivElement | undefined = $state();
 	let resizeObserver: ResizeObserver;
 
 	const updateDimensions = (entries: ResizeObserverEntry[]) => {
 		for (const entry of entries) {
 			const { width } = entry.contentRect;
-			containerWidth = Math.min(width, container.parentElement?.clientWidth ?? width);
+			containerWidth = Math.min(width, container?.parentElement?.clientWidth ?? width);
 			containerHeight = Math.round(containerWidth * 0.5);
 		}
 	};
@@ -58,10 +56,10 @@
 		};
 	});
 
-	let stockData: StockData[] = $state();
-	let volumeData: VolumeData[] = $state();
+	let stockData: StockData[] = $state([]);
+	let volumeData: VolumeData[] = $state([]);
 	let stockTickInput: string = $state('AAPL');
-	let stockTick: string = $state();
+	let stockTick: string = $derived(stockTickInput.toUpperCase());
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
 	// let lineSeries: ISeriesApi<'Line'> | null = null;
@@ -84,7 +82,6 @@
 			];
 			prevClose = close;
 		});
-		stockTick = stockTickInput.toUpperCase();
 		stockData = data.stockData;
 		volumeData = volume;
 		await tick();
@@ -145,7 +142,7 @@
 		}
 	};
 
-	let waterMarkText: string = $state(`${stockTickInput.toUpperCase()} 1D`);
+	let waterMarkText: string = $derived(`${stockTickInput.toUpperCase()} 1D`);
 	let watermark = $derived({
 		visible: true,
 		fontSize: 48,
@@ -199,7 +196,7 @@
 	let riskReward: number = $state(0);
 	let stockTickInputValid: boolean = $state(false);
 
-	run(() => {
+	$effect(() => {
 		stopLossPerc = calcStopLossPerc(entry, stop);
 		positionSize = calcPositionSize(risk / 100, stopLossPerc);
 		positionAmt = calcPositionAmt(accSize, positionSize, entry);
@@ -239,8 +236,7 @@
 								dispatchToast({ type: 'error', message: result.error.message });
 							} else if (result.type === 'success' && result.data) {
 								await update({ reset: false });
-								fillChartData(result.data);
-								waterMarkText = `${stockTickInput} 1D`;
+								fillChartData(result.data as ActionData);
 							} else if (result.type === 'failure') {
 								dispatchToast({ type: 'error', message: String(result.data?.message) });
 							} else {

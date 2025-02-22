@@ -1,13 +1,12 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { tick } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 
 	import { dispatchToast } from '@/routes/stores';
-
-	import Papa, { type ParseError, type ParseResult } from 'papaparse';
 	import type { Trade } from '../types';
+
+	import * as Papa from 'papaparse';
+	import type { ParseResult } from 'papaparse';
 
 	interface Props {
 		isModalOpen?: boolean;
@@ -20,9 +19,9 @@
 		[key: string]: string | number | Date;
 	};
 
-	let modal: HTMLDialogElement = $state();
+	let modal: HTMLDialogElement | undefined = $state();
 
-	run(() => {
+	$effect(() => {
 		(async () => {
 			await tick();
 			if (modal) {
@@ -74,7 +73,7 @@
 			return;
 		}
 
-		Papa.parse(file, {
+		Papa.parse<CSVRow>(file, {
 			complete: (results: ParseResult<CSVRow>) => {
 				// @FIXME type is temporary here
 				parsedData = results.data;
@@ -96,7 +95,7 @@
 				});
 				importStep = 1;
 			},
-			error: (error: ParseError) => {
+			error: (error: Error) => {
 				// @FIXME type is temporary here
 				dispatchToast({ type: 'error', message: error.message });
 			},
