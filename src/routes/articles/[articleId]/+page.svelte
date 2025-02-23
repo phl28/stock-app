@@ -30,10 +30,15 @@
 		{#if data.user === data.article.createdBy}
 			<SignedIn>
 				<div class="flex justify-end gap-2">
-					<a class="btn btn-circle btn-ghost" href={`/articles/${data.article.articleId}/edit`}
-						><Pencil /></a
+					<a
+						class="btn btn-circle btn-ghost"
+						href={`/articles/${data.article.articleId}/edit`}
+						data-testid="edit-article-button"><Pencil /></a
 					>
-					<button class="btn btn-circle btn-error" on:click={handleDeleteArticle}><Trash2 /></button
+					<button
+						class="btn btn-circle btn-error"
+						on:click={handleDeleteArticle}
+						data-testid="delete-article-button"><Trash2 /></button
 					>
 				</div>
 			</SignedIn>
