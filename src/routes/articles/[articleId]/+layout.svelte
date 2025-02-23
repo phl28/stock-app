@@ -19,6 +19,7 @@
 	{@render children?.()}
 </main>
 <footer class="flex justify-center">
+	<!-- This is not visible in Brave Browser but is working -->
 	<a href="https://www.buymeacoffee.com/alui" target="_blank"
 		><img
 			src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png"
