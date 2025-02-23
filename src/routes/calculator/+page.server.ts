@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ fetch }) => {
 				stockData = [
 					...stockData,
 					{
-						time: item.t,
+						time: date,
 						open: item.o,
 						high: item.h,
 						low: item.l,

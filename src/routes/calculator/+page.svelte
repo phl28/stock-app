@@ -187,25 +187,33 @@
 	let stop: number = $state(96);
 	let target: number = $state(120);
 	let risk: number = $state(0.3);
-	let stopLossAmt: number = $state(300);
-	let stopLossPerc: number = $state(0.004);
-	let positionAmt: number = $state(0);
-	let positionSize: number = $state(0);
-	let profit: number = $state(0);
-	let accGrowth: number = $state(0);
-	let riskReward: number = $state(0);
-	let stockTickInputValid: boolean = $state(false);
+	// let stopLossPerc: number = $state(0.004);
+	// let positionSize: number = $state(0);
+	// let positionAmt: number = $state(0);
+	// let stopLossAmt: number = $state(300);
+	// let profit: number = $state(0);
+	// let accGrowth: number = $state(0);
+	// let riskReward: number = $state(0);
+	// let stockTickInputValid: boolean = $state(false);
+	let stopLossPerc = $derived(calcStopLossPerc(entry, stop));
+	let positionSize = $derived(calcPositionSize(risk / 100, stopLossPerc));
+	let positionAmt = $derived(calcPositionAmt(accSize, positionSize, entry));
+	let stopLossAmt = $derived(calcStopLossAmt(entry, stop, positionAmt));
+	let profit = $derived(calcProfitPerc(target, entry));
+	let accGrowth = $derived(calcRewardPerc(profit, positionSize));
+	let riskReward = $derived(calcRewardToRisk(risk / 100, accGrowth));
+	let stockTickInputValid = $derived(stockTickInput.length > 0);
 
-	$effect(() => {
-		stopLossPerc = calcStopLossPerc(entry, stop);
-		positionSize = calcPositionSize(risk / 100, stopLossPerc);
-		positionAmt = calcPositionAmt(accSize, positionSize, entry);
-		stopLossAmt = calcStopLossAmt(entry, stop, positionAmt);
-		profit = calcProfitPerc(target, entry);
-		accGrowth = calcRewardPerc(profit, positionSize);
-		riskReward = calcRewardToRisk(risk / 100, accGrowth);
-		stockTickInputValid = stockTickInput.length > 0;
-	});
+	// $effect(() => {
+	// 	stopLossPerc = calcStopLossPerc(entry, stop);
+	// 	positionSize = calcPositionSize(risk / 100, stopLossPerc);
+	// 	positionAmt = calcPositionAmt(accSize, positionSize, entry);
+	// 	stopLossAmt = calcStopLossAmt(entry, stop, positionAmt);
+	// 	profit = calcProfitPerc(target, entry);
+	// 	accGrowth = calcRewardPerc(profit, positionSize);
+	// 	riskReward = calcRewardToRisk(risk / 100, accGrowth);
+	// 	stockTickInputValid = stockTickInput.length > 0;
+	// });
 </script>
 
 <svelte:head>

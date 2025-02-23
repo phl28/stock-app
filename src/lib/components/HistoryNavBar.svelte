@@ -17,10 +17,9 @@
 
 	let positionId: number | 'newPosition' | undefined = $state(undefined);
 
-	let selectedTickers: string[] = $state([]);
-	$effect(() => {
-		selectedTickers = Array.from(new Set(selectedTrades.map((trade) => trade.ticker)));
-	});
+	let selectedTickers: string[] = $derived(
+		Array.from(new Set(selectedTrades.map((trade) => trade.ticker)))
+	);
 
 	let possiblePositions = $derived(
 		positions.filter((position) => position.ticker === selectedTickers[0])

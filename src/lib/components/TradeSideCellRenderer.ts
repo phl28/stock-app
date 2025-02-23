@@ -1,5 +1,6 @@
 import type { ICellRendererComp, ICellRendererParams } from 'ag-grid-community';
 import { CircleArrowUp, CircleArrowDown } from 'lucide-svelte';
+import { mount } from 'svelte';
 
 interface TradeSideCellRendererParams extends ICellRendererParams {
 	badge?: boolean;
@@ -22,7 +23,7 @@ export class TradeSideCellRenderer implements ICellRendererComp {
 			this.eGui.appendChild(badgeDiv);
 		} else {
 			if (params.value === 'BUY') {
-				new CircleArrowUp({
+				mount(CircleArrowUp, {
 					target: this.eGui,
 					props: {
 						size: 20,
@@ -30,7 +31,7 @@ export class TradeSideCellRenderer implements ICellRendererComp {
 					}
 				});
 			} else {
-				new CircleArrowDown({
+				mount(CircleArrowDown, {
 					target: this.eGui,
 					props: {
 						size: 20,

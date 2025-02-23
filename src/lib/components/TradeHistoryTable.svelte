@@ -23,7 +23,7 @@
 		selectedTrades = trade;
 	};
 
-	let unassignedTrades: Trade[] = $state([]);
+	let unassignedTrades: Trade[] = $derived(trades.filter((trade) => !trade.positionId));
 
 	const toggleSelectAllUnassigned = () => {
 		if (selectedAllUnassigned) {
@@ -33,15 +33,6 @@
 		}
 		selectedAllUnassigned = !selectedAllUnassigned;
 	};
-
-	$effect(() => {
-		unassignedTrades = [];
-		for (const trade of trades) {
-			if (!trade.positionId) {
-				unassignedTrades = [...unassignedTrades, trade];
-			}
-		}
-	});
 
 	const gridOptions: GridOptions<Trade> = $state({
 		rowSelection: {

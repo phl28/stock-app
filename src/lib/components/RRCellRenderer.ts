@@ -1,5 +1,6 @@
 import type { ICellRendererComp, ICellRendererParams } from 'ag-grid-community';
 import { PencilLine } from 'lucide-svelte';
+import { mount } from 'svelte';
 
 export class RRCellRenderer implements ICellRendererComp {
 	eGui!: HTMLSpanElement;
@@ -20,7 +21,7 @@ export class RRCellRenderer implements ICellRendererComp {
 		valueSpan.style.width = '100%';
 		valueSpan.style.textAlign = 'center';
 
-		new PencilLine({
+		mount(PencilLine, {
 			target: iconContainer,
 			props: {
 				size: 20,
