@@ -105,11 +105,14 @@
 				 */
 				autofocus: autofocus,
 				placeholder: placeholder,
-				readOnly: readOnly,
+				readOnly: false,
 				onChange: () => {
 					if (autoSave) {
 						debouncedSave();
 					}
+				},
+				onReady: async () => {
+					await editor.readOnly.toggle(readOnly);
 				}
 			});
 		}
