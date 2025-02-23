@@ -4,7 +4,7 @@
 
 	import { dispatchToast } from '@/routes/stores';
 
-	import Papa, { type ParseError, type ParseResult } from 'papaparse';
+	import Papa, { type ParseResult } from 'papaparse';
 	import type { Trade } from '../types';
 
 	export let isModalOpen: boolean = false;
@@ -66,7 +66,7 @@
 			return;
 		}
 
-		Papa.parse(file, {
+		Papa.parse<CSVRow>(file, {
 			complete: (results: ParseResult<CSVRow>) => {
 				// @FIXME type is temporary here
 				parsedData = results.data;
@@ -88,7 +88,7 @@
 				});
 				importStep = 1;
 			},
-			error: (error: ParseError) => {
+			error: (error: Error) => {
 				// @FIXME type is temporary here
 				dispatchToast({ type: 'error', message: error.message });
 			},
