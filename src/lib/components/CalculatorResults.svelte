@@ -7,13 +7,16 @@
 
 	import type { GridApi, GridOptions, ICellRendererParams } from 'ag-grid-community';
 
-	export let input = {
-		risk: 0.0003,
-		entry: 100,
-		stop: 96,
-		target: 120,
-		stopLossPerc: 0.004
-	};
+	type CalculatorResultsProps = { input: CalculatorInput };
+	let {
+		input = {
+			risk: 0.0003,
+			entry: 100,
+			stop: 96,
+			target: 120,
+			stopLossPerc: 0.004
+		}
+	}: CalculatorResultsProps = $props();
 
 	interface CalculatorInput {
 		risk: number;
@@ -30,7 +33,6 @@
 		coverPrice: number;
 	}
 
-	$: data = calculateData(input);
 	const { calcProfitPerc, calcRewardPerc, calcCoverPrice } = calculator;
 	const riskReward = [2.0, 3.0, 4.0, 5.0];
 
@@ -43,24 +45,14 @@
 		});
 	};
 
-	let gridApi: GridApi;
-	const handleGridReady = (event: CustomEvent) => {
-		const api = event.detail;
+	let gridApi: GridApi | undefined = $state();
+	const handleGridReady = (api: GridApi) => {
 		gridApi = api;
 	};
 
-	let customRR: number = 6;
+	let customRR: number = $state(6);
 
-	$: customData = {
-		rr: customRR,
-		reward: calcRewardPerc(undefined, undefined, customRR, input.risk / 100),
-		profit: calcProfitPerc(undefined, undefined, input.stopLossPerc, customRR),
-		get coverPrice() {
-			return calcCoverPrice(input.entry, this.profit);
-		}
-	};
-
-	const gridOptions: GridOptions<TableData> = {
+	const gridOptions: GridOptions<TableData> = $state({
 		defaultColDef: {
 			resizable: false
 		},
@@ -102,29 +94,44 @@
 				valueFormatter: ({ value }) => `$${value.toFixed(2)}`
 			}
 		]
-	};
+	});
 
-	$: {
+	function handleCellValueChanged({
+		rowIndex,
+		newValue
+	}: {
+		rowIndex: number | null;
+		colId: string;
+		newValue: unknown;
+		oldValue: unknown;
+	}) {
+		if (rowIndex === 4) {
+			customRR = Number(newValue);
+		}
+	}
+	let data = $derived(calculateData(input));
+	let customData = $derived({
+		rr: customRR,
+		reward: calcRewardPerc(undefined, undefined, customRR, input.risk / 100),
+		profit: calcProfitPerc(undefined, undefined, input.stopLossPerc, customRR),
+		get coverPrice() {
+			return calcCoverPrice(input.entry, this.profit);
+		}
+	});
+	$effect(() => {
 		if (gridApi) {
 			gridApi.setGridOption('rowData', [...data, customData]);
 		} else {
 			gridOptions.rowData = [...data, customData];
 		}
-	}
-
-	function handleCellValueChanged(event: CustomEvent) {
-		const { rowIndex, newValue } = event.detail;
-		if (rowIndex === 4) {
-			customRR = Number(newValue);
-		}
-	}
+	});
 </script>
 
 <div class="overflow-auto rounded-lg border bg-base-100">
 	<Grid
 		{gridOptions}
 		isDarkMode={$darkTheme}
-		on:gridReady={handleGridReady}
-		on:cellValueChanged={handleCellValueChanged}
+		gridReady={handleGridReady}
+		cellValueChanged={handleCellValueChanged}
 	/>
 </div>

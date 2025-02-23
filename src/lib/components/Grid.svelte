@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 
 	import {
 		AllCommunityModule,
@@ -12,24 +12,40 @@
 
 	ModuleRegistry.registerModules([AllCommunityModule]);
 
-	const dispatch = createEventDispatcher();
+	type GridProps = {
+		gridOptions: GridOptions;
+		className?: string;
+		style?: string;
+		isDarkMode?: boolean;
+		cellValueChanged?: (params: {
+			rowIndex: number | null;
+			colId: string;
+			oldValue: unknown;
+			newValue: unknown;
+		}) => void;
+		gridReady?: (api: GridApi) => void;
+	};
 
-	export let gridOptions: GridOptions;
-	export let className: string = '';
-	export let style: string = '';
-	export let isDarkMode: boolean = false;
+	let {
+		gridOptions,
+		className = '',
+		style = '',
+		isDarkMode = false,
+		cellValueChanged,
+		gridReady
+	}: GridProps = $props();
 
-	let gridApi: GridApi;
-	let gridElement: HTMLElement;
+	let gridApi: GridApi | undefined = $state();
+	let gridElement: HTMLElement | undefined = $state();
 
-	$: {
+	$effect(() => {
 		if (gridApi) {
 			gridApi.setGridOption(
 				'theme',
 				isDarkMode ? themeAlpine.withPart(colorSchemeDarkBlue) : themeAlpine
 			);
 		}
-	}
+	});
 
 	const defaultOptions: Partial<GridOptions> = {
 		theme: isDarkMode ? themeAlpine.withPart(colorSchemeDarkBlue) : themeAlpine,
@@ -48,12 +64,14 @@
 			type: 'fitCellContents'
 		},
 		onCellValueChanged: (event: CellValueChangedEvent) => {
-			dispatch('cellValueChanged', {
-				rowIndex: event.rowIndex,
-				colId: event.column.getColId(),
-				oldValue: event.oldValue,
-				newValue: event.newValue
-			});
+			if (cellValueChanged) {
+				cellValueChanged({
+					rowIndex: event.rowIndex,
+					colId: event.column.getColId(),
+					oldValue: event.oldValue,
+					newValue: event.newValue
+				});
+			}
 
 			if (gridOptions.onCellValueChanged) {
 				gridOptions.onCellValueChanged(event);
@@ -69,8 +87,9 @@
 	onMount(() => {
 		if (gridElement) {
 			gridApi = createGrid(gridElement, mergedGridOptions);
-			dispatch('gridReady', gridApi);
-
+			if (gridReady) {
+				gridReady(gridApi);
+			}
 			return () => {
 				if (gridApi) {
 					gridApi.destroy();
@@ -80,7 +99,7 @@
 	});
 </script>
 
-<div bind:this={gridElement} class={className} {style} />
+<div bind:this={gridElement} class={className} {style}></div>
 
 <style>
 	div {

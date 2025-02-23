@@ -18,7 +18,7 @@
 		{ href: '/articles/page/1', label: 'Articles' }
 	];
 
-	let isOpen = false;
+	let isOpen = $state(false);
 	const toggleMenu = () => (isOpen = !isOpen);
 	const closeMenu = () => (isOpen = false);
 </script>
@@ -48,7 +48,7 @@
 		</div>
 
 		<div class="flex items-center gap-4">
-			<button class="btn btn-circle btn-ghost" on:click={() => darkTheme.toggle()}>
+			<button class="btn btn-circle btn-ghost" onclick={() => darkTheme.toggle()}>
 				{#if $darkTheme}
 					<Sun class="h-5 w-5" />
 				{:else}
@@ -76,19 +76,19 @@
 				</SignInButton>
 			</SignedOut>
 
-			<button class="btn btn-circle btn-ghost lg:hidden" on:click={toggleMenu}>
+			<button class="btn btn-circle btn-ghost lg:hidden" onclick={toggleMenu}>
 				<Menu class="h-5 w-5" />
 			</button>
 		</div>
 	</div>
 </header>
 {#if isOpen}
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
 		class="fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity lg:hidden"
-		on:click={closeMenu}
-	/>
+		onclick={closeMenu}
+	></div>
 	<div
 		class="fixed right-0 top-[var(--header-height)] z-50 h-[calc(100vh-var(--header-height))] w-64 transform overflow-y-auto bg-base-100 p-6 shadow-xl transition-transform lg:hidden"
 		class:translate-x-0={isOpen}
@@ -102,7 +102,7 @@
 							{href}
 							class="block text-sm font-medium transition-colors hover:text-primary"
 							class:text-primary={$page.url.pathname === href}
-							on:click={closeMenu}
+							onclick={closeMenu}
 						>
 							{label}
 						</a>

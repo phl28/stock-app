@@ -4,10 +4,14 @@
 	import Editor from '$lib/components/Editor.svelte';
 	import { dispatchToast } from '@/routes/stores';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
 
-	let title: string = data.article.title;
-	let publish: boolean = data.article.publishedAt ? true : false;
+	let { data }: Props = $props();
+
+	let title: string = $state(data.article.title);
+	let publish: boolean = $state(data.article.publishedAt ? true : false);
 	const originallyPublished: boolean = data.article.publishedAt ? true : false;
 
 	const handleSaveArticle = async (outputData: object) => {
@@ -78,7 +82,7 @@
 						type="checkbox"
 						class="toggle"
 						checked={publish}
-						on:change={() => (publish = !publish)}
+						onchange={() => (publish = !publish)}
 					/>
 				</label>
 			</div>

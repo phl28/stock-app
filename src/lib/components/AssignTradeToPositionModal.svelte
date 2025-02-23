@@ -1,35 +1,47 @@
 <script lang="ts">
-	import { createEventDispatcher, tick } from 'svelte';
+	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 
 	import { dispatchToast } from '@/routes/stores';
 	import type { Position, Trade } from '../types/tradeTypes';
 
-	const dispatch = createEventDispatcher();
+	interface Props {
+		isModalOpen?: boolean;
+		selectedTrades?: Trade[];
+		positionId?: number | 'newPosition' | undefined;
+		possiblePositions?: Position[];
+		handleCloseModal: () => void;
+		onAssigned: () => void;
+	}
 
-	export let isModalOpen: boolean = false;
-	export let selectedTrades: Trade[] = [];
-	export let positionId: number | 'newPosition' | undefined = undefined;
-	export let possiblePositions: Position[] = [];
-	export let handleCloseModal: () => void;
+	let {
+		isModalOpen = false,
+		selectedTrades = [],
+		positionId = undefined,
+		possiblePositions = [],
+		handleCloseModal,
+		onAssigned
+	}: Props = $props();
 
-	let modal: HTMLDialogElement;
+	let modal: HTMLDialogElement | undefined = $state();
 
-	$: (async () => {
-		await tick();
-		if (modal) {
-			if (isModalOpen && !modal.open) {
-				modal.showModal();
-			} else if (!isModalOpen && modal.open) {
-				modal.close();
+	$effect(() => {
+		(async () => {
+			await tick();
+			if (modal) {
+				if (isModalOpen && !modal.open) {
+					modal.showModal();
+				} else if (!isModalOpen && modal.open) {
+					modal.close();
+				}
 			}
-		}
-	})();
+		})();
+	});
 
-	$: localSelectedTrades = selectedTrades;
+	let localSelectedTrades = $derived(selectedTrades);
 
-	let isShort: boolean = false;
-	$: tradeIds = JSON.stringify(localSelectedTrades.map((trade) => trade.id));
+	let isShort: boolean = $state(false);
+	let tradeIds = $derived(JSON.stringify(localSelectedTrades.map((trade) => trade.id)));
 </script>
 
 <dialog id="assign-position-modal" class="modal" bind:this={modal}>
@@ -46,7 +58,7 @@
 							message: 'Trades assigned to position successfully!'
 						});
 						await update();
-						dispatch('assigned');
+						onAssigned();
 					} else if (result.type === 'error') {
 						dispatchToast({ type: 'error', message: result.error.message });
 					}
@@ -79,12 +91,12 @@
 							class="toggle"
 							checked={isShort}
 							name="isShort"
-							on:change={() => (isShort = !isShort)}
+							onchange={() => (isShort = !isShort)}
 						/>
 					</label>
 				</div>
 				<div class="modal-action">
-					<button class="btn" type="button" on:click={handleCloseModal}>Close</button>
+					<button class="btn" type="button" onclick={handleCloseModal}>Close</button>
 					<button class="btn btn-primary" type="submit" disabled={positionId === undefined}
 						>Add</button
 					>
@@ -93,6 +105,6 @@
 		</form>
 	</div>
 	<div class="modal-backdrop">
-		<button type="button" on:click={handleCloseModal}>close</button>
+		<button type="button" onclick={handleCloseModal}>close</button>
 	</div>
 </dialog>

@@ -1,9 +1,9 @@
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad, RouteParams } from './$types';
 import { error, isHttpError } from '@sveltejs/kit';
 import { PRIVATE_POLYGON_IO_API_KEY, PRIVATE_ALPHA_VANTAGE_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL, PUBLIC_ALPHA_VANTAGE_URL } from '$env/static/public';
 
-import { assertHasSession } from '@/lib/types/utils';
+import { assertHasSession, type AppLocals } from '@/lib/types/utils';
 import type { StockData, VolumeData } from '@/lib/types/index.js';
 import { convertUnixTimestampToDate } from '@/lib/helpers/DataHelpers.js';
 import { deletePosition, getPosition, markPositionReviewed } from '@/server/db/database';
@@ -71,7 +71,7 @@ const fetchStockData = async (
 			stockData = [
 				...stockData,
 				{
-					time: item.t,
+					time: date,
 					open: item.o,
 					high: item.h,
 					low: item.l,
@@ -91,7 +91,15 @@ const fetchStockData = async (
 	return { stockData, volumeData };
 };
 
-export const load: PageServerLoad = async ({ fetch, params, locals }) => {
+export const load: PageServerLoad = async ({
+	fetch,
+	params,
+	locals
+}: {
+	fetch: typeof globalThis.fetch;
+	params: RouteParams;
+	locals: AppLocals;
+}) => {
 	assertHasSession(locals);
 	const positionId = Number(params.positionId);
 	if (isNaN(positionId) || positionId < 0) {
@@ -136,7 +144,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 };
 
 export const actions = {
-	markPositionReviewed: async ({ locals, params }) => {
+	markPositionReviewed: async ({ locals, params }: { locals: AppLocals; params: RouteParams }) => {
 		assertHasSession(locals);
 		const positionId = Number(params.positionId);
 		if (isNaN(positionId) || positionId < 0) {
@@ -154,7 +162,7 @@ export const actions = {
 			throw error(500, 'An unexpected error occurred');
 		}
 	},
-	deletePosition: async ({ params, locals }) => {
+	deletePosition: async ({ params, locals }: { params: RouteParams; locals: AppLocals }) => {
 		assertHasSession(locals);
 		const positionId = Number(params.positionId);
 		if (isNaN(positionId) || positionId < 0) {

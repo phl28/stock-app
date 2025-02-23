@@ -15,31 +15,37 @@
 
 	type PartialTrade = Pick<Trade, 'id' | 'executedAt' | 'price' | 'fees' | 'volume' | 'tradeSide'>;
 
-	export let isModalOpen: boolean = false;
-	export let position: Position;
-	export let trades: PartialTrade[];
-	export let handleCloseModal: () => void;
+	interface Props {
+		isModalOpen?: boolean;
+		position: Position;
+		trades: PartialTrade[];
+		handleCloseModal: () => void;
+	}
 
-	let modal: HTMLDialogElement;
-	let gridApi: GridApi<PartialTrade>;
-	let gridData: PartialTrade[] = [];
-	let selectedRows: PartialTrade[] = [];
-	let isEdited: boolean = false;
-	$: (async () => {
-		await tick();
-		if (modal) {
-			if (isModalOpen && !modal.open) {
-				modal.showModal();
-				gridData = trades.map((t) => ({ ...t }));
-				if (gridApi) gridApi.setGridOption('rowData', gridData);
-			} else if (!isModalOpen && modal.open) {
-				modal.close();
+	let { isModalOpen = false, position, trades, handleCloseModal }: Props = $props();
+
+	let modal: HTMLDialogElement | undefined = $state();
+	let gridApi: GridApi<PartialTrade> | undefined = $state();
+	let gridData: PartialTrade[] = $state([]);
+	let selectedRows: PartialTrade[] = $state([]);
+	let isEdited: boolean = $state(false);
+	$effect(() => {
+		(async () => {
+			await tick();
+			if (modal) {
+				if (isModalOpen && !modal.open) {
+					modal.showModal();
+					gridData = trades.map((t) => ({ ...t }));
+					if (gridApi) gridApi.setGridOption('rowData', gridData);
+				} else if (!isModalOpen && modal.open) {
+					modal.close();
+				}
 			}
-		}
-	})();
+		})();
+	});
 
-	const handleGridReady = (event: CustomEvent) => {
-		gridApi = event.detail;
+	const handleGridReady = (api: GridApi) => {
+		gridApi = api;
 		gridApi.setGridOption('rowData', gridData);
 	};
 
@@ -113,11 +119,11 @@
 		]
 	};
 
-	$: {
+	$effect(() => {
 		if (gridApi) {
 			gridApi.setGridOption('rowData', gridData);
 		}
-	}
+	});
 
 	const resetGridData = () => {
 		gridData = trades.map((t) => ({ ...t }));
@@ -130,6 +136,7 @@
 	};
 
 	const handleUpdateTrades = async () => {
+		if (!gridApi) return;
 		const allTrades: PartialTrade[] = [];
 		gridApi.forEachNode((node) => {
 			if (node.data) {
@@ -156,6 +163,7 @@
 	};
 
 	const addNewRow = async () => {
+		if (!gridApi) return;
 		try {
 			let newTrade: Partial<Trade> = {
 				positionId: position.id,
@@ -189,6 +197,7 @@
 	};
 
 	const deleteSelectedRows = async () => {
+		if (!gridApi) return;
 		try {
 			const selectedNodes = gridApi.getSelectedNodes();
 			const selectedIds = selectedNodes.map((node) => node.data?.id);
@@ -237,10 +246,10 @@
 				</div>
 				<div class="mt-4 overflow-x-auto">
 					<div class="mb-4 flex gap-2">
-						<button class="btn btn-success btn-sm" on:click={addNewRow}>Add Trade</button>
+						<button class="btn btn-success btn-sm" onclick={addNewRow}>Add Trade</button>
 						<button
 							class="btn btn-error btn-sm"
-							on:click={deleteSelectedRows}
+							onclick={deleteSelectedRows}
 							disabled={selectedRows.length === 0}
 						>
 							Delete Selected
@@ -250,7 +259,7 @@
 						style="height: 250px"
 						{gridOptions}
 						isDarkMode={$darkTheme}
-						on:gridReady={handleGridReady}
+						gridReady={handleGridReady}
 					/>
 				</div>
 			</div>
@@ -306,13 +315,13 @@
 			</div>
 		</div>
 		<div class="modal-action">
-			<button class="btn btn-warning" type="button" on:click={resetGridData} disabled={!isEdited}>
+			<button class="btn btn-warning" type="button" onclick={resetGridData} disabled={!isEdited}>
 				Reset
 			</button>
-			<button class="btn btn-neutral" type="button" on:click={onClose}>Close</button>
+			<button class="btn btn-neutral" type="button" onclick={onClose}>Close</button>
 			<button
 				class="btn btn-primary"
-				on:click={handleUpdateTrades}
+				onclick={handleUpdateTrades}
 				type="submit"
 				disabled={!isEdited}
 			>
@@ -321,6 +330,6 @@
 		</div>
 	</div>
 	<div class="modal-backdrop">
-		<button type="button" on:click={onClose}>close</button>
+		<button type="button" onclick={onClose}>close</button>
 	</div>
 </dialog>
