@@ -7,4 +7,6 @@ test.describe('Calculator Page', () => {
 		await page.goto(`${TRADEUP_URL}/calculator`);
 		await expect(page).toHaveTitle('Trade Up - Stock Calculator');
 	});
+
+	// test('');
 });
