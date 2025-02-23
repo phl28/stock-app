@@ -87,7 +87,7 @@ export const actions: Actions = {
 					stockData = [
 						...stockData,
 						{
-							time: item.t,
+							time: date,
 							open: item.o,
 							high: item.h,
 							low: item.l,

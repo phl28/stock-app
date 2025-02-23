@@ -59,7 +59,7 @@
 	let stockData: StockData[] = $state([]);
 	let volumeData: VolumeData[] = $state([]);
 	let stockTickInput: string = $state('AAPL');
-	let stockTick: string = $derived(stockTickInput.toUpperCase());
+	let stockTick: string = $state('AAPL');
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
 	// let lineSeries: ISeriesApi<'Line'> | null = null;
@@ -142,7 +142,7 @@
 		}
 	};
 
-	let waterMarkText: string = $derived(`${stockTickInput.toUpperCase()} 1D`);
+	let waterMarkText: string = $derived(`${stockTick.toUpperCase()} 1D`);
 	let watermark = $derived({
 		visible: true,
 		fontSize: 48,
@@ -187,14 +187,7 @@
 	let stop: number = $state(96);
 	let target: number = $state(120);
 	let risk: number = $state(0.3);
-	// let stopLossPerc: number = $state(0.004);
-	// let positionSize: number = $state(0);
-	// let positionAmt: number = $state(0);
-	// let stopLossAmt: number = $state(300);
-	// let profit: number = $state(0);
-	// let accGrowth: number = $state(0);
-	// let riskReward: number = $state(0);
-	// let stockTickInputValid: boolean = $state(false);
+
 	let stopLossPerc = $derived(calcStopLossPerc(entry, stop));
 	let positionSize = $derived(calcPositionSize(risk / 100, stopLossPerc));
 	let positionAmt = $derived(calcPositionAmt(accSize, positionSize, entry));
@@ -203,17 +196,6 @@
 	let accGrowth = $derived(calcRewardPerc(profit, positionSize));
 	let riskReward = $derived(calcRewardToRisk(risk / 100, accGrowth));
 	let stockTickInputValid = $derived(stockTickInput.length > 0);
-
-	// $effect(() => {
-	// 	stopLossPerc = calcStopLossPerc(entry, stop);
-	// 	positionSize = calcPositionSize(risk / 100, stopLossPerc);
-	// 	positionAmt = calcPositionAmt(accSize, positionSize, entry);
-	// 	stopLossAmt = calcStopLossAmt(entry, stop, positionAmt);
-	// 	profit = calcProfitPerc(target, entry);
-	// 	accGrowth = calcRewardPerc(profit, positionSize);
-	// 	riskReward = calcRewardToRisk(risk / 100, accGrowth);
-	// 	stockTickInputValid = stockTickInput.length > 0;
-	// });
 </script>
 
 <svelte:head>
@@ -240,11 +222,14 @@
 					action="?/fetchStockData"
 					use:enhance={() => {
 						return async ({ result, update }) => {
-							if (result.type === 'error') {
-								dispatchToast({ type: 'error', message: result.error.message });
-							} else if (result.type === 'success' && result.data) {
+							if (result.type === 'success' && result.data) {
 								await update({ reset: false });
 								fillChartData(result.data as ActionData);
+								stockTick = stockTickInput.toUpperCase();
+								return;
+							}
+							if (result.type === 'error') {
+								dispatchToast({ type: 'error', message: result.error.message });
 							} else if (result.type === 'failure') {
 								dispatchToast({ type: 'error', message: String(result.data?.message) });
 							} else {
