@@ -191,7 +191,6 @@
 	let profit: number = 0;
 	let accGrowth: number = 0;
 	let riskReward: number = 0;
-	let stockTickInputValid: boolean = false;
 
 	$: {
 		stopLossPerc = calcStopLossPerc(entry, stop);
@@ -201,7 +200,6 @@
 		profit = calcProfitPerc(target, entry);
 		accGrowth = calcRewardPerc(profit, positionSize);
 		riskReward = calcRewardToRisk(risk / 100, accGrowth);
-		stockTickInputValid = stockTickInput.length > 0;
 	}
 </script>
 
@@ -258,7 +256,12 @@
 								class="input input-bordered flex-1"
 								placeholder="Enter ticker symbol (e.g., AAPL)"
 							/>
-							<button class="btn btn-primary" type="submit" disabled={!stockTickInputValid}>
+							<button
+								class="btn btn-primary"
+								type="submit"
+								data-testid="calculator-submit-button"
+								disabled={stockTickInput.length === 0}
+							>
 								<Search class="h-5 w-5" />
 							</button>
 						</div>
@@ -373,7 +376,7 @@
 		<div class="card flex flex-col bg-base-100 p-4 shadow-lg sm:p-6" bind:this={container}>
 			<CalculatorResults input={{ risk, entry, stop, target, stopLossPerc }} />
 			<div class="divider my-6"></div>
-			<div class="relative w-full px-2">
+			<div class="relative w-full px-2" data-testid="calculator-chart">
 				<Chart {...chartOptions} {watermark} {...THEMES[$darkTheme ? 'Dark' : 'Light'].chart}>
 					<CandlestickSeries
 						bind:data={stockData}
