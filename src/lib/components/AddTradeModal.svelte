@@ -51,7 +51,7 @@
 
 <dialog id="add-trade-modal" class="modal" bind:this={modal}>
 	<div class="modal-box">
-		<h3 class="text-lg font-bold">Add new trade(s)</h3>
+		<h3 class="text-lg font-bold" data-testid="add-trade-modal-title">Add new trade(s)</h3>
 		<p class="py-4">Enter the details of the new trade:</p>
 		<form
 			on:submit|preventDefault
@@ -84,11 +84,18 @@
 					bind:value={ticker}
 					name="ticker"
 					required
+					data-testid="add-trade-modal-ticker-input"
 				/>
 				<div class="label">
 					<span class="label-text">Region</span>
 				</div>
-				<select class="select select-bordered w-full" bind:value={region} name="region" required>
+				<select
+					class="select select-bordered w-full"
+					bind:value={region}
+					name="region"
+					required
+					data-testid="add-trade-modal-region-input"
+				>
 					{#each Object.values(Region) as region}
 						<option value={region}>{region}</option>
 					{/each}
@@ -101,6 +108,7 @@
 					bind:value={currency}
 					name="currency"
 					required
+					data-testid="add-trade-modal-currency-input"
 				>
 					{#each Object.values(Currency) as currency}
 						<option value={currency}>{currency}</option>
@@ -117,6 +125,7 @@
 					name="price"
 					step="0.01"
 					required
+					data-testid="add-trade-modal-price-input"
 				/>
 				<div class="label">
 					<span class="label-text">Fees</span>
@@ -128,6 +137,7 @@
 					bind:value={fees}
 					step="0.01"
 					name="fees"
+					data-testid="add-trade-modal-fees-input"
 				/>
 				<div class="label">
 					<span class="label-text">Volume</span>
@@ -139,6 +149,7 @@
 					bind:value={volume}
 					name="volume"
 					required
+					data-testid="add-trade-modal-volume-input"
 				/>
 				<div class="label">
 					<span class="label-text">Platform</span>
@@ -148,6 +159,7 @@
 					bind:value={platform}
 					name="platform"
 					required
+					data-testid="add-trade-modal-platform-input"
 				>
 					{#each Object.values(Platform) as platform}
 						<option value={platform}>{platform}</option>
@@ -156,7 +168,13 @@
 				<div class="label">
 					<span class="label-text">Side</span>
 				</div>
-				<select class="select select-bordered w-full" bind:value={side} name="side" required>
+				<select
+					class="select select-bordered w-full"
+					bind:value={side}
+					name="side"
+					required
+					data-testid="add-trade-modal-side-input"
+				>
 					{#each Object.values(TradeSide) as side}
 						<option value={side}>{side}</option>
 					{/each}
@@ -169,6 +187,7 @@
 					class="input input-bordered w-full"
 					bind:value={executedAt}
 					name="executedAt"
+					data-testid="add-trade-modal-executedAt-input"
 				/>
 			</div>
 			<div class="flex items-center justify-between">
@@ -180,12 +199,23 @@
 							class="toggle"
 							bind:checked={addAnother}
 							on:change={() => (addAnother = !addAnother)}
+							data-testid="add-trade-modal-add-another-input"
 						/>
 					</label>
 				</div>
 				<div class="modal-action">
-					<button class="btn" type="button" on:click={handleCloseModal}>Close</button>
-					<button class="btn btn-primary" type="submit" disabled={!isFormValid}>Add</button>
+					<button
+						class="btn"
+						type="button"
+						on:click={handleCloseModal}
+						data-testid="add-trade-modal-close-button">Close</button
+					>
+					<button
+						class="btn btn-primary"
+						type="submit"
+						disabled={!isFormValid}
+						data-testid="add-trade-modal-add-button">Add</button
+					>
 				</div>
 			</div>
 		</form>

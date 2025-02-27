@@ -59,7 +59,11 @@
 				>
 			{/if}
 		{/if}
-		<button class="btn btn-neutral" on:click={toggleAddTradeModal}>Add</button>
+		<button
+			class="btn btn-neutral"
+			on:click={toggleAddTradeModal}
+			data-testid="navbar-add-trade-button">Add</button
+		>
 		<button class="btn btn-neutral" on:click={toggleImportTradeModal}>Bulk Import</button>
 		<!-- @TODO: Hiding the sync button for now as it is not a priority and is yet to be implemented properly -->
 		<!-- <form method="POST" action="?/syncTrades">
