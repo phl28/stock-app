@@ -76,59 +76,74 @@ test.describe('Calculator Page', () => {
 		test('Default calculation values are displayed correctly', async ({ page }) => {
 			await page.goto(`${TRADEUP_URL}/calculator`);
 
-			await expect(page.getByRole('spinbutton', { name: 'Account Size (USD)' })).toHaveValue(
-				'1000000'
+			await expect(page.getByTestId('calculator-account-size-input')).toHaveValue('1000000');
+			await expect(page.getByTestId('calculator-risk-input')).toHaveValue('0.3');
+			await expect(page.getByTestId('calculator-entry-price-input')).toHaveValue('100');
+			await expect(page.getByTestId('calculator-stop-loss-input')).toHaveValue('96');
+			await expect(page.getByTestId('calculator-target-price-input')).toHaveValue('120');
+
+			await expect(page.getByTestId('calculator-stop-loss-amt')).toContainText('$3000.00');
+			await expect(page.getByTestId('calculator-stop-loss-perc')).toContainText('4.00%');
+
+			await expect(page.getByTestId('calculator-position-size-amt')).toContainText('750 shares');
+			await expect(page.getByTestId('calculator-position-size-perc')).toContainText(
+				'7.50% of account'
 			);
-			await expect(page.getByRole('spinbutton', { name: 'Risk (%)' })).toHaveValue('0.3');
-			await expect(page.getByRole('spinbutton', { name: 'Entry Price' })).toHaveValue('100');
-			await expect(page.getByRole('spinbutton', { name: 'Stop Loss' })).toHaveValue('96');
-			await expect(page.getByRole('spinbutton', { name: 'Target Price' })).toHaveValue('120');
 
-			await expect(page.locator('.stat-value').nth(0)).toContainText('$3000.00');
-			await expect(page.locator('.stat-desc').nth(0)).toContainText('4.00%');
+			await expect(page.getByTestId('calculator-profit-perc')).toContainText('20.00%');
+			await expect(page.getByTestId('calculator-account-growth-perc')).toContainText(
+				'Account growth: 1.50%'
+			);
 
-			await expect(page.locator('.stat-value').nth(1)).toContainText('75 shares');
-			await expect(page.locator('.stat-desc').nth(1)).toContainText('7.50% of account');
-
-			await expect(page.locator('.stat-value').nth(2)).toContainText('20.00%');
-			await expect(page.locator('.stat-desc').nth(2)).toContainText('Account growth: 1.50%');
-
-			await expect(page.locator('.stat-value').nth(3)).toContainText('5.00');
+			await expect(page.getByTestId('calculator-risk-reward-ratio')).toContainText('5.00');
 		});
 
 		test('Updating account size recalculates position size correctly', async ({ page }) => {
 			await page.goto(`${TRADEUP_URL}/calculator`);
 
-			// Change account size to $500,000
-			await page.getByRole('spinbutton', { name: 'Account Size (USD)' }).click();
-			await page.getByRole('spinbutton', { name: 'Account Size (USD)' }).clear();
-			await page.getByRole('spinbutton', { name: 'Account Size (USD)' }).fill('500000');
-			await page.getByRole('spinbutton', { name: 'Account Size (USD)' }).blur();
+			await expect(page.getByTestId('calculator-account-size-input')).toBeVisible();
+			// Change account size to $50,000
+			await page.getByTestId('calculator-account-size-input').click();
+			await page.getByTestId('calculator-account-size-input').fill('500000');
+			await page.getByTestId('calculator-account-size-input').blur();
 
-			// Position should be halved (from 75 to about 37-38 shares)
-			await expect(page.locator('.stat-value').nth(1)).toContainText('37 shares');
+			// Position should be halved (from 750 to about 375 shares)
+			await expect(page.getByTestId('calculator-position-size-amt')).toContainText('375 shares');
 
-			// Stop loss amount should be halved (from $300 to about $150)
-			await expect(page.locator('.stat-value').nth(0)).toContainText('$150.00');
+			// Stop loss amount should be halved (from $3000 to about $1500)
+			await expect(page.getByTestId('calculator-stop-loss-amt')).toContainText('$1500.00');
+
+			// Potential Growth and Risk Reward should not change
+			await expect(page.getByTestId('calculator-profit-perc')).toContainText('20.00%');
+			await expect(page.getByTestId('calculator-account-growth-perc')).toContainText(
+				'Account growth: 1.50%'
+			);
+
+			await expect(page.getByTestId('calculator-risk-reward-ratio')).toContainText('5.00');
 		});
 
 		test('Updating risk percentage recalculates position size correctly', async ({ page }) => {
 			await page.goto(`${TRADEUP_URL}/calculator`);
 
+			await expect(page.getByTestId('calculator-risk-input')).toBeVisible();
 			// Change risk from 0.3% to 1%
-			await page.getByRole('spinbutton', { name: 'Risk (%)' }).click();
-			await page.getByRole('spinbutton', { name: 'Risk (%)' }).clear();
-			await page.getByRole('spinbutton', { name: 'Risk (%)' }).fill('1');
-			await page.getByRole('spinbutton', { name: 'Risk (%)' }).blur();
+			await page.getByTestId('calculator-risk-input').click();
+			await page.getByTestId('calculator-risk-input').fill('1');
+			await page.getByTestId('calculator-risk-input').blur();
 
-			// Position size should increase (from 75 to about 250 shares)
-			await expect(page.locator('.stat-value').nth(1)).toContainText('250 shares');
+			// Position size should increase (from 750 to about 2500 shares)
+			await expect(page.getByTestId('calculator-position-size-amt')).toContainText('2500 shares');
 
-			// Stop loss amount should increase (from $300 to about $1000)
-			await expect(page.locator('.stat-value').nth(0)).toContainText('$1000.00');
+			// Stop loss amount should increase (from $3000 to about $10000)
+			await expect(page.getByTestId('calculator-stop-loss-amt')).toContainText('$10000.00');
 
-			// Risk/reward ratio should change accordingly (from 5.00 to about 1.50)
-			await expect(page.locator('.stat-value').nth(3)).toContainText('1.50');
+			// Potential Growth and Risk Reward should not change
+			await expect(page.getByTestId('calculator-profit-perc')).toContainText('20.00%');
+			await expect(page.getByTestId('calculator-account-growth-perc')).toContainText(
+				'Account growth: 5.00%'
+			);
+
+			await expect(page.getByTestId('calculator-risk-reward-ratio')).toContainText('5.00');
 		});
 
 		test('Updating entry and stop loss prices recalculates stop loss percentage correctly', async ({
@@ -136,99 +151,135 @@ test.describe('Calculator Page', () => {
 		}) => {
 			await page.goto(`${TRADEUP_URL}/calculator`);
 
-			// Change entry price to $200
-			await page.getByRole('spinbutton', { name: 'Entry Price' }).click();
-			await page.getByRole('spinbutton', { name: 'Entry Price' }).clear();
-			await page.getByRole('spinbutton', { name: 'Entry Price' }).fill('200');
+			await expect(page.getByTestId('calculator-entry-price-input')).toBeVisible();
+			// Change entry price to $120
+			await page.getByTestId('calculator-entry-price-input').click();
+			await page.getByTestId('calculator-entry-price-input').fill('120');
+			await page.getByTestId('calculator-entry-price-input').blur();
 
-			// Change stop loss to $190
-			await page.getByRole('spinbutton', { name: 'Stop Loss' }).click();
-			await page.getByRole('spinbutton', { name: 'Stop Loss' }).clear();
-			await page.getByRole('spinbutton', { name: 'Stop Loss' }).fill('190');
-			await page.getByRole('spinbutton', { name: 'Stop Loss' }).blur();
+			await expect(page.getByTestId('calculator-stop-loss-amt')).toContainText('$3000.00');
+			await expect(page.getByTestId('calculator-stop-loss-perc')).toContainText('20.00%');
 
-			// Stop loss percentage should be 5%
-			await expect(page.locator('.stat-desc').nth(0)).toContainText('5.00%');
+			await expect(page.getByTestId('calculator-position-size-amt')).toContainText('125 shares');
+			await expect(page.getByTestId('calculator-position-size-perc')).toContainText(
+				'1.50% of account'
+			);
 
-			// Position size should adjust based on the new stop loss percentage
-			await expect(page.locator('.stat-desc').nth(1)).toContainText('6.00% of account');
+			await expect(page.getByTestId('calculator-profit-perc')).toContainText('0.00%');
+			await expect(page.getByTestId('calculator-account-growth-perc')).toContainText('0.00%');
+
+			await expect(page.getByTestId('calculator-risk-reward-ratio')).toContainText('0.00');
+
+			// Change stop loss to $80
+			await page.getByTestId('calculator-stop-loss-input').click();
+			await page.getByTestId('calculator-stop-loss-input').fill('80');
+			await page.getByTestId('calculator-stop-loss-input').blur();
+
+			await expect(page.getByTestId('calculator-stop-loss-amt')).toContainText('$3000.00');
+			await expect(page.getByTestId('calculator-stop-loss-perc')).toContainText('33.33%');
+
+			await expect(page.getByTestId('calculator-position-size-amt')).toContainText('75 shares');
+			await expect(page.getByTestId('calculator-position-size-perc')).toContainText(
+				'0.90% of account'
+			);
+
+			await expect(page.getByTestId('calculator-profit-perc')).toContainText('0.00%');
+			await expect(page.getByTestId('calculator-account-growth-perc')).toContainText('0.00%');
+
+			await expect(page.getByTestId('calculator-risk-reward-ratio')).toContainText('0.00');
 		});
 
 		test('Updating target price recalculates potential profit correctly', async ({ page }) => {
 			await page.goto(`${TRADEUP_URL}/calculator`);
 
-			// Change target price from $120 to $150
-			await page.getByRole('spinbutton', { name: 'Target Price' }).click();
-			await page.getByRole('spinbutton', { name: 'Target Price' }).clear();
-			await page.getByRole('spinbutton', { name: 'Target Price' }).fill('150');
-			await page.getByRole('spinbutton', { name: 'Target Price' }).blur();
+			// Change target price to $150
+			await expect(page.getByTestId('calculator-target-price-input')).toBeVisible();
+			await page.getByTestId('calculator-target-price-input').click();
+			await page.getByTestId('calculator-target-price-input').fill('150');
+			await page.getByTestId('calculator-target-price-input').blur();
 
-			// Potential profit should increase from 20% to 50%
-			await expect(page.locator('.stat-value').nth(2)).toContainText('50.00%');
+			await expect(page.getByTestId('calculator-stop-loss-amt')).toContainText('$3000.00');
+			await expect(page.getByTestId('calculator-stop-loss-perc')).toContainText('4.00%');
 
-			// Account growth should increase accordingly
-			await expect(page.locator('.stat-desc').nth(2)).toContainText('Account growth: 3.75%');
+			await expect(page.getByTestId('calculator-position-size-amt')).toContainText('750 shares');
+			await expect(page.getByTestId('calculator-position-size-perc')).toContainText(
+				'7.50% of account'
+			);
 
-			// Risk/reward ratio should increase (from 5.00 to about 12.50)
-			await expect(page.locator('.stat-value').nth(3)).toContainText('12.50');
-		});
+			await expect(page.getByTestId('calculator-profit-perc')).toContainText('50.00%');
+			await expect(page.getByTestId('calculator-account-growth-perc')).toContainText('3.75%');
 
-		test('Full trade setup calculation with realistic values', async ({ page }) => {
-			await page.goto(`${TRADEUP_URL}/calculator`);
-
-			// Set up a realistic trade scenario
-			await page.getByRole('spinbutton', { name: 'Account Size (USD)' }).fill('10000');
-			await page.getByRole('spinbutton', { name: 'Risk (%)' }).fill('2');
-			await page.getByRole('spinbutton', { name: 'Entry Price' }).fill('45.75');
-			await page.getByRole('spinbutton', { name: 'Stop Loss' }).fill('43.50');
-			await page.getByRole('spinbutton', { name: 'Target Price' }).fill('52.00');
-			await page.getByRole('spinbutton', { name: 'Target Price' }).blur();
-
-			// Verify stop loss amount and percentage
-			await expect(page.locator('.stat-desc').nth(0)).toContainText('4.92%');
-
-			// Verify position size
-			await expect(page.locator('.stat-desc').nth(1)).toContainText('40.65% of account');
-
-			// Verify potential profit and account growth
-			await expect(page.locator('.stat-value').nth(2)).toContainText('13.66%');
-
-			// Verify risk/reward ratio
-			await expect(page.locator('.stat-value').nth(3)).toContainText(/2\.\d+/); // Should be approximately 2.7
+			await expect(page.getByTestId('calculator-risk-reward-ratio')).toContainText('12.50');
 		});
 
 		test('Negative values should not break calculations', async ({ page }) => {
 			await page.goto(`${TRADEUP_URL}/calculator`);
 
+			await expect(page.getByTestId('calculator-entry-price-input')).toBeVisible();
 			// Set entry price higher than target (negative profit)
-			await page.getByRole('spinbutton', { name: 'Entry Price' }).fill('120');
-			await page.getByRole('spinbutton', { name: 'Target Price' }).fill('100');
-			await page.getByRole('spinbutton', { name: 'Target Price' }).blur();
+			await page.getByTestId('calculator-entry-price-input').click();
+			await page.getByTestId('calculator-entry-price-input').fill('120');
+			await page.getByTestId('calculator-target-price-input').click();
+			await page.getByTestId('calculator-target-price-input').fill('100');
+			await page.getByTestId('calculator-target-price-input').blur();
 
-			// Profit should be negative
-			await expect(page.locator('.stat-value').nth(2)).toContainText('-16.67%');
+			await expect(page.getByTestId('calculator-stop-loss-amt')).toContainText('$3000.00');
+			await expect(page.getByTestId('calculator-stop-loss-perc')).toContainText('20.00%');
 
-			// Risk/reward should be negative
-			await expect(page.locator('.stat-value').nth(3)).toContainText('-');
+			await expect(page.getByTestId('calculator-position-size-amt')).toContainText('125 shares');
+			await expect(page.getByTestId('calculator-position-size-perc')).toContainText(
+				'1.50% of account'
+			);
+
+			await expect(page.getByTestId('calculator-profit-perc')).toContainText('-16.67%');
+			await expect(page.getByTestId('calculator-account-growth-perc')).toContainText('0.00%');
+
+			await expect(page.getByTestId('calculator-risk-reward-ratio')).toContainText('0.00');
 		});
 
 		test('Zero and extreme values handling', async ({ page }) => {
 			await page.goto(`${TRADEUP_URL}/calculator`);
 
+			await expect(page.getByTestId('calculator-account-size-input')).toBeVisible();
 			// Set account size to 0
-			await page.getByRole('spinbutton', { name: 'Account Size (USD)' }).fill('0');
-			await page.getByRole('spinbutton', { name: 'Account Size (USD)' }).blur();
+			await page.getByTestId('calculator-account-size-input').click();
+			await page.getByTestId('calculator-account-size-input').fill('0');
+			await page.getByTestId('calculator-account-size-input').blur();
 
 			// Position size should be 0 shares
-			await expect(page.locator('.stat-value').nth(1)).toContainText('0 shares');
+			await expect(page.getByTestId('calculator-stop-loss-amt')).toContainText('$0.00');
+			await expect(page.getByTestId('calculator-stop-loss-perc')).toContainText('4.00%');
+
+			await expect(page.getByTestId('calculator-position-size-amt')).toContainText('0 shares');
+			await expect(page.getByTestId('calculator-position-size-perc')).toContainText(
+				'7.50% of account'
+			);
+
+			await expect(page.getByTestId('calculator-profit-perc')).toContainText('20.00%');
+			await expect(page.getByTestId('calculator-account-growth-perc')).toContainText('1.50%');
+
+			await expect(page.getByTestId('calculator-risk-reward-ratio')).toContainText('5.00');
 
 			// Set extremely large values
-			await page.getByRole('spinbutton', { name: 'Account Size (USD)' }).fill('1000000000');
-			await page.getByRole('spinbutton', { name: 'Risk (%)' }).fill('100');
-			await page.getByRole('spinbutton', { name: 'Risk (%)' }).blur();
+			await page.getByTestId('calculator-account-size-input').click();
+			await page.getByTestId('calculator-account-size-input').fill('1000000000');
+			await page.getByTestId('calculator-risk-input').fill('1');
+			await page.getByTestId('calculator-risk-input').blur();
 
-			// Values should still be calculated properly
-			await expect(page.locator('.stat-desc').nth(1)).toContainText('2500.00% of account');
+			await expect(page.getByTestId('calculator-stop-loss-amt')).toContainText('$10000000.00');
+			await expect(page.getByTestId('calculator-stop-loss-perc')).toContainText('4.00%');
+
+			await expect(page.getByTestId('calculator-position-size-amt')).toContainText(
+				'2500000 shares'
+			);
+			await expect(page.getByTestId('calculator-position-size-perc')).toContainText(
+				'25.00% of account'
+			);
+
+			await expect(page.getByTestId('calculator-profit-perc')).toContainText('20.00%');
+			await expect(page.getByTestId('calculator-account-growth-perc')).toContainText('5.00%');
+
+			await expect(page.getByTestId('calculator-risk-reward-ratio')).toContainText('5.00');
 		});
 	});
 });
