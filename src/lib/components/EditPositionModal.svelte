@@ -346,6 +346,6 @@
 		</div>
 	</div>
 	<div class="modal-backdrop">
-		<button type="button" on:click={onClose}>close</button>
+		<button type="button" on:click={onClose} style="pointer-events: none;">close</button>
 	</div>
 </dialog>

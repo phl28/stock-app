@@ -206,6 +206,6 @@
 		{/if}
 	</div>
 	<div class="modal-backdrop">
-		<button on:click={handleCloseModal}>close</button>
+		<button on:click={handleCloseModal} style="pointer-events: none;">close</button>
 	</div>
 </dialog>

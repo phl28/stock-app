@@ -368,12 +368,20 @@ test.describe('Trades Page', () => {
 			await expect(page.getByTestId('edit-position-modal-save-button')).toBeDisabled();
 			await expect(page.getByTestId('edit-position-modal-grid-container')).toBeVisible();
 			await expect(page.getByTestId('edit-position-modal-reset-button')).toBeDisabled();
-			const tradeFirstRow = page.locator('.ag-center-cols-container .ag-row').first();
-			const cell = tradeFirstRow.locator(`.ag-cell[col-id="volume"]`);
-			await cell.dblclick();
+			await page
+				.getByTestId('edit-position-modal-grid-container')
+				.getByRole('gridcell', { name: '10' })
+				.first()
+				.click();
+			await page
+				.getByTestId('edit-position-modal-grid-container')
+				.getByRole('gridcell', { name: '10' })
+				.first()
+				.press('Enter');
 			await page.getByRole('spinbutton', { name: 'Input Editor' }).fill('15');
 			await page.getByRole('spinbutton', { name: 'Input Editor' }).press('Enter');
 			await page.getByTestId('edit-position-modal-save-button').click();
+			await expect(page.getByTestId('edit-position-modal-ticker-input')).toBeHidden();
 			await expect(page.getByText('Trades updated successfully!')).toBeVisible();
 			await expect(page.getByRole('main')).toContainText('Quantity 250');
 		});

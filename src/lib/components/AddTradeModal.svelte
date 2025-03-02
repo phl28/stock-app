@@ -220,6 +220,6 @@
 		</form>
 	</div>
 	<div class="modal-backdrop">
-		<button type="button" on:click={handleCloseModal}>close</button>
+		<button type="button" on:click={handleCloseModal} style="pointer-events: none;">close</button>
 	</div>
 </dialog>
