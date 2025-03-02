@@ -95,10 +95,8 @@ export const actions: Actions = {
 			const res = await fetch(
 				`${PUBLIC_POLYGON_IO_URL}/v2/aggs/ticker/${ticker}/range/1/day/${formattedTwoYearsAgo}/${formattedToday}?adjusted=true&sort=asc&apiKey=${API_KEY}`
 			);
-			console.log(res);
 			if (res.ok && res.status === 200) {
 				const data = await res.json();
-				console.log(data.ticker);
 				let stockData: StockData[] = [];
 				let volumeData: Pick<VolumeData, 'time' | 'value'>[] = [];
 				for (const item of data.results) {

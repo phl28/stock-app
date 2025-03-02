@@ -7,7 +7,7 @@
 	import type { Trade, Position } from '$lib/types/tradeTypes';
 	import { TradeSideCellRenderer } from './TradeSideCellRenderer';
 
-	import type { GridOptions, GridApi } from 'ag-grid-community';
+	import type { GridOptions, GridApi, GetRowIdParams } from 'ag-grid-community';
 
 	export let trades: Trade[];
 	export let positions: Position[];
@@ -40,6 +40,7 @@
 	}
 
 	const gridOptions: GridOptions<Trade> = {
+		getRowId: (params: GetRowIdParams<Trade>) => params.data.id.toString(),
 		rowSelection: {
 			mode: 'multiRow'
 		},
@@ -110,7 +111,6 @@
 <div class="w-full">
 	<HistoryNavBar bind:selectedTrades numOfTrades={trades.length} {positions} />
 	<div class="my-2 overflow-x-auto">
-		<h5 class="mt-6 text-center">Unassigned Trades ({unassignedTrades.length})</h5>
 		<Grid {gridOptions} isDarkMode={$darkTheme} on:gridReady={handleGridReady} />
 	</div>
 </div>

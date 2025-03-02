@@ -32,7 +32,7 @@
 </script>
 
 <div class="m-2 flex flex-row items-center justify-between">
-	<h5>Trades ({numOfTrades})</h5>
+	<h5 data-testid="history-nav-bar-title">Trades ({numOfTrades})</h5>
 	<div class="flex justify-end space-x-2">
 		{#if selectedTrades.length > 0}
 			<form
@@ -52,10 +52,17 @@
 				{#each selectedTrades as trade}
 					<input type="hidden" name="id" value={trade.id} />
 				{/each}
-				<button class="btn btn-error" type="submit">Delete</button>
+				<button
+					class="btn btn-error"
+					type="submit"
+					data-testid="history-nav-bar-delete-trades-button">Delete</button
+				>
 			</form>
 			{#if selectedTickers.length === 1}
-				<button class="btn btn-primary" on:click={toggleAssignTradeModal}>Assign To Position</button
+				<button
+					class="btn btn-primary"
+					on:click={toggleAssignTradeModal}
+					data-testid="history-nav-bar-assign-trades-button">Assign To Position</button
 				>
 			{/if}
 		{/if}
@@ -64,7 +71,7 @@
 			on:click={toggleAddTradeModal}
 			data-testid="navbar-add-trade-button">Add</button
 		>
-		<button class="btn btn-neutral" on:click={toggleImportTradeModal}>Bulk Import</button>
+		<!-- <button class="btn btn-neutral" on:click={toggleImportTradeModal}>Bulk Import</button> -->
 		<!-- @TODO: Hiding the sync button for now as it is not a priority and is yet to be implemented properly -->
 		<!-- <form method="POST" action="?/syncTrades">
 			<button class="btn btn-neutral" type="submit">Sync</button>

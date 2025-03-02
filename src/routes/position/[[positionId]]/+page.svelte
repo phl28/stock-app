@@ -29,6 +29,7 @@
 	import {
 		colorSchemeDarkBlue,
 		themeQuartz,
+		type GetRowIdParams,
 		type GridApi,
 		type GridOptions
 	} from 'ag-grid-community';
@@ -320,8 +321,9 @@
 		}
 	};
 
-	type TradeGrid = Pick<Trade, 'tradeSide' | 'executedAt' | 'price' | 'fees' | 'volume'>;
+	type TradeGrid = Pick<Trade, 'id' | 'tradeSide' | 'executedAt' | 'price' | 'fees' | 'volume'>;
 	const gridOptions: GridOptions<TradeGrid> = {
+		getRowId: (params: GetRowIdParams<TradeGrid>) => params.data.id.toString(),
 		suppressMovableColumns: true,
 		suppressCellFocus: true,
 		defaultColDef: {
@@ -347,13 +349,13 @@
 			{
 				field: 'price',
 				headerName: 'Price',
-				valueFormatter: ({ value }) => `${Number(value).toFixed(2)}`,
+				valueFormatter: ({ data }) => formatCurrency(data?.price ?? '', 'USD'),
 				width: 150
 			},
 			{
 				field: 'fees',
 				headerName: 'Fees',
-				valueFormatter: ({ value }) => `${Number(value).toFixed(2)}`,
+				valueFormatter: ({ data }) => formatCurrency(data?.fees ?? '', 'USD'),
 				width: 150
 			},
 			{
@@ -407,8 +409,8 @@
 			stopLossPrice
 		) {
 			rR =
-				(Number(data.position?.profitTargetPrice) - Number(data.position?.averageEntryPrice)) /
-				(Number(data.position?.averageEntryPrice) - Number(data.position?.stopLossPrice));
+				(Number(profitTargetPrice) - Number(data.position?.averageEntryPrice)) /
+				(Number(data.position?.averageEntryPrice) - Number(stopLossPrice));
 			previousRR = rR;
 		}
 		if (browser) {
@@ -429,7 +431,7 @@
 
 <section>
 	<div class="mb-4 flex items-center justify-between">
-		<h1 class="flex items-center gap-2">
+		<h1 class="flex items-center gap-2" data-testid="position-page-title">
 			{data.position?.ticker}
 			<div
 				class={`badge badge-lg text-sm font-normal ${data.position?.isShort ? 'badge-error' : 'badge-success'}`}
@@ -443,10 +445,14 @@
 		</h1>
 		<div id="top-bar-right" class="flex items-center gap-2">
 			<div class="dropdown dropdown-end dropdown-bottom">
-				<div tabindex="0" role="button" class="btn m-1"><EllipsisVertical /></div>
+				<div tabindex="0" role="button" class="btn m-1" data-testid="position-dropdown-button">
+					<EllipsisVertical />
+				</div>
 				<ul class="menu dropdown-content z-[1000] w-52 rounded-box bg-base-100 p-2 shadow">
 					<li>
-						<button on:click={toggleEditPositionModal}>Edit Position</button>
+						<button on:click={toggleEditPositionModal} data-testid="position-dropdown-edit-button"
+							>Edit Position</button
+						>
 					</li>
 					<div class="divider m-0 p-0"></div>
 					<li>
@@ -464,20 +470,29 @@
 								};
 							}}
 						>
-							<button type="submit">Delete Position</button>
+							<button type="submit" data-testid="position-dropdown-delete-button"
+								>Delete Position</button
+							>
 						</form>
 					</li>
 				</ul>
 			</div>
 			<form method="POST" action="?/markPositionReviewed">
-				<button class="btn btn-primary" type="submit" disabled={data.position?.reviewedAt !== null}
-					><CheckCheck /> Mark as reviewed</button
+				<button
+					class="btn btn-primary"
+					type="submit"
+					disabled={data.position?.reviewedAt !== null}
+					data-testid="position-page-mark-reviewed-button"><CheckCheck /> Mark as reviewed</button
 				>
 			</form>
 		</div>
 	</div>
 	<div class="relative flex w-full gap-2 px-2">
-		<div class="relative flex w-4/6 flex-col px-2" bind:this={container}>
+		<div
+			class="relative flex w-4/6 flex-col px-2"
+			bind:this={container}
+			data-testid="position-page-chart-container"
+		>
 			<Chart {...chartOptions} {watermark} {...THEMES[$darkTheme ? 'Dark' : 'Light'].chart}>
 				<CandlestickSeries
 					bind:data={stockData}
@@ -531,6 +546,7 @@
 							disabled={isCalculatingRR}
 							on:blur={updateRiskReward}
 							class="input input-sm input-bordered w-full"
+							data-testid="position-page-stop-loss-input"
 						/>
 					</label>
 					<label class="form-control w-full">
@@ -543,6 +559,7 @@
 							disabled={isCalculatingRR}
 							on:blur={updateRiskReward}
 							class="input input-sm input-bordered w-full"
+							data-testid="position-page-profit-target-input"
 						/>
 					</label>
 					<label class="form-control w-full">
@@ -556,6 +573,7 @@
 							disabled={isCalculatingRR}
 							on:blur={updateRiskReward}
 							class="input input-sm input-bordered w-full"
+							data-testid="position-page-rr-input"
 						/>
 					</label>
 				</div>
@@ -569,10 +587,12 @@
 							<span
 								class={Number(data.position?.grossProfitLoss) >= 0 ? 'text-success' : 'text-error'}
 							>
-								{formatCurrency(
-									data.position?.grossProfitLoss ?? '0',
-									data.position?.region === 'US' ? 'USD' : 'HKD'
-								)}
+								{data.position?.grossProfitLoss
+									? formatCurrency(
+											data.position.grossProfitLoss,
+											data.position?.region === 'US' ? 'USD' : 'HKD'
+										)
+									: 'N/A'}
 							</span>
 						</div>
 						<div class="flex justify-between">
@@ -583,10 +603,14 @@
 									? 'text-success'
 									: 'text-error'}
 							>
-								{formatCurrency(
-									String(Number(data.position?.grossProfitLoss) - Number(data.position?.totalFees)),
-									data.position?.region === 'US' ? 'USD' : 'HKD'
-								)}
+								{data.position?.grossProfitLoss
+									? formatCurrency(
+											String(
+												Number(data.position?.grossProfitLoss) - Number(data.position?.totalFees)
+											),
+											data.position?.region === 'US' ? 'USD' : 'HKD'
+										)
+									: 'N/A'}
 							</span>
 						</div>
 						<div class="flex justify-between">
@@ -626,10 +650,12 @@
 						<div class="flex justify-between">
 							<span class="text-sm opacity-75">Exit Price</span>
 							<span
-								>{formatCurrency(
-									data.trades?.at(-1)?.price ?? '',
-									data.position?.region === 'US' ? 'USD' : 'HKD'
-								)}</span
+								>{data.position?.outstandingVolume === 0
+									? formatCurrency(
+											data.trades?.at(-1)?.price ?? '',
+											data.position?.region === 'US' ? 'USD' : 'HKD'
+										)
+									: 'N/A'}</span
 							>
 						</div>
 						<div class="flex justify-between">
@@ -644,10 +670,12 @@
 						<div class="flex justify-between">
 							<span class="text-sm opacity-75">Average Exit Price</span>
 							<span
-								>{formatCurrency(
-									data.position?.averageExitPrice ?? '',
-									data.position?.region === 'US' ? 'USD' : 'HKD'
-								)}</span
+								>{data.position?.averageEntryPrice && Number(data.position.averageExitPrice) > 0
+									? formatCurrency(
+											data.position.averageExitPrice,
+											data.position?.region === 'US' ? 'USD' : 'HKD'
+										)
+									: 'N/A'}</span
 							>
 						</div>
 						<div class="divider my-0"></div>
