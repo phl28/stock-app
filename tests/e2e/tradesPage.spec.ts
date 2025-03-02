@@ -383,7 +383,7 @@ test.describe('Trades Page', () => {
 			await page.getByTestId('edit-position-modal-save-button').click();
 			await expect(page.getByTestId('edit-position-modal-ticker-input')).toBeHidden();
 			await expect(page.getByText('Trades updated successfully!')).toBeVisible();
-			await expect(page.getByRole('main')).toContainText('Quantity 250');
+			await expect(page.getByTestId('position-page-total-volume')).toHaveText('25');
 		});
 
 		test('Update position journal', async () => {

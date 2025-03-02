@@ -586,6 +586,7 @@
 							<span class="text-sm opacity-75">Gross Profit / Loss</span>
 							<span
 								class={Number(data.position?.grossProfitLoss) >= 0 ? 'text-success' : 'text-error'}
+								data-testid="position-page-gross-profit-loss"
 							>
 								{data.position?.grossProfitLoss
 									? formatCurrency(
@@ -602,6 +603,7 @@
 								0
 									? 'text-success'
 									: 'text-error'}
+								data-testid="position-page-net-profit-loss"
 							>
 								{data.position?.grossProfitLoss
 									? formatCurrency(
@@ -615,7 +617,7 @@
 						</div>
 						<div class="flex justify-between">
 							<span class="text-sm opacity-75">Total Fees</span>
-							<span
+							<span data-testid="position-page-total-fees"
 								>{formatCurrency(
 									data.position?.totalFees ?? '0',
 									data.position?.region === 'US' ? 'USD' : 'HKD'
@@ -625,22 +627,25 @@
 						<div class="divider my-0"></div>
 						<div class="flex justify-between">
 							<span class="text-sm opacity-75">Side</span>
-							<span class={`badge ${data.position?.isShort ? 'badge-error' : 'badge-success'}`}>
+							<span
+								class={`badge ${data.position?.isShort ? 'badge-error' : 'badge-success'}`}
+								data-testid="position-page-side"
+							>
 								{data.position?.isShort ? 'SHORT' : 'LONG'}
 							</span>
 						</div>
 						<div class="flex justify-between">
 							<span class="text-sm opacity-75">Quantity</span>
-							<span>{data.position?.totalVolume}</span>
+							<span data-testid="position-page-total-volume">{data.position?.totalVolume}</span>
 						</div>
 						<div class="flex justify-between">
 							<span class="text-sm opacity-75">Executions</span>
-							<span>{data.trades?.length ?? 0}</span>
+							<span data-testid="position-page-executions">{data.trades?.length ?? 0}</span>
 						</div>
 						<div class="divider my-0"></div>
 						<div class="flex justify-between">
 							<span class="text-sm opacity-75">Entry Price</span>
-							<span
+							<span data-testid="position-page-entry-price"
 								>{formatCurrency(
 									data.trades?.at(0)?.price ?? '',
 									data.position?.region === 'US' ? 'USD' : 'HKD'
@@ -649,7 +654,7 @@
 						</div>
 						<div class="flex justify-between">
 							<span class="text-sm opacity-75">Exit Price</span>
-							<span
+							<span data-testid="position-page-exit-price"
 								>{data.position?.outstandingVolume === 0
 									? formatCurrency(
 											data.trades?.at(-1)?.price ?? '',
@@ -660,7 +665,7 @@
 						</div>
 						<div class="flex justify-between">
 							<span class="text-sm opacity-75">Average Entry Price</span>
-							<span
+							<span data-testid="position-page-average-entry-price"
 								>{formatCurrency(
 									data.position?.averageEntryPrice ?? '',
 									data.position?.region === 'US' ? 'USD' : 'HKD'
@@ -669,7 +674,7 @@
 						</div>
 						<div class="flex justify-between">
 							<span class="text-sm opacity-75">Average Exit Price</span>
-							<span
+							<span data-testid="position-page-average-exit-price"
 								>{data.position?.averageEntryPrice && Number(data.position.averageExitPrice) > 0
 									? formatCurrency(
 											data.position.averageExitPrice,
@@ -681,7 +686,7 @@
 						<div class="divider my-0"></div>
 						<div class="flex justify-between">
 							<span class="text-sm opacity-75">Duration</span>
-							<span
+							<span data-testid="position-page-duration"
 								>{formatDuration(
 									new Date(data.trades?.at(0)?.executedAt ?? ''),
 									new Date(data.trades?.at(-1)?.executedAt ?? '')
