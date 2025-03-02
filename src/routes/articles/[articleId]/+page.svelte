@@ -8,7 +8,11 @@
 	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
 	import { Trash2, Pencil } from 'lucide-svelte';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 
 	const handleDeleteArticle = async () => {
 		if (confirm('Are you sure you want to delete this article?')) {
@@ -37,7 +41,7 @@
 					>
 					<button
 						class="btn btn-circle btn-error"
-						on:click={handleDeleteArticle}
+						onclick={handleDeleteArticle}
 						data-testid="delete-article-button"><Trash2 /></button
 					>
 				</div>

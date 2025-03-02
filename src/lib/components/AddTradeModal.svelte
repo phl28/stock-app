@@ -5,35 +5,26 @@
 	import { dispatchToast } from '@/routes/stores';
 	import { Currency, Platform, Region, TradeSide } from '../types';
 
-	export let isModalOpen: boolean = false;
-	export let handleCloseModal: () => void;
+	interface Props {
+		isModalOpen?: boolean;
+		handleCloseModal: () => void;
+	}
 
-	let modal: HTMLDialogElement;
+	let { isModalOpen = false, handleCloseModal }: Props = $props();
 
-	$: (async () => {
-		await tick();
-		if (modal) {
-			if (isModalOpen && !modal.open) {
-				modal.showModal();
-			} else if (!isModalOpen && modal.open) {
-				modal.close();
-			}
-		}
-	})();
+	let modal: HTMLDialogElement | undefined = $state();
 
-	$: isFormValid = ticker && region && currency && price && volume && platform && side;
+	let ticker: string = $state('');
+	let region: string = $state('US');
+	let currency: string = $state('USD');
+	let price: number = $state(0);
+	let fees: number = $state(0);
+	let volume: number = $state(0);
+	let platform: string = $state('FUTU');
+	let side: string = $state('BUY');
+	let executedAt: string = $state(new Date().toISOString().split('T')[0]);
 
-	let ticker: string;
-	let region: string;
-	let currency: string;
-	let price: number;
-	let fees: number;
-	let volume: number;
-	let platform: string;
-	let side: string;
-	let executedAt: string = new Date().toISOString().split('T')[0];
-
-	let addAnother: boolean = true;
+	let addAnother: boolean = $state(true);
 
 	const resetForm = () => {
 		ticker = '';
@@ -47,6 +38,19 @@
 		executedAt = new Date().toISOString().split('T')[0];
 		addAnother = true;
 	};
+	$effect(() => {
+		(async () => {
+			await tick();
+			if (modal) {
+				if (isModalOpen && !modal.open) {
+					modal.showModal();
+				} else if (!isModalOpen && modal.open) {
+					modal.close();
+				}
+			}
+		})();
+	});
+	let isFormValid = $derived(ticker && region && currency && price && volume && platform && side);
 </script>
 
 <dialog id="add-trade-modal" class="modal" bind:this={modal}>
@@ -54,7 +58,7 @@
 		<h3 class="text-lg font-bold" data-testid="add-trade-modal-title">Add new trade(s)</h3>
 		<p class="py-4">Enter the details of the new trade:</p>
 		<form
-			on:submit|preventDefault
+			onsubmit={(e) => e.preventDefault()}
 			method="POST"
 			action="?/addTrade"
 			use:enhance={() => {
@@ -206,7 +210,7 @@
 					<button
 						class="btn"
 						type="button"
-						on:click={handleCloseModal}
+						onclick={handleCloseModal}
 						data-testid="add-trade-modal-close-button">Close</button
 					>
 					<button
@@ -220,6 +224,8 @@
 		</form>
 	</div>
 	<div class="modal-backdrop">
-		<button type="button" on:click={handleCloseModal} style="pointer-events: none;">close</button>
+		<button type="button" onclick={handleCloseModal} style="pointer-events: none;">close</button>
 	</div>
 </dialog>
+
+å

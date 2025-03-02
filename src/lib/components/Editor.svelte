@@ -4,18 +4,22 @@
 
 	import { compressImage } from '$lib/helpers/ImageCompressor';
 
-	export let data = {};
-	export let readOnly = false;
-	export let placeholder = 'What are your thoughts for this week?';
-	export let autofocus = true;
-	export let onSave = undefined;
-	export let removeImages = undefined;
-	export let autoSave = false;
+	let {
+		data = {},
+		readOnly = false,
+		placeholder = 'What are your thoughts for this week?',
+		autofocus = true,
+		onSave = undefined,
+		removeImages = undefined,
+		autoSave = false,
+		children = undefined
+	} = $props();
 
 	let saveTimeout;
 
 	let editor;
 	const removedImagesUrl = [];
+	let CustomImageTool;
 
 	onMount(async () => {
 		if (browser) {
@@ -28,14 +32,14 @@
 			const Table = (await import('@editorjs/table')).default;
 			const Embed = (await import('@editorjs/embed')).default;
 
-			class CustomImageTool extends ImageTool {
+			CustomImageTool = class extends ImageTool {
 				removed() {
 					const fileUrl = this._data.file.url;
 					if (fileUrl.includes('blob.vercel-storage.com')) {
 						removedImagesUrl.push(fileUrl);
 					}
 				}
-			}
+			};
 
 			editor = new EditorJS({
 				/**
@@ -156,7 +160,7 @@
 ></div>
 {#if !readOnly && !autoSave}
 	<div class="flex items-center justify-end gap-2">
-		<slot></slot>
-		<button class="btn btn-neutral" on:click={save}>Save</button>
+		{@render children?.()}
+		<button class="btn btn-neutral" onclick={save}>Save</button>
 	</div>
 {/if}

@@ -34,9 +34,13 @@
 		type GridOptions
 	} from 'ag-grid-community';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
 
-	let isCalculatingRR = false;
+	let { data }: Props = $props();
+
+	let isCalculatingRR = $state(false);
 
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
@@ -47,9 +51,9 @@
 	let profitTargetPriceLine: IPriceLine | undefined = undefined;
 	let stopLossPriceLine: IPriceLine | undefined = undefined;
 
-	let container: HTMLDivElement;
-	let containerWidth = 600;
-	let containerHeight = 300;
+	let container: HTMLDivElement | undefined = $state();
+	let containerWidth = $state(600);
+	let containerHeight = $state(300);
 	let resizeObserver: ResizeObserver;
 
 	function debounce<Args extends unknown[], ReturnType>(
@@ -80,23 +84,8 @@
 		};
 	});
 
-	$: {
-		if (data) {
-			if (data.stockData) {
-				try {
-					fillChartData(data);
-				} catch {
-					dispatchToast({ type: 'error', message: 'Error initializing chart' });
-				}
-			}
-			if (data.position) {
-				fillPositionData(data.position, data.trades ?? []);
-			}
-		}
-	}
-
-	let stockData: StockData[];
-	let volumeData: VolumeData[];
+	let stockData: StockData[] = $state([]);
+	let volumeData: VolumeData[] = $state([]);
 
 	const fillChartData = async (data: PageData) => {
 		if (!data.stockData) {
@@ -195,7 +184,7 @@
 	const updateDimensions = debounce((entries: ResizeObserverEntry[]) => {
 		for (const entry of entries) {
 			const { width } = entry.contentRect;
-			containerWidth = Math.min(width, container.parentElement?.clientWidth ?? width);
+			containerWidth = Math.min(width, container?.parentElement?.clientWidth ?? width);
 			containerHeight = Math.round(containerWidth * 0.5);
 		}
 	}, 100);
@@ -248,34 +237,6 @@
 	};
 
 	let waterMarkText: string = `${data.position?.ticker} 1D`;
-	$: watermark = {
-		visible: true,
-		fontSize: 48,
-		horzAlign: 'center' as const,
-		vertAlign: 'center' as const,
-		color: 'rgba(171, 71, 188, 0.15)',
-		text: waterMarkText
-	};
-
-	$: chartOptions = {
-		width: containerWidth,
-		height: containerHeight,
-		crosshair: { mode: CrosshairMode.Magnet },
-		rightPriceScale: {
-			borderColor: 'rgba(197, 203, 206, 0.8)',
-			scaleMargins: { top: 0.3, bottom: 0.25 }
-		},
-		timeScale: {
-			borderColor: 'rgba(197, 203, 206, 0.8)'
-		},
-		layout: {
-			background: {
-				type: ColorType.Solid,
-				color: '#FFFFFF'
-			},
-			textColor: '#333'
-		}
-	};
 
 	const toggleEditPositionModal = () => {
 		modalStore.toggleEditPositionModal();
@@ -366,32 +327,26 @@
 		]
 	};
 
-	let gridApi: GridApi;
+	let gridApi: GridApi | undefined = $state();
 
-	$: {
-		if (gridApi) {
-			gridApi.setGridOption('rowData', [...(data.trades ?? [])]);
-		}
-	}
-	const handleGridReady = (event: CustomEvent) => {
-		const api = event.detail;
+	const handleGridReady = (api: GridApi) => {
 		gridApi = api;
 	};
-	$: if (gridApi) {
-		gridApi.setGridOption(
-			'theme',
-			$darkTheme ? themeQuartz.withPart(colorSchemeDarkBlue) : themeQuartz
-		);
-	}
 
-	let rR: number | undefined =
+	let rR: number | undefined = $state(
+		(Number(data.position?.profitTargetPrice) - Number(data.position?.averageEntryPrice)) /
+			(Number(data.position?.averageEntryPrice) - Number(data.position?.stopLossPrice))
+	);
+	let previousRR: number | undefined =
 		(Number(data.position?.profitTargetPrice) - Number(data.position?.averageEntryPrice)) /
 		(Number(data.position?.averageEntryPrice) - Number(data.position?.stopLossPrice));
-	let previousRR: number | undefined = rR;
-	let stopLossPrice: number | undefined = Number(data.position?.stopLossPrice) || undefined;
-	let previousStopLossPrice: number | undefined = stopLossPrice;
-	let profitTargetPrice: number | undefined = Number(data.position?.profitTargetPrice) || undefined;
-	let previousProfitTargetPrice: number | undefined = profitTargetPrice;
+	let stopLossPrice: number | undefined = $state(Number(data.position?.stopLossPrice) || undefined);
+	let previousStopLossPrice: number | undefined = Number(data.position?.stopLossPrice) || undefined;
+	let profitTargetPrice: number | undefined = $state(
+		Number(data.position?.profitTargetPrice) || undefined
+	);
+	let previousProfitTargetPrice: number | undefined =
+		Number(data.position?.profitTargetPrice) || undefined;
 
 	const updateRiskReward = debounce(async () => {
 		if (!data.position) return;
@@ -427,6 +382,60 @@
 		}
 		isCalculatingRR = false;
 	}, 500);
+	$effect(() => {
+		if (data) {
+			if (data.stockData) {
+				try {
+					fillChartData(data);
+				} catch {
+					dispatchToast({ type: 'error', message: 'Error initializing chart' });
+				}
+			}
+			if (data.position) {
+				fillPositionData(data.position, data.trades ?? []);
+			}
+		}
+	});
+	let watermark = $derived({
+		visible: true,
+		fontSize: 48,
+		horzAlign: 'center' as const,
+		vertAlign: 'center' as const,
+		color: 'rgba(171, 71, 188, 0.15)',
+		text: waterMarkText
+	});
+	let chartOptions = $derived({
+		width: containerWidth,
+		height: containerHeight,
+		crosshair: { mode: CrosshairMode.Magnet },
+		rightPriceScale: {
+			borderColor: 'rgba(197, 203, 206, 0.8)',
+			scaleMargins: { top: 0.3, bottom: 0.25 }
+		},
+		timeScale: {
+			borderColor: 'rgba(197, 203, 206, 0.8)'
+		},
+		layout: {
+			background: {
+				type: ColorType.Solid,
+				color: '#FFFFFF'
+			},
+			textColor: '#333'
+		}
+	});
+	$effect(() => {
+		if (gridApi) {
+			gridApi.setGridOption('rowData', [...(data.trades ?? [])]);
+		}
+	});
+	$effect(() => {
+		if (gridApi) {
+			gridApi.setGridOption(
+				'theme',
+				$darkTheme ? themeQuartz.withPart(colorSchemeDarkBlue) : themeQuartz
+			);
+		}
+	});
 </script>
 
 <section>
@@ -450,7 +459,7 @@
 				</div>
 				<ul class="menu dropdown-content z-[1000] w-52 rounded-box bg-base-100 p-2 shadow">
 					<li>
-						<button on:click={toggleEditPositionModal} data-testid="position-dropdown-edit-button"
+						<button onclick={toggleEditPositionModal} data-testid="position-dropdown-edit-button"
 							>Edit Position</button
 						>
 					</li>
@@ -529,7 +538,7 @@
 						style="height: 250px"
 						{gridOptions}
 						isDarkMode={$darkTheme}
-						on:gridReady={handleGridReady}
+						gridReady={handleGridReady}
 					/>
 				</div>
 			</div>
@@ -544,7 +553,7 @@
 							type="number"
 							bind:value={stopLossPrice}
 							disabled={isCalculatingRR}
-							on:blur={updateRiskReward}
+							onblur={updateRiskReward}
 							class="input input-sm input-bordered w-full"
 							data-testid="position-page-stop-loss-input"
 						/>
@@ -557,7 +566,7 @@
 							type="number"
 							bind:value={profitTargetPrice}
 							disabled={isCalculatingRR}
-							on:blur={updateRiskReward}
+							onblur={updateRiskReward}
 							class="input input-sm input-bordered w-full"
 							data-testid="position-page-profit-target-input"
 						/>
@@ -571,7 +580,7 @@
 							bind:value={rR}
 							step="0.01"
 							disabled={isCalculatingRR}
-							on:blur={updateRiskReward}
+							onblur={updateRiskReward}
 							class="input input-sm input-bordered w-full"
 							data-testid="position-page-rr-input"
 						/>

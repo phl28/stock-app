@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { dismissToast, toasts } from '@/routes/stores.ts';
+	import { dismissToast, toasts } from '@/routes/stores';
 
 	import Toast from './Toast.svelte';
 </script>
@@ -7,7 +7,7 @@
 {#if $toasts}
 	<section>
 		{#each $toasts as toast (toast.id)}
-			<Toast type={toast.type} on:dismiss={() => dismissToast(toast.id)}>{toast.message}</Toast>
+			<Toast type={toast.type} dismiss={() => dismissToast(toast.id)}>{toast.message}</Toast>
 		{/each}
 	</section>
 {/if}

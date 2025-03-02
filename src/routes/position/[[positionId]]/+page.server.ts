@@ -95,7 +95,15 @@ const fetchStockData = async (
 	}
 };
 
-export const load: PageServerLoad = async ({ fetch, params, locals }) => {
+export const load: PageServerLoad = async ({
+	fetch,
+	params,
+	locals
+}: {
+	fetch: typeof globalThis.fetch;
+	params: RouteParams;
+	locals: AppLocals;
+}) => {
 	assertHasSession(locals);
 	const positionId = Number(params.positionId);
 	if (isNaN(positionId) || positionId < 0) {

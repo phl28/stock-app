@@ -2,7 +2,7 @@
 	import Calendar from '@event-calendar/core';
 	import DayGrid from '@event-calendar/day-grid';
 
-	export let data;
+	let { data } = $props();
 
 	const handleDateSet = async (info) => {
 		const params = new URLSearchParams();
@@ -32,7 +32,7 @@
 	};
 
 	let plugins = [DayGrid];
-	let options = {
+	let options = $state({
 		view: 'dayGridMonth',
 		events: data.trades.map((trade) => {
 			return {
@@ -52,7 +52,7 @@
 		buttonText: {
 			today: 'Today'
 		}
-	};
+	});
 </script>
 
 <Calendar {plugins} {options} />

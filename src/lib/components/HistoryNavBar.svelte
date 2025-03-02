@@ -8,16 +8,23 @@
 	import ImportTradesModal from './ImportTradesModal.svelte';
 	import AddTradeModal from './AddTradeModal.svelte';
 
-	export let selectedTrades: Trade[] = [];
-	export let numOfTrades: number = 0;
-	export let positions: Position[] = [];
+	interface Props {
+		selectedTrades?: Trade[];
+		numOfTrades?: number;
+		positions?: Position[];
+	}
 
-	let positionId: number | 'newPosition' | undefined = undefined;
+	let { selectedTrades = $bindable([]), numOfTrades = 0, positions = [] }: Props = $props();
 
-	let selectedTickers: string[] = [];
-	$: selectedTickers = Array.from(new Set(selectedTrades.map((trade) => trade.ticker)));
+	let positionId: number | 'newPosition' | undefined = $state(undefined);
 
-	$: possiblePositions = positions.filter((position) => position.ticker === selectedTickers[0]);
+	let selectedTickers: string[] = $derived(
+		Array.from(new Set(selectedTrades.map((trade) => trade.ticker)))
+	);
+
+	let possiblePositions = $derived(
+		positions.filter((position) => position.ticker === selectedTickers[0])
+	);
 
 	const toggleAddTradeModal = () => {
 		modalStore.toggleAddTradeModal();
@@ -63,17 +70,17 @@
 			{#if selectedTickers.length === 1}
 				<button
 					class="btn btn-primary"
-					on:click={toggleAssignTradeModal}
+					onclick={toggleAssignTradeModal}
 					data-testid="history-nav-bar-assign-trades-button">Assign To Position</button
 				>
 			{/if}
 		{/if}
 		<button
 			class="btn btn-neutral"
-			on:click={toggleAddTradeModal}
+			onclick={toggleAddTradeModal}
 			data-testid="navbar-add-trade-button">Add</button
 		>
-		<!-- <button class="btn btn-neutral" on:click={toggleImportTradeModal}>Bulk Import</button> -->
+		<!-- <button class="btn btn-neutral" onclick={toggleImportTradeModal}>Bulk Import</button> -->
 		<!-- @TODO: Hiding the sync button for now as it is not a priority and is yet to be implemented properly -->
 		<!-- <form method="POST" action="?/syncTrades">
 			<button class="btn btn-neutral" type="submit">Sync</button>
@@ -82,10 +89,10 @@
 			<AssignTradeToPositionModal
 				isModalOpen={$modalStore.assignTradeModal}
 				{selectedTrades}
-				bind:positionId
-				bind:possiblePositions
+				{positionId}
+				{possiblePositions}
 				handleCloseModal={toggleAssignTradeModal}
-				on:assigned={() => {
+				onAssigned={() => {
 					selectedTrades = [];
 				}}
 			/>

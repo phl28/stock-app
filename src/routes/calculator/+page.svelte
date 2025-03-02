@@ -12,16 +12,20 @@
 	import { Search } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
-	export let data: PageData;
-	let containerWidth = 600;
-	let containerHeight = 300;
-	let container: HTMLDivElement;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
+	let containerWidth = $state(600);
+	let containerHeight = $state(300);
+	let container: HTMLDivElement | undefined = $state();
 	let resizeObserver: ResizeObserver;
 
 	const updateDimensions = (entries: ResizeObserverEntry[]) => {
 		for (const entry of entries) {
 			const { width } = entry.contentRect;
-			containerWidth = Math.min(width, container.parentElement?.clientWidth ?? width);
+			containerWidth = Math.min(width, container?.parentElement?.clientWidth ?? width);
 			containerHeight = Math.round(containerWidth * 0.5);
 		}
 	};
@@ -52,10 +56,10 @@
 		};
 	});
 
-	let stockData: StockData[];
-	let volumeData: VolumeData[];
-	let stockTickInput: string = 'AAPL';
-	let stockTick: string;
+	let stockData: StockData[] = $state([]);
+	let volumeData: VolumeData[] = $state([]);
+	let stockTickInput: string = $state('AAPL');
+	let stockTick: string = $state('AAPL');
 	let chartSeries: ISeriesApi<'Candlestick'> | null = null;
 	let volumeSeries: ISeriesApi<'Histogram'> | null = null;
 	// let lineSeries: ISeriesApi<'Line'> | null = null;
@@ -78,7 +82,6 @@
 			];
 			prevClose = close;
 		});
-		stockTick = stockTickInput.toUpperCase();
 		stockData = data.stockData;
 		volumeData = volume;
 		await tick();
@@ -139,17 +142,17 @@
 		}
 	};
 
-	let waterMarkText: string = `${stockTickInput.toUpperCase()} 1D`;
-	$: watermark = {
+	let waterMarkText: string = $derived(`${stockTick.toUpperCase()} 1D`);
+	let watermark = $derived({
 		visible: true,
 		fontSize: 48,
 		horzAlign: 'center' as const,
 		vertAlign: 'center' as const,
 		color: 'rgba(171, 71, 188, 0.15)',
 		text: waterMarkText
-	};
+	});
 
-	$: chartOptions = {
+	let chartOptions = $derived({
 		width: containerWidth,
 		height: containerHeight,
 		crosshair: { mode: CrosshairMode.Magnet },
@@ -167,7 +170,7 @@
 			},
 			textColor: '#333'
 		}
-	};
+	});
 
 	const {
 		calcStopLossPerc,
@@ -179,28 +182,20 @@
 		calcRewardToRisk
 	} = calculator;
 
-	let accSize: number = 1000000;
-	let entry: number = 100;
-	let stop: number = 96;
-	let target: number = 120;
-	let risk: number = 0.3;
-	let stopLossAmt: number = 300;
-	let stopLossPerc: number = 0.004;
-	let positionAmt: number = 0;
-	let positionSize: number = 0;
-	let profit: number = 0;
-	let accGrowth: number = 0;
-	let riskReward: number = 0;
+	let accSize: number = $state(1000000);
+	let entry: number = $state(100);
+	let stop: number = $state(96);
+	let target: number = $state(120);
+	let risk: number = $state(0.3);
 
-	$: {
-		stopLossPerc = calcStopLossPerc(entry, stop);
-		positionSize = calcPositionSize(risk / 100, stopLossPerc);
-		positionAmt = calcPositionAmt(accSize, positionSize, entry);
-		stopLossAmt = calcStopLossAmt(entry, stop, positionAmt);
-		profit = calcProfitPerc(target, entry);
-		accGrowth = calcRewardPerc(profit, positionSize);
-		riskReward = calcRewardToRisk(risk / 100, accGrowth);
-	}
+	let stopLossPerc = $derived(calcStopLossPerc(entry, stop));
+	let positionSize = $derived(calcPositionSize(risk / 100, stopLossPerc));
+	let positionAmt = $derived(calcPositionAmt(accSize, positionSize, entry));
+	let stopLossAmt = $derived(calcStopLossAmt(entry, stop, positionAmt));
+	let profit = $derived(calcProfitPerc(target, entry));
+	let accGrowth = $derived(calcRewardPerc(profit, positionSize));
+	let riskReward = $derived(calcRewardToRisk(risk / 100, accGrowth));
+	let stockTickInputValid = $derived(stockTickInput.length > 0);
 </script>
 
 <svelte:head>
@@ -227,12 +222,14 @@
 					action="?/fetchStockData"
 					use:enhance={() => {
 						return async ({ result, update }) => {
+							if (result.type === 'success' && result.data) {
+								await update({ reset: false });
+								fillChartData(result.data as ActionData);
+								stockTick = stockTickInput.toUpperCase();
+								return;
+							}
 							if (result.type === 'error') {
 								dispatchToast({ type: 'error', message: result.error.message });
-							} else if (result.type === 'success' && result.data) {
-								await update({ reset: false });
-								fillChartData(result.data);
-								waterMarkText = `${stockTickInput} 1D`;
 							} else if (result.type === 'failure') {
 								dispatchToast({ type: 'error', message: String(result.data?.message) });
 							} else {

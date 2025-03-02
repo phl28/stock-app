@@ -9,7 +9,11 @@
 	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
 	import { Search } from 'lucide-svelte';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 
 	type ArticleData = {
 		createdAt: Date;
@@ -21,9 +25,10 @@
 		createdBy: string;
 	};
 
-	let visibleArticles: ArticleData[] = [];
-	$: visibleArticles = data.articles.filter(
-		(article) => article.publishedAt !== null || article.createdBy === data.user
+	let visibleArticles = $derived(
+		data.articles.filter(
+			(article) => article.publishedAt !== null || article.createdBy === data.user
+		)
 	);
 
 	const handlePageIncrement = () => {
@@ -42,8 +47,8 @@
 		goto(`/articles/page/${pageNumber}`);
 	};
 
-	let searchTerm: string = '';
-	let searchResults: ArticleData[] = [];
+	let searchTerm: string = $state('');
+	let searchResults: ArticleData[] = $state([]);
 
 	const handleSearchResults = (result: ActionResult) => {
 		if (result.type === 'success') {
@@ -53,7 +58,7 @@
 		}
 	};
 
-	$: pageNumbers = generatePageNumbers(data.currentPage, data.totalPages);
+	let pageNumbers = $derived(generatePageNumbers(data.currentPage, data.totalPages));
 </script>
 
 <svelte:head>
@@ -155,13 +160,13 @@
 			<div class="join">
 				<button
 					class={`btn join-item ${data.currentPage === 1 ? 'btn-disabled' : ''}`}
-					on:click={handlePageDecrement}>«</button
+					onclick={handlePageDecrement}>«</button
 				>
 				{#each pageNumbers as pageNum}
 					{#if typeof pageNum === 'number'}
 						<button
 							class={`btn join-item ${pageNum === data.currentPage ? 'btn-active' : ''}`}
-							on:click={() => handlePageRedirect(pageNum)}
+							onclick={() => handlePageRedirect(pageNum)}
 						>
 							{pageNum}
 						</button>
@@ -171,7 +176,7 @@
 				{/each}
 				<button
 					class={`btn join-item ${data.currentPage === data.totalPages ? 'btn-disabled' : ''}`}
-					on:click={handlePageIncrement}>»</button
+					onclick={handlePageIncrement}>»</button
 				>
 			</div>
 		</div>
