@@ -13,22 +13,12 @@
 	export let positions: Position[];
 
 	let selectedTrades: Trade[] = [];
-	let selectedAllUnassigned: boolean = false;
 
 	const toggleSelection = (trade: Trade[]) => {
 		selectedTrades = trade;
 	};
 
 	let unassignedTrades: Trade[] = [];
-
-	const toggleSelectAllUnassigned = () => {
-		if (selectedAllUnassigned) {
-			selectedTrades = [];
-		} else {
-			selectedTrades = [...unassignedTrades];
-		}
-		selectedAllUnassigned = !selectedAllUnassigned;
-	};
 
 	$: {
 		unassignedTrades = [];
@@ -84,13 +74,8 @@
 			}
 		],
 		onSelectionChanged: (event) => {
-			if (event.source === 'uiSelectAll' || event.source === 'rowDataChanged') {
-				toggleSelectAllUnassigned();
-				return;
-			} else {
-				const trades = event.api.getSelectedRows();
-				toggleSelection(trades);
-			}
+			const trades = event.api.getSelectedRows();
+			toggleSelection(trades);
 		}
 	};
 
@@ -106,10 +91,12 @@
 			gridOptions.rowData = [...unassignedTrades];
 		}
 	}
+
+	$: selectedTrades = [...selectedTrades.filter((t) => trades.map((t) => t.id).includes(t.id))];
 </script>
 
 <div class="w-full">
-	<HistoryNavBar bind:selectedTrades numOfTrades={trades.length} {positions} />
+	<HistoryNavBar {selectedTrades} numOfTrades={trades.length} {positions} />
 	<div class="my-2 overflow-x-auto">
 		<Grid {gridOptions} isDarkMode={$darkTheme} on:gridReady={handleGridReady} />
 	</div>

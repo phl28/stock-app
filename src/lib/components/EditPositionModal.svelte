@@ -249,12 +249,14 @@
 							Delete Selected
 						</button>
 					</div>
-					<Grid
-						style="height: 250px"
-						{gridOptions}
-						isDarkMode={$darkTheme}
-						on:gridReady={handleGridReady}
-					/>
+					<div data-testid="edit-position-modal-grid-container">
+						<Grid
+							style="height: 250px"
+							{gridOptions}
+							isDarkMode={$darkTheme}
+							on:gridReady={handleGridReady}
+						/>
+					</div>
 				</div>
 			</div>
 			<div class="divider divider-horizontal"></div>
@@ -322,7 +324,7 @@
 				type="button"
 				on:click={resetGridData}
 				disabled={!isEdited}
-				data-testid="edit-position-modal=reset-button"
+				data-testid="edit-position-modal-reset-button"
 			>
 				Reset
 			</button>
@@ -330,14 +332,14 @@
 				class="btn btn-neutral"
 				type="button"
 				on:click={onClose}
-				data-testid="edit-position-modal=close-button">Close</button
+				data-testid="edit-position-modal-close-button">Close</button
 			>
 			<button
 				class="btn btn-primary"
 				on:click={handleUpdateTrades}
 				type="submit"
 				disabled={!isEdited}
-				data-testid="edit-position-modal=save-button"
+				data-testid="edit-position-modal-save-button"
 			>
 				Save
 			</button>

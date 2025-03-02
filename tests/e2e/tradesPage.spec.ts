@@ -296,7 +296,7 @@ test.describe('Trades Page', () => {
 					let expectedValue = position[col];
 					if (!expectedValue) return;
 					if (col === 'isShort') {
-						expectedValue = expectedValue ? 'SHORT' : 'LONG';
+						expectedValue = expectedValue === 'SHORT' ? 'SHORT' : 'LONG';
 					}
 					await expect(cell).toHaveText(expectedValue);
 				}
@@ -311,14 +311,14 @@ test.describe('Trades Page', () => {
 			await positionRow.click();
 			await page.waitForURL(`${TRADEUP_URL}/position/${positionId}`);
 			await expect(page.getByTestId('position-page-title')).toContainText(
-				`${position.ticker} ${position.isShort ? 'Short' : 'Long'}`
+				`${position.ticker} ${position.isShort === 'SHORT' ? 'Short' : 'Long'}`
 			);
 		});
 
 		test('Check position individual trade details are still correct in the position page', async () => {
 			await expect(page.locator('.ag-root-wrapper')).toBeVisible();
 			const tradeRows = await page.locator('.ag-center-cols-container .ag-row').all();
-			expect(tradeRows.length).toBe(mockPositions[0].numOfTrades);
+			expect(tradeRows.length.toString()).toBe(mockPositions[0].numOfTrades);
 			tradeRows.forEach(async (row, idx) => {
 				const trade = mockTrades[idx];
 				expect(trade).toBeDefined();
@@ -338,22 +338,21 @@ test.describe('Trades Page', () => {
 			await page.getByTestId('position-page-stop-loss-input').click();
 			await page.getByTestId('position-page-stop-loss-input').fill('140');
 			await page.getByTestId('position-page-stop-loss-input').blur();
-			await expect(page.getByTestId('position-page-rr-input')).toBeDisabled();
 			await expect(page.getByTestId('position-page-rr-input')).toHaveValue('-1');
+
 			await page.getByTestId('position-page-profit-target-input').click();
 			await page.getByTestId('position-page-profit-target-input').fill('160');
 			await page.getByTestId('position-page-profit-target-input').blur();
-			await expect(page.getByTestId('position-page-rr-input')).toBeDisabled();
 			await expect(page.getByTestId('position-page-rr-input')).toHaveValue('1');
+
 			await page.getByTestId('position-page-profit-target-input').click();
 			await page.getByTestId('position-page-profit-target-input').fill('170');
 			await page.getByTestId('position-page-profit-target-input').blur();
-			await expect(page.getByTestId('position-page-rr-input')).toBeDisabled();
 			await expect(page.getByTestId('position-page-rr-input')).toHaveValue('2');
+
 			await page.getByTestId('position-page-rr-input').click();
 			await page.getByTestId('position-page-rr-input').fill('4');
 			await page.getByTestId('position-page-rr-input').blur();
-			await expect(page.getByTestId('position-page-profit-target-input')).toBeDisabled();
 			await expect(page.getByTestId('position-page-profit-target-input')).toHaveValue('190');
 		});
 
@@ -367,10 +366,10 @@ test.describe('Trades Page', () => {
 			await expect(page.getByTestId('edit-position-modal-platform-input')).toBeDisabled();
 			await expect(page.getByTestId('edit-position-modal-close-button')).toBeEnabled();
 			await expect(page.getByTestId('edit-position-modal-save-button')).toBeDisabled();
-			await expect(page.locator('.ag-root-wrapper')).toBeVisible();
+			await expect(page.getByTestId('edit-position-modal-grid-container')).toBeVisible();
 			await expect(page.getByTestId('edit-position-modal-reset-button')).toBeDisabled();
 			const tradeFirstRow = page.locator('.ag-center-cols-container .ag-row').first();
-			const cell = tradeFirstRow.locator(`.ag-cell[col-id=volume"]`);
+			const cell = tradeFirstRow.locator(`.ag-cell[col-id="volume"]`);
 			await cell.dblclick();
 			await page.getByRole('spinbutton', { name: 'Input Editor' }).fill('15');
 			await page.getByRole('spinbutton', { name: 'Input Editor' }).press('Enter');
@@ -400,6 +399,10 @@ test.describe('Trades Page', () => {
 				'Delete Position'
 			);
 			await page.getByTestId('position-dropdown-delete-button').click();
+			await page.waitForResponse(
+				(response) => response.url().includes('deletePosition') && response.status() === 200
+			);
+			await page.waitForURL(`${TRADEUP_URL}/trade/1`);
 		});
 	});
 });

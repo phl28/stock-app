@@ -327,8 +327,7 @@
 		suppressMovableColumns: true,
 		suppressCellFocus: true,
 		defaultColDef: {
-			cellStyle: { fontSize: '12px !important' },
-			resizable: false
+			cellStyle: { fontSize: '12px !important' }
 		},
 		autoSizeStrategy: {
 			type: 'fitGridWidth'
@@ -343,8 +342,9 @@
 			{
 				field: 'executedAt',
 				headerName: 'Time',
-				valueFormatter: ({ value }) => new Date(value).toLocaleDateString(),
-				flex: 1
+				flex: 1,
+				cellDataType: 'date',
+				sort: 'desc'
 			},
 			{
 				field: 'price',

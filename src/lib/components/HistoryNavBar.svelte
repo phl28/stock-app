@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 
 	import type { Trade, Position } from '$lib/types/tradeTypes';
 	import { dispatchToast, modalStore } from '@/routes/stores';
@@ -42,8 +43,8 @@
 					return async ({ result, update }) => {
 						if (result.type === 'success') {
 							dispatchToast({ type: 'success', message: 'Trades deleted successfully!' });
-							selectedTrades = [];
 							await update();
+							await invalidateAll();
 						} else if (result.type === 'error') {
 							dispatchToast({ type: 'error', message: result.error.message });
 						}
@@ -80,7 +81,7 @@
 		{#if $modalStore.assignTradeModal}
 			<AssignTradeToPositionModal
 				isModalOpen={$modalStore.assignTradeModal}
-				bind:selectedTrades
+				{selectedTrades}
 				bind:positionId
 				bind:possiblePositions
 				handleCloseModal={toggleAssignTradeModal}

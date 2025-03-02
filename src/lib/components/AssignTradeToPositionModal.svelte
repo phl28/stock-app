@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, tick } from 'svelte';
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 
 	import { dispatchToast } from '@/routes/stores';
 	import type { Position, Trade } from '../types/tradeTypes';
@@ -47,8 +48,8 @@
 							type: 'success',
 							message: 'Trades assigned to position successfully!'
 						});
-						selectedTrades = [];
 						await update();
+						await invalidateAll();
 						dispatch('assigned');
 					} else if (result.type === 'error') {
 						dispatchToast({ type: 'error', message: result.error.message });
