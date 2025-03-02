@@ -109,11 +109,14 @@
 				 */
 				autofocus: autofocus,
 				placeholder: placeholder,
-				readOnly: readOnly,
+				readOnly: false,
 				onChange: () => {
 					if (autoSave) {
 						debouncedSave();
 					}
+				},
+				onReady: async () => {
+					await editor.readOnly.toggle(readOnly);
 				}
 			});
 		}
@@ -153,6 +156,7 @@
 <div
 	id="article-editor"
 	class={`article-editor w-full flex-grow p-4 ${!readOnly ? 'border-spacing-5 rounded-md border-2' : ''} `}
+	data-testid="editor"
 ></div>
 {#if !readOnly && !autoSave}
 	<div class="flex items-center justify-end gap-2">

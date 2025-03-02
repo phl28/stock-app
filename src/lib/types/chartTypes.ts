@@ -13,6 +13,7 @@ export interface VolumeData {
 }
 
 export interface ChartResponse {
+	ticker: string;
 	stockData: StockData[];
 	volumeData: VolumeData[];
 	// smaData: StockData[];

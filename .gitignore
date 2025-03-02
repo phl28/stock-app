@@ -14,3 +14,10 @@ vite.config.ts.timestamp-*
 .vscode/settings.json
 .zed/*
 __pycache__
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth

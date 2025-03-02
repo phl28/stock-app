@@ -31,14 +31,22 @@
 
 {#if data.article}
 	<section class="container flex flex-grow flex-col gap-4">
-		<SignedIn>
-			<div class="flex justify-end gap-2">
-				<a class="btn btn-circle btn-ghost" href={`/articles/${data.article.articleId}/edit`}
-					><Pencil /></a
-				>
-				<button class="btn btn-circle btn-error" onclick={handleDeleteArticle}><Trash2 /></button>
-			</div>
-		</SignedIn>
+		{#if data.user === data.article.createdBy}
+			<SignedIn>
+				<div class="flex justify-end gap-2">
+					<a
+						class="btn btn-circle btn-ghost"
+						href={`/articles/${data.article.articleId}/edit`}
+						data-testid="edit-article-button"><Pencil /></a
+					>
+					<button
+						class="btn btn-circle btn-error"
+						onclick={handleDeleteArticle}
+						data-testid="delete-article-button"><Trash2 /></button
+					>
+				</div>
+			</SignedIn>
+		{/if}
 		<span class="flex justify-center text-3xl font-bold">{data.article.title}</span>
 		<p class="px-4 text-center text-sm text-neutral-500">
 			DISCLAIMER: The analysis provided is based on personal opinion and research. Not financial

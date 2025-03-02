@@ -22,7 +22,13 @@
 		title: string;
 		content: unknown;
 		articleId: number;
+		createdBy: string;
 	};
+
+	let visibleArticles: ArticleData[] = [];
+	$: visibleArticles = data.articles.filter(
+		(article) => article.publishedAt !== null || article.createdBy === data.user
+	);
 
 	const handlePageIncrement = () => {
 		if (data.currentPage < data.totalPages) {
@@ -120,16 +126,18 @@
 		</form>
 
 		<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-			{#each data.articles as article (article.articleId)}
+			{#each visibleArticles as article (article.articleId)}
 				<div class="card bg-base-200 transition-all hover:shadow-lg">
 					<div class="card-body">
 						<div class="flex items-start justify-between gap-4">
 							<h2 class="card-title flex-1">{article.title}</h2>
-							<SignedIn>
-								<div class={`badge ${article.publishedAt ? 'badge-primary' : 'badge-neutral'}`}>
-									{article.publishedAt ? 'Published' : 'Draft'}
-								</div>
-							</SignedIn>
+							{#if article.createdBy === data.user}
+								<SignedIn>
+									<div class={`badge ${article.publishedAt ? 'badge-primary' : 'badge-neutral'}`}>
+										{article.publishedAt ? 'Published' : 'Draft'}
+									</div>
+								</SignedIn>
+							{/if}
 						</div>
 						<p class="text-sm text-base-content/60">
 							{article.publishedAt?.toLocaleDateString() ?? article.createdAt.toLocaleDateString()}

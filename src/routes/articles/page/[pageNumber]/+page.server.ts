@@ -11,12 +11,14 @@ type ArticleData = {
 	title: string;
 	content: unknown;
 	articleId: number;
+	createdBy: string;
 };
 type ArticlesResponse = {
 	articles: ArticleData[];
 	currentPage: number;
 	totalPages: number;
 	totalArticles: number;
+	user: string | null;
 };
 
 type SearchArticlesResponse = {
@@ -38,7 +40,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 		const pageNumber = Number(params.pageNumber) ?? 1;
 		const result = await getPaginatedArticles(9, pageNumber, publishedOnly);
-		return result satisfies ArticlesResponse;
+		return { ...result, user: userId } satisfies ArticlesResponse;
 	} catch {
 		error(404, 'Articles not found');
 	}

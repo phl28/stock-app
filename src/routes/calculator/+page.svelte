@@ -253,7 +253,12 @@
 								class="input input-bordered flex-1"
 								placeholder="Enter ticker symbol (e.g., AAPL)"
 							/>
-							<button class="btn btn-primary" type="submit" disabled={!stockTickInputValid}>
+							<button
+								class="btn btn-primary"
+								type="submit"
+								data-testid="calculator-submit-button"
+								disabled={stockTickInput.length === 0}
+							>
 								<Search class="h-5 w-5" />
 							</button>
 						</div>
@@ -266,7 +271,13 @@
 					<label class="label" for="accSize">
 						<span class="label-text font-medium">Account Size (USD)</span>
 					</label>
-					<input type="number" id="accSize" bind:value={accSize} class="input input-bordered" />
+					<input
+						type="number"
+						id="accSize"
+						bind:value={accSize}
+						class="input input-bordered"
+						data-testid="calculator-account-size-input"
+					/>
 				</div>
 
 				<div class="form-control">
@@ -279,6 +290,7 @@
 						bind:value={risk}
 						class="input input-bordered"
 						step="0.1"
+						data-testid="calculator-risk-input"
 					/>
 				</div>
 
@@ -292,6 +304,7 @@
 						bind:value={entry}
 						class="input input-bordered"
 						step="0.01"
+						data-testid="calculator-entry-price-input"
 					/>
 				</div>
 
@@ -305,6 +318,7 @@
 						bind:value={stop}
 						class="input input-bordered"
 						step="0.01"
+						data-testid="calculator-stop-loss-input"
 					/>
 				</div>
 
@@ -318,6 +332,7 @@
 						bind:value={target}
 						class="input input-bordered"
 						step="0.01"
+						data-testid="calculator-target-price-input"
 					/>
 				</div>
 			</div>
@@ -327,37 +342,37 @@
 			<div class="grid gap-4 sm:grid-cols-2">
 				<div class="stat rounded-box bg-base-200 p-4">
 					<div class="stat-title">Stop Loss</div>
-					<div class="stat-value text-xl">
+					<div class="stat-value text-xl" data-testid="calculator-stop-loss-amt">
 						${stopLossAmt.toFixed(2)}
 					</div>
-					<div class="stat-desc">
+					<div class="stat-desc" data-testid="calculator-stop-loss-perc">
 						{(stopLossPerc * 100).toFixed(2)}%
 					</div>
 				</div>
 
 				<div class="stat rounded-box bg-base-200 p-4">
 					<div class="stat-title">Position Size</div>
-					<div class="stat-value text-xl">
+					<div class="stat-value text-xl" data-testid="calculator-position-size-amt">
 						{positionAmt} shares
 					</div>
-					<div class="stat-desc">
+					<div class="stat-desc" data-testid="calculator-position-size-perc">
 						{(positionSize * 100).toFixed(2)}% of account
 					</div>
 				</div>
 
 				<div class="stat rounded-box bg-base-200 p-4">
 					<div class="stat-title">Potential Profit</div>
-					<div class="stat-value text-xl text-success">
+					<div class="stat-value text-xl text-success" data-testid="calculator-profit-perc">
 						{(profit * 100).toFixed(2)}%
 					</div>
-					<div class="stat-desc">
+					<div class="stat-desc" data-testid="calculator-account-growth-perc">
 						Account growth: {(accGrowth * 100).toFixed(2)}%
 					</div>
 				</div>
 
 				<div class="stat rounded-box bg-base-200 p-4">
 					<div class="stat-title">Risk/Reward</div>
-					<div class="stat-value text-xl">
+					<div class="stat-value text-xl" data-testid="calculator-risk-reward-ratio">
 						{riskReward.toFixed(2)}
 					</div>
 					<div class="stat-desc">Higher is better</div>
@@ -368,7 +383,7 @@
 		<div class="card flex flex-col bg-base-100 p-4 shadow-lg sm:p-6" bind:this={container}>
 			<CalculatorResults input={{ risk, entry, stop, target, stopLossPerc }} />
 			<div class="divider my-6"></div>
-			<div class="relative w-full px-2">
+			<div class="relative w-full px-2" data-testid="calculator-chart">
 				<Chart {...chartOptions} {watermark} {...THEMES[$darkTheme ? 'Dark' : 'Light'].chart}>
 					<CandlestickSeries
 						bind:data={stockData}

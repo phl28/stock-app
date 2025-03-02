@@ -3,6 +3,8 @@
 	import { invalidateAll } from '$app/navigation';
 
 	import { dispatchToast } from '@/routes/stores';
+
+	import Papa, { type ParseResult } from 'papaparse';
 	import type { Trade } from '../types';
 
 	import * as Papa from 'papaparse';
@@ -213,6 +215,6 @@
 		{/if}
 	</div>
 	<div class="modal-backdrop">
-		<button onclick={handleCloseModal}>close</button>
+		<button onclick={handleCloseModal} style="pointer-events: none;">close</button>
 	</div>
 </dialog>

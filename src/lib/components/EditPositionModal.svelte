@@ -10,7 +10,7 @@
 	import { TradeSideCellRenderer } from './TradeSideCellRenderer';
 	import { DateTimeEditor } from './DateTimeEditor';
 
-	import type { GridApi, GridOptions, RowSelectedEvent } from 'ag-grid-community';
+	import type { GetRowIdParams, GridApi, GridOptions, RowSelectedEvent } from 'ag-grid-community';
 	import { ArrowDown, ArrowUp } from 'lucide-svelte';
 
 	type PartialTrade = Pick<Trade, 'id' | 'executedAt' | 'price' | 'fees' | 'volume' | 'tradeSide'>;
@@ -50,6 +50,7 @@
 	};
 
 	const gridOptions: GridOptions<PartialTrade> = {
+		getRowId: (params: GetRowIdParams<PartialTrade>) => params.data.id.toString(),
 		suppressMovableColumns: true,
 		defaultColDef: {
 			cellStyle: { fontSize: '12px !important' },
@@ -231,6 +232,7 @@
 							disabled
 							class="input input-bordered w-full"
 							value={position.ticker}
+							data-testid="edit-position-modal-ticker-input"
 						/>
 					</label>
 					<label class="label flex cursor-pointer flex-col items-start gap-1">
@@ -241,6 +243,7 @@
 							disabled
 							class="input input-bordered w-full"
 							value={position.platform}
+							data-testid="edit-position-modal-platform-input"
 						/>
 					</label>
 				</div>
@@ -255,12 +258,14 @@
 							Delete Selected
 						</button>
 					</div>
-					<Grid
-						style="height: 250px"
-						{gridOptions}
-						isDarkMode={$darkTheme}
-						gridReady={handleGridReady}
-					/>
+					<div data-testid="edit-position-modal-grid-container">
+						<Grid
+							style="height: 250px"
+							{gridOptions}
+							isDarkMode={$darkTheme}
+							gridReady={handleGridReady}
+						/>
+					</div>
 				</div>
 			</div>
 			<div class="divider divider-horizontal"></div>
@@ -288,20 +293,28 @@
 				</div>
 				<div class="flex items-center justify-between">
 					<span class="text-sm opacity-75">Gross P/L</span>
-					<span>{Number(position?.grossProfitLoss).toFixed(2)}</span>
+					<span>{formatCurrency(position?.grossProfitLoss ?? '0', 'USD')}</span>
 				</div>
 				<div class="flex items-center justify-between">
 					<span class="text-sm opacity-75">Net P/L</span>
-					<span>{(Number(position?.grossProfitLoss) - Number(position?.totalFees)).toFixed(2)}</span
+					<span
+						>{formatCurrency(
+							String(Number(position?.grossProfitLoss) - Number(position?.totalFees)),
+							'USD'
+						)}</span
 					>
 				</div>
 				<div class="flex items-center justify-between">
 					<span class="text-sm opacity-75">Average Entry Price</span>
-					<span>{Number(position?.averageEntryPrice).toFixed(2)}</span>
+					<span>{formatCurrency(position?.averageEntryPrice, 'USD')}</span>
 				</div>
 				<div class="flex items-center justify-between">
 					<span class="text-sm opacity-75">Average Exit Price</span>
-					<span>{Number(position?.averageExitPrice).toFixed(2)}</span>
+					<span
+						>{position.averageExitPrice && Number(position.averageExitPrice) > 0
+							? formatCurrency(position.averageExitPrice, 'USD')
+							: 'N/A'}</span
+					>
 				</div>
 				<div class="flex items-center justify-between">
 					<span class="text-sm opacity-75">Duration</span>
@@ -315,21 +328,33 @@
 			</div>
 		</div>
 		<div class="modal-action">
-			<button class="btn btn-warning" type="button" onclick={resetGridData} disabled={!isEdited}>
+			<button
+				class="btn btn-warning"
+				type="button"
+				onclick={resetGridData}
+				disabled={!isEdited}
+				data-testid="edit-position-modal-reset-button"
+			>
 				Reset
 			</button>
-			<button class="btn btn-neutral" type="button" onclick={onClose}>Close</button>
+			<button
+				class="btn btn-neutral"
+				type="button"
+				onclick={onClose}
+				data-testid="edit-position-modal-close-button">Close</button
+			>
 			<button
 				class="btn btn-primary"
 				onclick={handleUpdateTrades}
 				type="submit"
 				disabled={!isEdited}
+				data-testid="edit-position-modal-save-button"
 			>
 				Save
 			</button>
 		</div>
 	</div>
 	<div class="modal-backdrop">
-		<button type="button" onclick={onClose}>close</button>
+		<button type="button" onclick={onClose} style="pointer-events: none;">close</button>
 	</div>
 </dialog>

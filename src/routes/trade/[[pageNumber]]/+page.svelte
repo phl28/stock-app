@@ -48,7 +48,11 @@
 
 	<div class="card bg-base-100 p-6 shadow-lg">
 		<div class="mb-6">
-			<select class="select select-bordered w-full max-w-xs" bind:value={view}>
+			<select
+				class="select select-bordered w-full max-w-xs"
+				bind:value={view}
+				data-testid="trade-view-selector"
+			>
 				<option value="positions">Positions</option>
 				<option value="trades">Trades</option>
 			</select>
