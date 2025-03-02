@@ -31,6 +31,8 @@
 	};
 
 	let pageNumbers = $derived(generatePageNumbers(data.currentPage, data.totalPages));
+
+	let unassignedTrades = $derived(trades.filter((trade) => !trade.positionId));
 </script>
 
 <svelte:head>
@@ -59,7 +61,7 @@
 		</div>
 
 		{#if view === 'trades'}
-			<TradeHistoryTable {trades} {positions} />
+			<TradeHistoryTable {unassignedTrades} {positions} />
 		{:else if view === 'positions'}
 			<PositionTable {positions} />
 		{/if}

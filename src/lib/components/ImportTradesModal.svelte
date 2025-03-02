@@ -7,9 +7,6 @@
 	import Papa, { type ParseResult } from 'papaparse';
 	import type { Trade } from '../types';
 
-	import * as Papa from 'papaparse';
-	import type { ParseResult } from 'papaparse';
-
 	interface Props {
 		isModalOpen?: boolean;
 		handleCloseModal: () => void;

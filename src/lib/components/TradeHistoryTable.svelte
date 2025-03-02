@@ -10,19 +10,17 @@
 	import type { GridOptions, GridApi, GetRowIdParams } from 'ag-grid-community';
 
 	interface Props {
-		trades: Trade[];
+		unassignedTrades: Trade[];
 		positions: Position[];
 	}
 
-	let { trades, positions }: Props = $props();
+	let { unassignedTrades, positions }: Props = $props();
 
 	let selectedTrades: Trade[] = $state([]);
 
 	const toggleSelection = (trade: Trade[]) => {
 		selectedTrades = trade;
 	};
-
-	let unassignedTrades: Trade[] = $derived(trades.filter((trade) => !trade.positionId));
 
 	const gridOptions: GridOptions<Trade> = $state({
 		getRowId: (params: GetRowIdParams<Trade>) => params.data.id.toString(),
@@ -86,12 +84,10 @@
 			gridOptions.rowData = [...unassignedTrades];
 		}
 	});
-
-	$: selectedTrades = [...selectedTrades.filter((t) => trades.map((t) => t.id).includes(t.id))];
 </script>
 
 <div class="w-full">
-	<HistoryNavBar {selectedTrades} numOfTrades={trades.length} {positions} />
+	<HistoryNavBar {selectedTrades} numOfTrades={unassignedTrades.length} {positions} />
 	<div class="my-2 overflow-x-auto">
 		<Grid {gridOptions} isDarkMode={$darkTheme} gridReady={handleGridReady} />
 	</div>

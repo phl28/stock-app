@@ -25,9 +25,10 @@
 		createdBy: string;
 	};
 
-	let visibleArticles: ArticleData[] = [];
-	$: visibleArticles = data.articles.filter(
-		(article) => article.publishedAt !== null || article.createdBy === data.user
+	let visibleArticles = $derived(
+		data.articles.filter(
+			(article) => article.publishedAt !== null || article.createdBy === data.user
+		)
 	);
 
 	const handlePageIncrement = () => {
