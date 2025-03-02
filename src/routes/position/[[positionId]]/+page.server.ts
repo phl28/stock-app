@@ -1,9 +1,9 @@
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad, RouteParams } from './$types';
 import { error, isHttpError } from '@sveltejs/kit';
 import { PRIVATE_POLYGON_IO_API_KEY, PRIVATE_ALPHA_VANTAGE_API_KEY } from '$env/static/private';
 import { PUBLIC_POLYGON_IO_URL, PUBLIC_ALPHA_VANTAGE_URL } from '$env/static/public';
 
-import { assertHasSession } from '@/lib/types/utils';
+import { assertHasSession, type AppLocals } from '@/lib/types/utils';
 import type { StockData, VolumeData } from '@/lib/types/index.js';
 import { convertUnixTimestampToDate } from '@/lib/helpers/DataHelpers.js';
 import { deletePosition, getPosition, markPositionReviewed } from '@/server/db/database';
@@ -29,66 +29,70 @@ const fetchStockData = async (
 	startDate: Date,
 	endDate: Date
 ) => {
-	const today = new Date();
-	const twoYearsAgoToday = new Date(today.getFullYear() - 2, today.getMonth(), today.getDate());
+	try {
+		const today = new Date();
+		const twoYearsAgoToday = new Date(today.getFullYear() - 2, today.getMonth(), today.getDate());
 
-	const formattedLastExecutedDate = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
-	const formattedTwoYearsPriorToLastExecutedDate = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+		const formattedLastExecutedDate = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+		const formattedTwoYearsPriorToLastExecutedDate = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
 
-	let stockData: StockData[] = [];
-	let volumeData: Pick<VolumeData, 'time' | 'value'>[] = [];
-	if (endDate < twoYearsAgoToday) {
-		const res = await fetch(
-			`${PUBLIC_ALPHA_VANTAGE_URL}/query?function=TIME_SERIES_DAILY&symbol=${ticker}&outputsize=full&apikey=${ALPHA_VANTAGE_API_KEY}`
-		);
-		const data = (await res.json()) as AlphaVantageData;
-		for (const [date, item] of Object.entries(data['Time Series (Daily)'])) {
-			stockData = [
-				{
-					time: date,
-					open: Number(item['1. open']),
-					high: Number(item['2. high']),
-					low: Number(item['3. low']),
-					close: Number(item['4. close'])
-				},
-				...stockData
-			];
-			volumeData = [
-				{
-					time: date,
-					value: Number(item['5. volume'])
-				},
-				...volumeData
-			];
+		let stockData: StockData[] = [];
+		let volumeData: Pick<VolumeData, 'time' | 'value'>[] = [];
+		if (endDate < twoYearsAgoToday) {
+			const res = await fetch(
+				`${PUBLIC_ALPHA_VANTAGE_URL}/query?function=TIME_SERIES_DAILY&symbol=${ticker}&outputsize=full&apikey=${ALPHA_VANTAGE_API_KEY}`
+			);
+			const data = (await res.json()) as AlphaVantageData;
+			for (const [date, item] of Object.entries(data['Time Series (Daily)'])) {
+				stockData = [
+					{
+						time: date,
+						open: Number(item['1. open']),
+						high: Number(item['2. high']),
+						low: Number(item['3. low']),
+						close: Number(item['4. close'])
+					},
+					...stockData
+				];
+				volumeData = [
+					{
+						time: date,
+						value: Number(item['5. volume'])
+					},
+					...volumeData
+				];
+			}
+		} else {
+			const res = await fetch(
+				`${PUBLIC_POLYGON_IO_URL}/v2/aggs/ticker/${ticker}/range/1/day/${formattedTwoYearsPriorToLastExecutedDate}/${formattedLastExecutedDate}?adjusted=false&sort=asc&apiKey=${POLYGON_IO_API_KEY}`
+			);
+			const data = await res.json();
+			for (const item of data.results) {
+				const date = convertUnixTimestampToDate(item.t);
+				stockData = [
+					...stockData,
+					{
+						time: date,
+						open: item.o,
+						high: item.h,
+						low: item.l,
+						close: item.c
+					}
+				];
+				volumeData = [
+					...volumeData,
+					{
+						time: date,
+						value: item.v
+					}
+				];
+			}
 		}
-	} else {
-		const res = await fetch(
-			`${PUBLIC_POLYGON_IO_URL}/v2/aggs/ticker/${ticker}/range/1/day/${formattedTwoYearsPriorToLastExecutedDate}/${formattedLastExecutedDate}?adjusted=false&sort=asc&apiKey=${POLYGON_IO_API_KEY}`
-		);
-		const data = await res.json();
-		for (const item of data.results) {
-			const date = convertUnixTimestampToDate(item.t);
-			stockData = [
-				...stockData,
-				{
-					time: item.t,
-					open: item.o,
-					high: item.h,
-					low: item.l,
-					close: item.c
-				}
-			];
-			volumeData = [
-				...volumeData,
-				{
-					time: date,
-					value: item.v
-				}
-			];
-		}
+
+		return { stockData, volumeData, error: null };
+	} catch (error) {
+		return { stockData: [], volumeData: [], error: error };
 	}
-
-	return { stockData, volumeData };
 };
 
 export const load: PageServerLoad = async ({ fetch, params, locals }) => {
@@ -108,12 +112,15 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 				lastExecutedDate.getDate()
 			);
 
-			const { stockData, volumeData } = await fetchStockData(
+			const { stockData, volumeData, error } = await fetchStockData(
 				fetch,
 				position.ticker,
 				twoYearsAgo,
 				lastExecutedDate
 			);
+			if (error) {
+				console.error(error);
+			}
 			if (stockData && volumeData) {
 				return {
 					position,
@@ -136,7 +143,7 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 };
 
 export const actions = {
-	markPositionReviewed: async ({ locals, params }) => {
+	markPositionReviewed: async ({ locals, params }: { locals: AppLocals; params: RouteParams }) => {
 		assertHasSession(locals);
 		const positionId = Number(params.positionId);
 		if (isNaN(positionId) || positionId < 0) {
@@ -154,7 +161,7 @@ export const actions = {
 			throw error(500, 'An unexpected error occurred');
 		}
 	},
-	deletePosition: async ({ params, locals }) => {
+	deletePosition: async ({ params, locals }: { params: RouteParams; locals: AppLocals }) => {
 		assertHasSession(locals);
 		const positionId = Number(params.positionId);
 		if (isNaN(positionId) || positionId < 0) {

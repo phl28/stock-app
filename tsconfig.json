@@ -15,6 +15,7 @@
 		"src/**/*.js",
 		"src/**/*.svelte",
 		".eslintrc.cjs",
-		".svelte-kit/ambient.d.ts"
+		".svelte-kit/ambient.d.ts",
+		"tests/**/*"
 	]
 }

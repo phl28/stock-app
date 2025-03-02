@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, tick } from 'svelte';
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 
 	import { dispatchToast } from '@/routes/stores';
 	import type { Position, Trade } from '../types/tradeTypes';
@@ -34,7 +35,9 @@
 
 <dialog id="assign-position-modal" class="modal" bind:this={modal}>
 	<div class="modal-box">
-		<h3 class="mb-2 text-lg font-bold">Assign the selected trades to a position</h3>
+		<h3 class="mb-2 text-lg font-bold" data-testid="assign-position-modal-title">
+			Assign the selected trades to a position
+		</h3>
 		<form
 			method="POST"
 			action="?/assignTradesToPosition"
@@ -46,6 +49,7 @@
 							message: 'Trades assigned to position successfully!'
 						});
 						await update();
+						await invalidateAll();
 						dispatch('assigned');
 					} else if (result.type === 'error') {
 						dispatchToast({ type: 'error', message: result.error.message });
@@ -58,6 +62,7 @@
 				class="select select-bordered select-sm w-full"
 				bind:value={positionId}
 				name="positionId"
+				data-testid="assign-position-modal-position-select"
 			>
 				<option disabled selected value={undefined}
 					>Select the position to assign these trades to?</option
@@ -80,12 +85,18 @@
 							checked={isShort}
 							name="isShort"
 							on:change={() => (isShort = !isShort)}
+							data-testid="assign-position-modal-short-toggle"
 						/>
 					</label>
 				</div>
 				<div class="modal-action">
 					<button class="btn" type="button" on:click={handleCloseModal}>Close</button>
-					<button class="btn btn-primary" type="submit" disabled={positionId === undefined}
+					<button
+						class="btn btn-primary"
+						type="submit"
+						disabled={positionId === undefined}
+						data-testid="assign-position-modal-add-button"
+					>
 						>Add</button
 					>
 				</div>
@@ -93,6 +104,6 @@
 		</form>
 	</div>
 	<div class="modal-backdrop">
-		<button type="button" on:click={handleCloseModal}>close</button>
+		<button type="button" on:click={handleCloseModal} style="pointer-events: none;">close</button>
 	</div>
 </dialog>

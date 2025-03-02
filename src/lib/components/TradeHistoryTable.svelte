@@ -7,28 +7,18 @@
 	import type { Trade, Position } from '$lib/types/tradeTypes';
 	import { TradeSideCellRenderer } from './TradeSideCellRenderer';
 
-	import type { GridOptions, GridApi } from 'ag-grid-community';
+	import type { GridOptions, GridApi, GetRowIdParams } from 'ag-grid-community';
 
 	export let trades: Trade[];
 	export let positions: Position[];
 
 	let selectedTrades: Trade[] = [];
-	let selectedAllUnassigned: boolean = false;
 
 	const toggleSelection = (trade: Trade[]) => {
 		selectedTrades = trade;
 	};
 
 	let unassignedTrades: Trade[] = [];
-
-	const toggleSelectAllUnassigned = () => {
-		if (selectedAllUnassigned) {
-			selectedTrades = [];
-		} else {
-			selectedTrades = [...unassignedTrades];
-		}
-		selectedAllUnassigned = !selectedAllUnassigned;
-	};
 
 	$: {
 		unassignedTrades = [];
@@ -40,6 +30,7 @@
 	}
 
 	const gridOptions: GridOptions<Trade> = {
+		getRowId: (params: GetRowIdParams<Trade>) => params.data.id.toString(),
 		rowSelection: {
 			mode: 'multiRow'
 		},
@@ -83,13 +74,8 @@
 			}
 		],
 		onSelectionChanged: (event) => {
-			if (event.source === 'uiSelectAll' || event.source === 'rowDataChanged') {
-				toggleSelectAllUnassigned();
-				return;
-			} else {
-				const trades = event.api.getSelectedRows();
-				toggleSelection(trades);
-			}
+			const trades = event.api.getSelectedRows();
+			toggleSelection(trades);
 		}
 	};
 
@@ -105,12 +91,13 @@
 			gridOptions.rowData = [...unassignedTrades];
 		}
 	}
+
+	$: selectedTrades = [...selectedTrades.filter((t) => trades.map((t) => t.id).includes(t.id))];
 </script>
 
 <div class="w-full">
-	<HistoryNavBar bind:selectedTrades numOfTrades={trades.length} {positions} />
+	<HistoryNavBar {selectedTrades} numOfTrades={trades.length} {positions} />
 	<div class="my-2 overflow-x-auto">
-		<h5 class="mt-6 text-center">Unassigned Trades ({unassignedTrades.length})</h5>
 		<Grid {gridOptions} isDarkMode={$darkTheme} on:gridReady={handleGridReady} />
 	</div>
 </div>

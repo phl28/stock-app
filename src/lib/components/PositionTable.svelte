@@ -8,7 +8,7 @@
 	import PositionNavBar from './PositionNavBar.svelte';
 	import { TradeSideCellRenderer } from './TradeSideCellRenderer';
 
-	import type { GridOptions } from 'ag-grid-community';
+	import type { GetRowIdParams, GridOptions } from 'ag-grid-community';
 
 	export let positions: Position[];
 
@@ -17,6 +17,7 @@
 	};
 
 	const gridOptions: GridOptions<Position> = {
+		getRowId: (params: GetRowIdParams<Position>) => params.data.id.toString(),
 		suppressMovableColumns: true,
 		suppressCellFocus: true,
 		rowData: positions,

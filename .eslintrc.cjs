@@ -30,6 +30,10 @@ module.exports = {
 					typescript: '@typescript-eslint/parser'
 				}
 			}
+		},
+		{
+			files: 'tests/e2e/**',
+			extends: 'plugin:playwright/recommended'
 		}
 	]
 };
