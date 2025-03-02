@@ -202,7 +202,6 @@
 							type="checkbox"
 							class="toggle"
 							bind:checked={addAnother}
-							onchange={() => (addAnother = !addAnother)}
 							data-testid="add-trade-modal-add-another-input"
 						/>
 					</label>
