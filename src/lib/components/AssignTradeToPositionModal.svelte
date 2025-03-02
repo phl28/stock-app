@@ -47,6 +47,7 @@
 							type: 'success',
 							message: 'Trades assigned to position successfully!'
 						});
+						selectedTrades = [];
 						await update();
 						dispatch('assigned');
 					} else if (result.type === 'error') {

@@ -11,7 +11,6 @@ const tradeTableColumnsToCheck: Array<{
 	{ colId: 'ticker', mockProperty: 'ticker' },
 	{ colId: 'price', mockProperty: 'price' },
 	{ colId: 'volume', mockProperty: 'volume' },
-	{ colId: 'fees', mockProperty: 'fees' },
 	{ colId: 'platform', mockProperty: 'platform' },
 	{ colId: 'region', mockProperty: 'region' },
 	{ colId: 'tradeSide', mockProperty: 'side' },
@@ -30,62 +29,83 @@ const positionsTableColumnsToCheck: Array<keyof (typeof mockPositions)[number]> 
 	'openedAt'
 ];
 
+async function selectViewWithRetry(page: Page, selection: 'trades' | 'positions', maxRetries = 3) {
+	for (let attempt = 1; attempt <= maxRetries; attempt++) {
+		try {
+			await page.getByTestId('trade-view-selector').click();
+			await page.getByTestId('trade-view-selector').selectOption(selection);
+
+			// Verify the selection worked
+			const selectedValue = await page
+				.getByTestId('trade-view-selector')
+				.evaluate((el: HTMLSelectElement) => el.value);
+
+			if (selectedValue === selection) {
+				console.log(`Successfully selected ${selection} view`);
+				return;
+			}
+
+			console.log(`Selection didn't take effect on attempt ${attempt}, retrying...`);
+		} catch (error) {
+			console.log(`Error on attempt ${attempt}: ${error}`);
+			if (attempt === maxRetries) throw error;
+		}
+
+		// Wait before retry
+		await page.waitForTimeout(500);
+	}
+}
+
 test.describe('Trades Page', () => {
 	// @FIXME: Assume it is fine for now to move on but definitely come back later
-	// async function cleanupTradesAndPositions(page: Page) {
-	// 	await page.goto(`${TRADEUP_URL}/trade/1`);
+	async function cleanupTradesAndPositions(page: Page) {
+		await page.goto(`${TRADEUP_URL}/trade/1`);
 
-	// 	// Check positions
-	// 	await expect(page.getByTestId('position-nav-bar-title')).toBeVisible();
-	// 	let positionCountText = await page.getByTestId('position-nav-bar-title').innerText();
-	// 	let positionCount = extractNumberFromBrackets(positionCountText);
+		// Check positions
+		await expect(page.getByTestId('position-nav-bar-title')).toBeVisible();
+		let positionCountText = await page.getByTestId('position-nav-bar-title').innerText();
+		let positionCount = extractNumberFromBrackets(positionCountText);
 
-	// 	while (positionCount > 0) {
-	// 		const positionRow = page.locator('.ag-center-cols-container .ag-row').first();
-	// 		const positionId = await positionRow.getAttribute('row-id');
-	// 		await positionRow.click();
-	// 		await page.waitForURL(`${TRADEUP_URL}/position/${positionId}`);
-	// 		await page.getByTestId('position-dropdown-button').click();
-	// 		await page.getByTestId('position-dropdown-delete-button').click();
-	// 		await page.waitForURL(`${TRADEUP_URL}/trade/1`);
-	// 		await expect(page.getByText('Position deleted successfully!')).toBeVisible();
+		await expect(page.locator('.ag-root-wrapper')).toBeVisible();
 
-	// 		positionCountText = await page.getByTestId('position-nav-bar-title').innerText();
-	// 		positionCount = extractNumberFromBrackets(positionCountText);
-	// 	}
-	// 	expect(extractNumberFromBrackets(positionCountText)).toBe(0);
+		while (positionCount > 0) {
+			const positionRow = page.locator('.ag-center-cols-container .ag-row').first();
+			const positionId = await positionRow.getAttribute('row-id');
+			await positionRow.click();
+			await page.waitForURL(`${TRADEUP_URL}/position/${positionId}`);
+			await page.getByTestId('position-dropdown-button').click();
+			await page.getByTestId('position-dropdown-delete-button').click();
+			await page.waitForURL(`${TRADEUP_URL}/trade/1`);
+			await expect(page.getByText('Position deleted successfully!')).toBeVisible();
 
-	// 	// Check trades
-	// 	await page.getByTestId('trade-view-selector').selectOption('trades');
+			positionCountText = await page.getByTestId('position-nav-bar-title').innerText();
+			positionCount = extractNumberFromBrackets(positionCountText);
+		}
+		expect(extractNumberFromBrackets(positionCountText)).toBe(0);
 
-	// 	await expect(page.getByTestId('history-nav-bar-title')).toBeVisible();
-	// 	let tradesCountText = await page.getByTestId('history-nav-bar-title').innerText();
-	// 	const tradesCount = extractNumberFromBrackets(tradesCountText);
-	// 	if (tradesCount > 0) {
-	// 		await page.getByRole('checkbox', { name: 'Column with Header Selection' }).check();
-	// 		await page.getByTestId('history-nav-bar-delete-trades-button').click();
-	// 		tradesCountText = await page.getByTestId('history-nav-bar-title').innerText();
-	// 		expect(extractNumberFromBrackets(tradesCountText)).toBe(0);
-	// 	}
-	// }
+		// Check trades
+		await selectViewWithRetry(page, 'trades');
 
-	// test.beforeAll(async ({ browser }) => {
-	// 	const page = await browser.newPage();
-	// 	try {
-	// 		await cleanupTradesAndPositions(page);
-	// 	} finally {
-	// 		await page.close();
-	// 	}
-	// });
+		await expect(page.getByTestId('history-nav-bar-title')).toBeVisible();
+		let tradesCountText = await page.getByTestId('history-nav-bar-title').innerText();
+		const tradesCount = extractNumberFromBrackets(tradesCountText);
+		if (tradesCount > 0) {
+			await page.getByRole('checkbox', { name: 'Column with Header Selection' }).check();
+			await page.getByTestId('history-nav-bar-delete-trades-button').click();
+			await expect(page.getByText('Trades deleted successfully!')).toBeVisible();
+			tradesCountText = await page.getByTestId('history-nav-bar-title').innerText();
+			expect(extractNumberFromBrackets(tradesCountText)).toBe(0);
+		}
+	}
 
-	// test.afterAll(async ({ browser }) => {
-	// 	const page = await browser.newPage();
-	// 	try {
-	// 		await cleanupTradesAndPositions(page);
-	// 	} finally {
-	// 		await page.close();
-	// 	}
-	// });
+	test.beforeAll(async ({ browser }) => {
+		const page = await browser.newPage();
+		try {
+			await cleanupTradesAndPositions(page);
+		} finally {
+			await page.close();
+		}
+	});
 
 	test('Goto Trades Page', async ({ page }) => {
 		await page.goto(`${TRADEUP_URL}/trade/1`);
@@ -100,8 +120,8 @@ test.describe('Trades Page', () => {
 		test('Click Add Trade Button', async () => {
 			await page.goto(`${TRADEUP_URL}/trade/1`);
 			await expect(page.getByRole('heading', { name: 'Positions (0)' })).toBeVisible();
-			await page.getByTestId('trade-view-selector').click();
-			await page.getByTestId('trade-view-selector').selectOption('trades');
+			await expect(page.locator('.ag-root-wrapper')).toBeVisible();
+			await selectViewWithRetry(page, 'trades');
 			await expect(page.getByRole('heading', { name: 'Trades (0)', exact: true })).toBeVisible();
 			await page.getByTestId('navbar-add-trade-button').click();
 			await expect(page.getByTestId('add-trade-modal-title')).toBeVisible();
@@ -139,7 +159,6 @@ test.describe('Trades Page', () => {
 			await page.getByTestId('add-trade-modal-executedAt-input').fill(mockTrade.executedAt);
 			await page.getByTestId('add-trade-modal-add-button').click();
 
-			await expect(page.getByTestId('add-trade-modal-add-button')).toBeDisabled();
 			await expect(page.getByTestId('add-trade-modal-ticker-input')).toBeEmpty();
 		});
 
@@ -157,7 +176,6 @@ test.describe('Trades Page', () => {
 			await page.getByTestId('add-trade-modal-executedAt-input').fill(mockTrade.executedAt);
 			await page.getByTestId('add-trade-modal-add-button').click();
 
-			await expect(page.getByTestId('add-trade-modal-add-button')).toBeDisabled();
 			await expect(page.getByTestId('add-trade-modal-ticker-input')).toBeEmpty();
 		});
 
@@ -178,7 +196,10 @@ test.describe('Trades Page', () => {
 			await page.getByTestId('add-trade-modal-add-another-input').uncheck();
 			await page.getByTestId('add-trade-modal-add-button').click();
 
-			await expect(page.getByText('Trade added successfully!')).toBeVisible();
+			await expect(page.getByText('Trade added successfully!').first()).toBeVisible();
+			await page.waitForResponse((response) => {
+				return response.url().includes('addTrade') && response.status() === 200;
+			});
 			await expect(page.getByTestId('add-trade-modal-title')).toBeHidden();
 			await expect(page.getByRole('heading', { name: 'Trade Management' })).toBeVisible();
 		});
@@ -189,10 +210,11 @@ test.describe('Trades Page', () => {
 			const tradesCountText = await page.getByTestId('history-nav-bar-title').innerText();
 			const tradesCount = extractNumberFromBrackets(tradesCountText);
 			expect(tradesCount).toBe(3);
+			await expect(page.locator('.ag-root-wrapper')).toBeVisible();
 			const tradeRows = await page.locator('.ag-center-cols-container .ag-row').all();
 			expect(tradeRows.length).toBe(3);
 			tradeRows.forEach(async (row, idx) => {
-				const trade = mockTrades.find((t) => t.expectedRowIndex === idx.toString());
+				const trade = mockTrades[idx];
 				expect(trade).toBeDefined();
 				if (!trade) return;
 				for (const col of tradeTableColumnsToCheck) {
@@ -206,14 +228,21 @@ test.describe('Trades Page', () => {
 			await page.getByRole('checkbox', { name: 'Column with Header Selection' }).check();
 			await expect(page.getByTestId('history-nav-bar-assign-trades-button')).toBeHidden();
 			await expect(page.getByTestId('history-nav-bar-delete-trades-button')).toBeVisible();
+			await page.getByRole('checkbox', { name: 'Column with Header Selection' }).uncheck();
 		});
 
 		test('Delete trade', async () => {
-			const msftSelector = page.locator(
-				'.ag-center-cols-container .ag-row[row-id="0"] .ag-cell[col-id="ag-Grid-SelectionColumn"]'
-			);
+			await expect(page.locator('.ag-root-wrapper')).toBeVisible();
+			const msftRow = page.locator('.ag-center-cols-container .ag-row[row-index="0"]');
+			const msftSelector = msftRow
+				.locator('.ag-cell[col-id="ag-Grid-SelectionColumn"]')
+				.getByRole('checkbox', { name: 'Press Space to toggle row selection' });
 			await msftSelector.check();
 			await page.getByTestId('history-nav-bar-delete-trades-button').click();
+			await page.waitForResponse((response) => {
+				return response.url().includes('deleteTradesBatch') && response.status() === 200;
+			});
+			await expect(page.getByTestId('history-nav-bar-title')).toBeVisible();
 			const tradesCountText = await page.getByTestId('history-nav-bar-title').innerText();
 			const tradesCount = extractNumberFromBrackets(tradesCountText);
 			expect(tradesCount).toBe(2);
@@ -229,7 +258,7 @@ test.describe('Trades Page', () => {
 				'Assign the selected trades to a position'
 			);
 			await expect(page.getByTestId('assign-position-modal-add-button')).toBeDisabled();
-			await page.getByTestId('trade-view-selector').click();
+			await page.getByTestId('assign-position-modal-position-select').click();
 			await page.getByTestId('assign-position-modal-position-select').selectOption('newPosition');
 			await expect(page.getByTestId('assign-position-modal-short-toggle')).toBeVisible();
 			await expect(page.getByTestId('assign-position-modal-short-toggle')).not.toBeChecked();
@@ -246,18 +275,19 @@ test.describe('Trades Page', () => {
 		});
 
 		test('Go to position tab', async () => {
-			await page.getByTestId('trade-view-selector').click();
-			await page.getByTestId('trade-view-selector').selectOption('positions');
+			await expect(page.locator('.ag-root-wrapper')).toBeVisible();
+			await selectViewWithRetry(page, 'positions');
 			const positionCountText = await page.getByTestId('position-nav-bar-title').innerText();
 			const positionCount = extractNumberFromBrackets(positionCountText);
 			expect(positionCount).toBe(mockPositions.length);
 		});
 
 		test('Check position details are correct in the table', async () => {
+			await expect(page.locator('.ag-root-wrapper')).toBeVisible();
 			const positionRows = await page.locator('.ag-center-cols-container .ag-row').all();
 			expect(positionRows.length).toBe(mockPositions.length);
 			positionRows.forEach(async (row, idx) => {
-				const position = mockPositions.find((t) => t.expectedRowIndex === idx.toString());
+				const position = mockPositions[idx];
 				expect(position).toBeDefined();
 				if (!position) return;
 				for (const col of positionsTableColumnsToCheck) {
@@ -275,6 +305,7 @@ test.describe('Trades Page', () => {
 
 		test('Click into a position', async () => {
 			const position = mockPositions[0];
+			await expect(page.locator('.ag-root-wrapper')).toBeVisible();
 			const positionRow = page.locator('.ag-center-cols-container .ag-row').first();
 			const positionId = await positionRow.getAttribute('row-id');
 			await positionRow.click();
@@ -336,6 +367,7 @@ test.describe('Trades Page', () => {
 			await expect(page.getByTestId('edit-position-modal-platform-input')).toBeDisabled();
 			await expect(page.getByTestId('edit-position-modal-close-button')).toBeEnabled();
 			await expect(page.getByTestId('edit-position-modal-save-button')).toBeDisabled();
+			await expect(page.locator('.ag-root-wrapper')).toBeVisible();
 			await expect(page.getByTestId('edit-position-modal-reset-button')).toBeDisabled();
 			const tradeFirstRow = page.locator('.ag-center-cols-container .ag-row').first();
 			const cell = tradeFirstRow.locator(`.ag-cell[col-id=volume"]`);

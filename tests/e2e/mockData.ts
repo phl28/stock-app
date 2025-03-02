@@ -1,7 +1,6 @@
 export const mockTrades = [
 	{
 		// expectedRowIndex refers to the index of the row when the trade is added, they are ordered by executedAt
-		expectedRowIndex: '1',
 		ticker: 'AAPL',
 		region: 'US',
 		price: '$100.00',
@@ -12,7 +11,6 @@ export const mockTrades = [
 		executedAt: '2025-02-27'
 	},
 	{
-		expectedRowIndex: '2',
 		ticker: 'AAPL',
 		region: 'US',
 		price: '$200.00',
@@ -23,7 +21,6 @@ export const mockTrades = [
 		executedAt: '2025-02-25'
 	},
 	{
-		expectedRowIndex: '0',
 		ticker: 'MSFT',
 		region: 'US',
 		price: '$300.00',

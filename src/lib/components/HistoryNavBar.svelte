@@ -42,6 +42,7 @@
 					return async ({ result, update }) => {
 						if (result.type === 'success') {
 							dispatchToast({ type: 'success', message: 'Trades deleted successfully!' });
+							selectedTrades = [];
 							await update();
 						} else if (result.type === 'error') {
 							dispatchToast({ type: 'error', message: result.error.message });
